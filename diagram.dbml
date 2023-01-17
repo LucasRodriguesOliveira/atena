@@ -1,0 +1,189 @@
+Project Zeus {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Zeus E-commerce management
+  '''
+}
+
+Table UserType {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt   timestamp
+}
+
+Table User {
+  id         varchar (100) [not null, pk]
+  name       varchar (50)  [not null]
+  username   varchar (50)  [not null]
+  password   varchar (150) [not null]
+  userTypeId int           [not null]
+  createdAt  timestamp     [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt  timestamp     [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt  timestamp
+}
+
+Table Permission {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt   timestamp
+}
+
+Table Module {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt   timestamp
+}
+
+Table PermissionGroup {
+  id           int       [pk, increment, not null]
+  userTypeId   int       [not null]
+  permissionId int       [not null]
+  moduleId     int       [not null]
+  status       boolean   [not null, default: true]
+  createdAt    timestamp [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt    timestamp [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt    timestamp
+}
+
+Table TokenDurationType {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt   timestamp
+
+  Note: 'Second, Minute, Hour, Day, Week, Month, Year'
+}
+
+Table TokenType {
+  id             int          [pk, increment, not null]
+  description    varchar (50) [not null]
+  durationTypeId int          [not null]
+  durationAmount int  
+  createdAt      timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt      timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt      timestamp
+
+  Note: '''
+    With the relation with duration type, it can be read like: "6 months",
+    and it allows to make a relation to a token for e-mail
+  '''
+}
+
+Table Token {
+  id          int          [pk, increment, not null]
+  value       varchar (50) [not null]
+  typeId      int          [not null]
+  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+
+  Note: '''
+  # Token
+  Considering the following situation where:
+
+  <details>
+    <summary><strong>TokenDurationType</strong></summary>
+
+    | id | description |
+    | --- | --- |
+    | 0 | SECOND |
+    | 1 | MINUTE |
+    | 2 | HOUR |
+    | 3 | DAY |
+    | 4 | WEEK |
+    | 5 | MONTH |
+    | 6 | YEAR |
+  </details>
+
+  <details>
+    <summary><strong>TokenType</strong></summary>
+
+    | id | description | durationTypeId | durationAmount |
+    | --- | --- | --- | --- |
+    | 0 | LOGIN - ZEUS | 3 | 1 |
+    | 1 | PASSWORD RECOVER - ZEUS | 2 | 1 |
+    | 2 | LOGIN - ARES | 3 | 1 |
+    | 3 | LOGIN - ARES - LONG | 5 | 6 |
+    | 4 | PASSWORD RECOVER - ARES | 2 | 1 |
+  </details>
+
+  <details>
+    <summary><strong>Token</strong></summary>
+
+    | id | value | typeId |
+    | --- | --- | --- |
+    | 0 | ff23kjas9-wefkln1-lçsdkf-mm1n2 | 0 |
+    | 1 | 24m2m112o-eh33hkb-ascnnm1-121j | 2 |
+    | 2 | gdfmgd-1r31f1-ascskgqgwkg-fl3l | 3 |
+  </details>
+
+  with that in mind, it is possible to validate with a cron service if the token is still valid
+  '''
+}
+
+Table Company {
+  id             varchar       [pk, not null]
+  name           varchar (50)  [not null]
+  email          varchar (100) [not null]
+  status         boolean       [not null, default: true]
+  createdAt      timestamp     [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt      timestamp     [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt      timestamp
+}
+
+Table ServicePack {
+  id             varchar         [pk, not null]
+  name           varchar   (50)  [not null]
+  description    varchar   (100) [not null]
+  duration       int             [not null, default: 12, Note: 'in months']
+  status         boolean         [not null, default: true]
+  createdAt      timestamp       [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt      timestamp       [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt      timestamp
+}
+
+Table ServicePackItemType {
+  id             int            [pk, increment, not null]
+  description    varchar   (50) [not null]
+  createdAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
+}
+
+Table ServicePackItem {
+  id             varchar        [pk, not null]
+  itemTypeId     int            [not null]
+  servicePackId  varchar        [not null]
+  amount         int            [not null]
+  status         boolean        [not null, default: true]
+  createdAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt      timestamp
+}
+
+Table Contract {
+  id            varchar         [pk, not null]
+  servicePackId varchar         [not null]
+  companyId     varchar         [not null]
+  price         decimal (10, 4) [not null]
+  expiresAt     date            [not null]
+  status        boolean         [not null, default: true]
+  createdAt     timestamp       [not null, default: 'CURRENT_TIMESTAMP']
+  updatedAt     timestamp       [not null, default: 'CURRENT_TIMESTAMP']
+  deletedAt     timestamp
+}
+
+Ref "User_UserType_fk": User.userTypeId < UserType.id
+Ref "PermissionGroup_UserType_fk": PermissionGroup.userTypeId < UserType.id
+Ref "PermissionGroup_Permission_fk": PermissionGroup.permissionId < Permission.id
+Ref "PermissionGroup_Module_fk": PermissionGroup.moduleId < Module.id
+Ref "TokenType_TokenDurationType_fk": TokenType.durationTypeId < TokenDurationType.id
+Ref "Token_TokenType_fk": Token.typeId < TokenType.id
+Ref "ServicePackItem_ServicePackItemType_fk": ServicePackItem.itemTypeId < ServicePackItemType.id
+Ref "ServicePackItem_ServicePack_fk": ServicePackItem.servicePackId < ServicePack.id
+Ref "Contract_ServicePack_fk": Contract.servicePackId < ServicePack.id
+Ref "Contract_Company_fk": Contract.companyId < Company.id
