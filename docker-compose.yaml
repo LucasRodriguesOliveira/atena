@@ -24,7 +24,8 @@ services:
   test:
     volumes:
       - .:/usr/src/app
-    build: .
+    build:
+      dockerfile: ./e2e.Dockerfile
     depends_on:
       - db_test
     ports:
