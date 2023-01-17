@@ -1,8 +1,10 @@
+import { User } from 'src/modules/user/entity/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,6 +16,9 @@ export class UserType {
 
   @Column({ type: 'varchar', length: 50 })
   description: string;
+
+  @OneToMany(() => User, (user) => user.type)
+  users: User[];
 
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
