@@ -16,6 +16,10 @@ export class UserTypeService {
     return this.userTypeRepository.find({});
   }
 
+  public async find(userTypeId: number): Promise<UserType> {
+    return this.userTypeRepository.findOneBy({ id: userTypeId });
+  }
+
   public async create(createUserTypeDto: CreateUserTypeDto): Promise<UserType> {
     return this.userTypeRepository.save(createUserTypeDto);
   }

@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JWTModuleConfig } from '../../config/jwt/jwt-module.config';
+import { UserModule } from '../user/user.module';
 import { JwtService } from './jwt.service';
 
 @Module({
@@ -12,7 +13,8 @@ import { JwtService } from './jwt.service';
     TypeOrmModule.forFeature([]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync(JWTModuleConfig()),
+    UserModule,
   ],
-  providers: [JwtService],
+  providers: [JwtService, UserModule],
 })
 export class AuthModule {}
