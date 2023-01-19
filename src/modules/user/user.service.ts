@@ -44,6 +44,12 @@ export class UserService {
     });
   }
 
+  public async findByUsername(username: string): Promise<User> {
+    return this.userRepository.findOneBy({
+      username,
+    });
+  }
+
   public async create({
     name,
     password,
