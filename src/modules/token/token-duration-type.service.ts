@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import {
+  CreateTokenDurationTypeResponseDto,
+  TokenDurationTypeResponse,
+} from './dto/create-token-duration-type-response.dto';
 import { CreateTokenDurationTypeDto } from './dto/create-token-duration-type.dto';
 import { TokenDurationType } from './entity/token-duration-type.entity';
 
@@ -12,17 +16,26 @@ export class TokenDurationTypeService {
   ) {}
 
   public async list(): Promise<TokenDurationType[]> {
-    return this.tokenDurationTypeRepository.find({});
+    return this.tokenDurationTypeRepository.find({
+      select: ['id', 'description'],
+    });
   }
 
   public async find(id: number): Promise<TokenDurationType> {
-    return this.tokenDurationTypeRepository.findOneBy({ id });
+    return this.tokenDurationTypeRepository.findOne({
+      where: { id },
+      select: ['id', 'description'],
+    });
   }
 
   public async create(
     createTokenDurationTypeDto: CreateTokenDurationTypeDto,
-  ): Promise<TokenDurationType> {
-    return this.tokenDurationTypeRepository.save(createTokenDurationTypeDto);
+  ): Promise<TokenDurationTypeResponse> {
+    const tokenDurationType = await this.tokenDurationTypeRepository.save(
+      createTokenDurationTypeDto,
+    );
+
+    return CreateTokenDurationTypeResponseDto.from(tokenDurationType);
   }
 
   public async update(
@@ -31,7 +44,10 @@ export class TokenDurationTypeService {
   ): Promise<TokenDurationType> {
     await this.tokenDurationTypeRepository.update({ id }, { description });
 
-    return this.tokenDurationTypeRepository.findOneBy({ id });
+    return this.tokenDurationTypeRepository.findOne({
+      where: { id },
+      select: ['id', 'description', 'udpatedAt'],
+    });
   }
 
   public async delete(id: number): Promise<boolean> {

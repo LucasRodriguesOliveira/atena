@@ -3,6 +3,7 @@ services:
   app:
     volumes:
       - .:/usr/src/app
+      - /usr/src/app/node_modules
     build: .
     depends_on:
       - db
@@ -15,22 +16,6 @@ services:
     ports:
       - "5432:5432"
     env_file: .env
-  db_test:
-    image: postgres
-    restart: always
-    ports:
-      - "5433:5432"
-    env_file: .env.test
-  test:
-    volumes:
-      - .:/usr/src/app
-    build:
-      dockerfile: ./e2e.Dockerfile
-    depends_on:
-      - db_test
-    ports:
-      - "3001:3001"
-    env_file: .env.test
 
 volumes:
   atena:

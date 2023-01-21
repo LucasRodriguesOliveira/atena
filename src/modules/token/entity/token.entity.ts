@@ -24,6 +24,6 @@ export class Token {
   })
   type: TokenType;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 }

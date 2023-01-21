@@ -20,12 +20,12 @@ export class TokenDurationType {
   @OneToMany(() => TokenType, (tokenType) => tokenType.durationType)
   tokenType: TokenType[];
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime' })
+  @UpdateDateColumn({ type: 'timestamp' })
   udpatedAt: Date;
 
-  @DeleteDateColumn({ type: 'datetime' })
+  @DeleteDateColumn({ type: 'timestamp' })
   deletedAt: Date;
 }

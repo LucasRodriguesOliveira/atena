@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateTokenDurationTypeDto {
+export class UpdateTokenDurationTypeDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
