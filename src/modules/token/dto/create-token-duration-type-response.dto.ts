@@ -1,15 +1,17 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { TokenDurationType } from '../entity/token-duration-type.entity';
 
-export interface TokenDurationTypeResponse {
-  id: number;
-  description: string;
-}
+export class CreateTokenDurationTypeResponse {
+  @ApiProperty()
+  public id: number;
 
-export class CreateTokenDurationTypeResponseDto {
+  @ApiProperty()
+  public description: string;
+
   static from({
     id,
     description,
-  }: TokenDurationType): TokenDurationTypeResponse {
+  }: TokenDurationType): CreateTokenDurationTypeResponse {
     return {
       id,
       description,

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
@@ -12,9 +13,11 @@ import { TokenType } from './token-type.entity';
 @Entity()
 export class TokenDurationType {
   @PrimaryGeneratedColumn()
+  @ApiProperty()
   id: number;
 
   @Column({ type: 'varchar', length: 50 })
+  @ApiProperty()
   description: string;
 
   @OneToMany(() => TokenType, (tokenType) => tokenType.durationType)
