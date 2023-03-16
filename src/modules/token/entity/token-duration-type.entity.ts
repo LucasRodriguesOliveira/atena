@@ -1,4 +1,4 @@
-import { User } from 'src/modules/user/entity/user.entity';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
@@ -8,23 +8,26 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TokenType } from './token-type.entity';
 
 @Entity()
-export class UserType {
-  @PrimaryGeneratedColumn({ type: 'int' })
+export class TokenDurationType {
+  @PrimaryGeneratedColumn()
+  @ApiProperty()
   id: number;
 
   @Column({ type: 'varchar', length: 50 })
+  @ApiProperty()
   description: string;
 
-  @OneToMany(() => User, (user) => user.type)
-  users: User[];
+  @OneToMany(() => TokenType, (tokenType) => tokenType.durationType)
+  tokenType: TokenType[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
+  udpatedAt: Date;
 
   @DeleteDateColumn({ type: 'timestamp' })
   deletedAt: Date;

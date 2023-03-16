@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -8,9 +9,10 @@ import { JWTConfig } from '../../config/env/jwt.config';
 import { User } from '../user/entity/user.entity';
 
 @Injectable()
-export class JwtService extends PassportStrategy(Strategy) {
+export class JWTService extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -30,5 +32,9 @@ export class JwtService extends PassportStrategy(Strategy) {
     }
 
     return user;
+  }
+
+  async sign(user: User): Promise<string> {
+    return this.jwtService.sign({ id: user.id });
   }
 }

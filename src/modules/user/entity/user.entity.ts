@@ -32,12 +32,12 @@ export class User {
   @ManyToOne(() => UserType, (userType) => userType.users)
   type: UserType;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'datetime' })
+  @DeleteDateColumn({ type: 'timestamp' })
   deletedAt: Date;
 }

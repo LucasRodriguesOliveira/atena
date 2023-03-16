@@ -1,0 +1,4 @@
+export enum TokenTypeEnum {
+  LOGIN_SHORT_TERM = 'LOGIN_SHORT_TERM',
+  LOGIN_LONG_TERM = 'LOGIN_LONG_TERM',
+}
