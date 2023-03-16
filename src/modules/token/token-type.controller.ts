@@ -19,6 +19,7 @@ import {
 import { CreateTokenDurationTypeResponse } from './dto/create-token-duration-type-response.dto';
 import { CreateTokenTypeDto } from './dto/create-token-type.dto';
 import { TokenTypeListResponse } from './dto/token-type-list-response.dto';
+import { TokenTypeResponse } from './dto/token-type-response.dto';
 import { UpdateTokenTypeDto } from './dto/update-token-type.dto';
 import { TokenType } from './entity/token-type.entity';
 import { TokenTypeService } from './token-type.service';
@@ -38,14 +39,14 @@ export class TokenTypeController {
   }
 
   @ApiOkResponse({
-    type: TokenType,
+    type: TokenTypeResponse,
     description: 'Token Type specified by id',
   })
   @ApiNotFoundResponse({
     description: 'Token Type could not be found',
   })
   @Get(':id')
-  public async findById(@Param('id') id: number): Promise<TokenType> {
+  public async findById(@Param('id') id: number): Promise<TokenTypeResponse> {
     const tokenType = await this.tokenTypeService.findById(id);
 
     if (!tokenType) {

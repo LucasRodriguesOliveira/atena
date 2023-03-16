@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateTokenTypeResponse } from './dto/create-token-type-response.dto';
 import { CreateTokenTypeDto } from './dto/create-token-type.dto';
 import { TokenTypeListResponse } from './dto/token-type-list-response.dto';
+import { TokenTypeResponse } from './dto/token-type-response.dto';
 import { UpdateTokenTypeDto } from './dto/update-token-type.dto';
 import { TokenType } from './entity/token-type.entity';
 import { TokenDurationTypeService } from './token-duration-type.service';
@@ -24,8 +25,29 @@ export class TokenTypeService {
     });
   }
 
-  public async findById(id: number): Promise<TokenType> {
-    return this.tokenTypeRepository.findOneBy({ id });
+  public async findById(id: number): Promise<TokenTypeResponse> {
+    const tokenType = TokenTypeResponse.from(
+      await this.tokenTypeRepository.findOne({
+        select: {
+          id: true,
+          description: true,
+          durationAmount: true,
+          durationType: {
+            id: true,
+            description: true,
+          },
+          createdAt: true,
+        },
+        where: {
+          id,
+        },
+        relations: {
+          durationType: true,
+        },
+      }),
+    );
+
+    return tokenType;
   }
 
   public async list(): Promise<TokenTypeListResponse[]> {
@@ -69,6 +91,7 @@ export class TokenTypeService {
     tokenTypeId: number,
     updateTokenTypeDto: UpdateTokenTypeDto,
   ): Promise<TokenType> {
+    console.log(updateTokenTypeDto);
     await this.tokenTypeRepository.update(
       { id: tokenTypeId },
       { ...updateTokenTypeDto },
