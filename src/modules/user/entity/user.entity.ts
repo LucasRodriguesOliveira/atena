@@ -24,6 +24,9 @@ export class User {
   @Column({ type: 'varchar', length: 150 })
   password: string;
 
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  token: string;
+
   @JoinColumn({
     name: 'userTypeId',
     foreignKeyConstraintName: 'User_UserType_fk',

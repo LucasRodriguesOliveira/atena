@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config/env/env.config';
 import { AuthModule } from './modules/auth/auth.module';
-import { TokenModule } from './modules/token/token.module';
 import { TypeormPostgresModule } from './modules/typeorm/typeorm.module';
 import { UserTypeModule } from './modules/user-type/user-type.module';
 import { UserModule } from './modules/user/user.module';
@@ -16,7 +15,6 @@ import { UserModule } from './modules/user/user.module';
     AuthModule,
     UserTypeModule,
     UserModule,
-    TokenModule,
   ],
   controllers: [AppController],
   providers: [AppService],

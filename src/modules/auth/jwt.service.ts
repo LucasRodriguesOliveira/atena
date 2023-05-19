@@ -2,20 +2,17 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Repository } from 'typeorm';
 import { JWTConfig } from '../../config/env/jwt.config';
 import { User } from '../user/entity/user.entity';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class JWTService extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userService: UserService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -25,7 +22,7 @@ export class JWTService extends PassportStrategy(Strategy) {
 
   async validate(payload: { id: string }): Promise<User> {
     const { id } = payload;
-    const user: User = await this.userRepository.findOneBy({ id });
+    const user: User = await this.userService.find(id);
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -34,7 +31,7 @@ export class JWTService extends PassportStrategy(Strategy) {
     return user;
   }
 
-  async sign(user: User): Promise<string> {
-    return this.jwtService.sign({ id: user.id });
+  async sign(user: User, expiresIn: string): Promise<string> {
+    return this.jwtService.sign({ id: user.id }, { expiresIn });
   }
 }

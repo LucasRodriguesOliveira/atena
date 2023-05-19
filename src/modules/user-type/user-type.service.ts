@@ -13,7 +13,9 @@ export class UserTypeService {
   ) {}
 
   public async list(): Promise<UserType[]> {
-    return this.userTypeRepository.find({});
+    return this.userTypeRepository.find({
+      select: ['id', 'description'],
+    });
   }
 
   public async find(userTypeId: number): Promise<UserType> {
