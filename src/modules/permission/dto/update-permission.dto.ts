@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class UpdateTokenDurationTypeDto {
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(3)
-  @MaxLength(50)
+export class UpdatePermissionDto {
   @ApiProperty()
+  @IsString()
+  @MaxLength(50)
+  @MinLength(3)
+  @IsNotEmpty()
   description: string;
 }

@@ -33,20 +33,58 @@ export class UserService {
       };
     }
 
-    return this.userRepository.findBy({
-      ...query,
+    return this.userRepository.find({
+      select: {
+        id: true,
+        name: true,
+        type: {
+          description: true,
+        },
+      },
+      relations: {
+        type: true,
+      },
+      where: {
+        ...query,
+      },
     });
   }
 
   public async find(userId: string): Promise<User> {
-    return this.userRepository.findOneBy({
-      id: userId,
+    return this.userRepository.findOne({
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        type: {
+          description: true,
+        },
+      },
+      relations: {
+        type: true,
+      },
+      where: {
+        id: userId,
+      },
     });
   }
 
   public async findByUsername(username: string): Promise<User> {
-    return this.userRepository.findOneBy({
-      username,
+    return this.userRepository.findOne({
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        type: {
+          description: true,
+        },
+      },
+      relations: {
+        type: true,
+      },
+      where: {
+        username,
+      },
     });
   }
 
@@ -76,6 +114,12 @@ export class UserService {
       { id: userId },
       { name, password, username, type: userType },
     );
+
+    return this.userRepository.findOneBy({ id: userId });
+  }
+
+  public async updateToken(userId: string, token: string): Promise<User> {
+    await this.userRepository.update({ id: userId }, { token });
 
     return this.userRepository.findOneBy({ id: userId });
   }
