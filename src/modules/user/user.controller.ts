@@ -27,8 +27,8 @@ export class UserController {
   @UseGuards(JwtGuard, RoleGuard)
   @UserRole(UserTypeEnum.ADMIN)
   public async list(
-    @Query('name', ValidationPipe) name: string,
-    @Query('username', ValidationPipe) username: string,
+    @Query('name', ValidationPipe) name?: string,
+    @Query('username', ValidationPipe) username?: string,
   ): Promise<User[]> {
     return this.userService.list({
       name,
