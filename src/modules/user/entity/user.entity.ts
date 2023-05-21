@@ -1,4 +1,4 @@
-import { UserType } from 'src/modules/user-type/entity/user-type.entity';
+import { UserType } from '../../../modules/user-type/entity/user-type.entity';
 import {
   Column,
   CreateDateColumn,

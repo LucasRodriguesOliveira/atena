@@ -24,7 +24,7 @@ export class JWTService extends PassportStrategy(Strategy) {
     const { id } = payload;
     const user: User = await this.userService.find(id);
 
-    if (!user) {
+    if (!user?.id) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 

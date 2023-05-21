@@ -24,7 +24,7 @@ export class AuthService {
   public async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const user: User = await this.userService.findByUsername(loginDto.username);
 
-    if (!(user.password !== loginDto.password)) {
+    if (user.password !== loginDto.password) {
       throw new HttpException(
         'username or password incorrect',
         HttpStatus.FORBIDDEN,
