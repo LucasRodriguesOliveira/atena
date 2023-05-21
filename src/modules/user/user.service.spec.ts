@@ -78,8 +78,26 @@ describe('UserService', () => {
       expect(userRepository.find).toHaveBeenCalled();
     });
 
+    it('should return a list of users by name or username', async () => {
+      const result = await userService.list({
+        name: 'test',
+        username: 'test',
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result).toBe(userList);
+      expect(userRepository.find).toHaveBeenCalled();
+    });
+
     it('should return a user', async () => {
       const result = await userService.find('0');
+
+      expect(result).toBe(user);
+      expect(userRepository.findOne).toHaveBeenCalled();
+    });
+
+    it('should return a user by username', async () => {
+      const result = await userService.findByUsername('test');
 
       expect(result).toBe(user);
       expect(userRepository.findOne).toHaveBeenCalled();
@@ -134,6 +152,14 @@ describe('UserService', () => {
 
     it('should update the user ', async () => {
       const result = await userService.update('0', { name: 'test' });
+
+      expect(result).toBe(user);
+      expect(userRepository.update).toHaveBeenCalled();
+      expect(userRepository.findOneBy).toHaveBeenCalled();
+    });
+
+    it('should update the user token', async () => {
+      const result = await userService.updateToken('0', 'test');
 
       expect(result).toBe(user);
       expect(userRepository.update).toHaveBeenCalled();
