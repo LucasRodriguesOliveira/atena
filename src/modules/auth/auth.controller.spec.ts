@@ -59,10 +59,10 @@ describe('AuthController', () => {
       name: 'John Doe',
       username: 'johndoe',
       password: 'password',
-      createdAt: null,
-      updatedAt: null,
-      deletedAt: null,
-      token: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: new Date(),
+      token: '',
       type: null,
     };
 
