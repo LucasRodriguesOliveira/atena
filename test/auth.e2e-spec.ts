@@ -13,8 +13,6 @@ import { UserType } from '../src/modules/user-type/entity/user-type.entity';
 import { LoginDto } from '../src/modules/auth/dto/login.dto';
 import { JWTService } from '../src/modules/auth/jwt.service';
 
-jest.useFakeTimers('legacy');
-
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
   const userService = {
