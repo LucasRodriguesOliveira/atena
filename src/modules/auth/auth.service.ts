@@ -14,15 +14,22 @@ export class AuthService {
   ) {}
 
   public async register(registerDto: RegisterDto): Promise<boolean> {
+    registerDto.password = await this.userService.hashPassword(
+      registerDto.password,
+    );
     const user: User = await this.userService.create(registerDto);
 
     // returns true to confirm that the creation was successfull
 
-    return !!user;
+    return !!user?.id;
   }
 
   public async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const user: User = await this.userService.findByUsername(loginDto.username);
+    loginDto.password = await this.userService.hashPassword(
+      loginDto.password,
+      user.password,
+    );
 
     if (user.password !== loginDto.password) {
       throw new HttpException(
