@@ -8,6 +8,8 @@ import {
   Delete,
   ValidationPipe,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserRole } from '../auth/decorator/user-type.decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
@@ -47,8 +49,9 @@ export class UserTypeController {
   @Put(':userTypeId')
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
   public async update(
-    @Param('userTypeId') userTypeId: number,
+    @Param('userTypeId', ValidationPipe) userTypeId: number,
     @Body(ValidationPipe) updateUserTypeDto: UpdateUserTypeDto,
   ): Promise<UpdateUserTypeResponse> {
     const userType = await this.userTypeService.update(
@@ -62,8 +65,9 @@ export class UserTypeController {
   @Delete(':userTypeId')
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
   public async delete(
-    @Param('userTypeId') userTypeId: number,
+    @Param('userTypeId', ValidationPipe) userTypeId: number,
   ): Promise<boolean> {
     return this.userTypeService.delete(userTypeId);
   }
