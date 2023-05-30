@@ -95,11 +95,10 @@ export class UserService {
     username,
   }: CreateUserDto): Promise<User> {
     const userType: UserType = await this.userTypeService.find(userTypeId);
-    const hashedPassword = await this.hashPassword(password);
 
     return this.userRepository.save({
       name,
-      password: hashedPassword,
+      password,
       username,
       type: userType,
     });
@@ -130,8 +129,11 @@ export class UserService {
     return affected > 0;
   }
 
-  private async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt();
+  public async hashPassword(password: string, salt?: string): Promise<string> {
+    if (!salt) {
+      salt = await bcrypt.genSalt();
+    }
+
     return bcrypt.hash(password, salt);
   }
 }

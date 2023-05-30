@@ -8,6 +8,8 @@ import {
   Body,
   Delete,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';
@@ -44,6 +46,7 @@ export class UserController {
 
   @Put(':userId')
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
   public async update(
     @Param('userId') userId: string,
     @Body(ValidationPipe) updateUserDto: UpdateUserDto,
@@ -54,6 +57,7 @@ export class UserController {
   @Delete(':userId')
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
   public async delete(@Param('userId') userId: string): Promise<boolean> {
     return this.userService.delete(userId);
   }
