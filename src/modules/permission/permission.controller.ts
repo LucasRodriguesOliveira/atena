@@ -9,19 +9,20 @@ import {
   Post,
   Put,
   UseGuards,
+  HttpException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePermissionResponse } from './dto/create-permission-response.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionResponse } from './dto/update-permission-response.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
-import { Permission } from './entity/permission.entity';
 import { PermissionService } from './permission.service';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
 import { UserRole } from '../auth/decorator/user-type.decorator';
 import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { ListPermissionDto } from './dto/list-permission.dto';
+import { FindPermissionDto } from './dto/find-permission.dto';
 
 @Controller('permission')
 @ApiTags('permission')
@@ -35,9 +36,24 @@ export class PermissionController {
   @ApiBearerAuth()
   @ApiResponse({
     status: HttpStatus.OK,
+    description: 'Permission',
+    type: FindPermissionDto,
   })
-  public async find(@Param('id') id: number): Promise<Permission> {
-    return this.permissionService.find(id);
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Permission could not be found',
+  })
+  public async find(@Param('id') id: number): Promise<FindPermissionDto> {
+    const permission = await this.permissionService.find(id);
+
+    if (!permission?.id) {
+      throw new HttpException(
+        'Permission could not be found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return permission;
   }
 
   @Get()

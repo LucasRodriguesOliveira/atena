@@ -7,6 +7,7 @@ import { UpdatePermissionResponse } from './dto/update-permission-response.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { Permission } from './entity/permission.entity';
 import { ListPermissionDto } from './dto/list-permission.dto';
+import { FindPermissionDto } from './dto/find-permission.dto';
 
 @Injectable()
 export class PermissionService {
@@ -15,11 +16,17 @@ export class PermissionService {
     private readonly permissionRepository: Repository<Permission>,
   ) {}
 
-  public async find(id: number): Promise<Permission> {
-    return this.permissionRepository.findOne({
+  public async find(id: number): Promise<FindPermissionDto | null> {
+    const permission = await this.permissionRepository.findOne({
       where: { id },
       select: ['id', 'description', 'createdAt'],
     });
+
+    if (!permission?.id) {
+      return null;
+    }
+
+    return FindPermissionDto.from(permission);
   }
 
   public async list(): Promise<ListPermissionDto[]> {

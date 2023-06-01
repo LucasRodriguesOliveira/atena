@@ -17,7 +17,6 @@
     "<rootDir>/main.ts",
     "dist"
   ],
-  "collectCoverage": true,
   "collectCoverageFrom": [
     "<rootDir>/**/*.ts"
   ],

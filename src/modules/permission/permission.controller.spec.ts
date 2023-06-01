@@ -1,17 +1,22 @@
+import { Repository } from 'typeorm';
 import { PermissionService } from './permission.service';
 import { Permission } from './entity/permission.entity';
+import { MockType } from 'test/utils/mock-type';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { PermissionController } from './permission.controller';
 import { FindPermissionDto } from './dto/find-permission.dto';
 import { ListPermissionDto } from './dto/list-permission.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { CreatePermissionResponse } from './dto/create-permission-response.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { UpdatePermissionResponse } from './dto/update-permission-response.dto';
+import { HttpException } from '@nestjs/common';
 
-describe('PermissionService', () => {
+describe('PermissionController', () => {
+  let controller: PermissionController;
   let service: PermissionService;
-  const repository = {
+  const repository: MockType<Repository<Permission>> = {
     findOne: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
@@ -21,6 +26,7 @@ describe('PermissionService', () => {
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
+      controllers: [PermissionController],
       providers: [
         PermissionService,
         { provide: getRepositoryToken(Permission), useValue: repository },
@@ -28,10 +34,12 @@ describe('PermissionService', () => {
     }).compile();
 
     service = moduleRef.get<PermissionService>(PermissionService);
+    controller = moduleRef.get<PermissionController>(PermissionController);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+    expect(controller).toBeDefined();
   });
 
   describe('Find', () => {
@@ -51,7 +59,7 @@ describe('PermissionService', () => {
       });
 
       it('should find a permission by id', async () => {
-        const result = await service.find(permissionId);
+        const result = await controller.find(permissionId);
 
         expect(repository.findOne).toHaveBeenCalled();
         expect(result).toEqual(FindPermissionDto.from(permissionExpected));
@@ -63,11 +71,12 @@ describe('PermissionService', () => {
         repository.findOne.mockResolvedValueOnce({});
       });
 
-      it('should return null when not finding a permission', async () => {
-        const result = await service.find(permissionId);
+      it('should throw an error when not finding a permission', async () => {
+        await expect(() => controller.find(permissionId)).rejects.toThrow(
+          HttpException,
+        );
 
         expect(repository.findOne).toHaveBeenCalled();
-        expect(result).toBeNull();
       });
     });
   });
@@ -98,7 +107,7 @@ describe('PermissionService', () => {
     });
 
     it('should return a list of permissions', async () => {
-      const result = await service.list();
+      const result = await controller.list();
 
       expect(repository.find).toHaveBeenCalled();
       expect(result).toStrictEqual(permissionListExpected);
@@ -122,7 +131,7 @@ describe('PermissionService', () => {
     });
 
     it('should create a permission', async () => {
-      const result = await service.create(createPermissionDto);
+      const result = await controller.create(createPermissionDto);
 
       expect(repository.save).toHaveBeenCalled();
       expect(result).toStrictEqual(CreatePermissionResponse.from(permission));
@@ -148,7 +157,10 @@ describe('PermissionService', () => {
     });
 
     it('should update a permission', async () => {
-      const result = await service.update(permission.id, updatePermissionDto);
+      const result = await controller.update(
+        permission.id,
+        updatePermissionDto,
+      );
 
       expect(repository.update).toHaveBeenCalled();
       expect(repository.findOne).toHaveBeenCalled();
@@ -164,7 +176,7 @@ describe('PermissionService', () => {
     });
 
     it('should soft delete a permission', async () => {
-      const result = await service.delete(permissionId);
+      const result = await controller.delete(permissionId);
 
       expect(repository.softDelete).toHaveBeenCalled();
       expect(result).toBe(true);
