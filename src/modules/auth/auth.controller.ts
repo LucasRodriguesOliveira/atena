@@ -5,7 +5,6 @@ import {
   HttpStatus,
   Post,
   ValidationPipe,
-  Header,
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -19,7 +18,6 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.OK)
-  @Header('content-type', 'text/json')
   public async register(
     @Body(ValidationPipe) registerDto: RegisterDto,
   ): Promise<boolean> {
@@ -28,7 +26,6 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Header('content-type', 'text/json')
   @ApiResponse({
     type: String,
     description: 'token string',
