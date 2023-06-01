@@ -8,6 +8,8 @@ import { QueryUserDto } from './dto/query-user.dto';
 import { User } from './entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FindUserDto } from './dto/find-user.dto';
+import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -50,8 +52,8 @@ export class UserService {
     });
   }
 
-  public async find(userId: string): Promise<User> {
-    return this.userRepository.findOne({
+  public async find(userId: string): Promise<FindUserDto | null> {
+    const user = await this.userRepository.findOne({
       select: {
         id: true,
         name: true,
@@ -67,14 +69,20 @@ export class UserService {
         id: userId,
       },
     });
+
+    if (!user?.id) {
+      return null;
+    }
+
+    return FindUserDto.from(user);
   }
 
   public async findByUsername(username: string): Promise<User> {
     return this.userRepository.findOne({
       select: {
         id: true,
-        name: true,
         username: true,
+        password: true,
         type: {
           description: true,
         },
@@ -107,14 +115,16 @@ export class UserService {
   public async update(
     userId: string,
     { name, password, userTypeId, username }: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<UpdateUserResponseDto> {
     const userType: UserType = await this.userTypeService.find(userTypeId);
     await this.userRepository.update(
       { id: userId },
       { name, password, username, type: userType },
     );
 
-    return this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOneBy({ id: userId });
+
+    return UpdateUserResponseDto.from(user);
   }
 
   public async updateToken(userId: string, token: string): Promise<User> {
@@ -135,5 +145,12 @@ export class UserService {
     }
 
     return bcrypt.hash(password, salt);
+  }
+
+  public async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return bcrypt.compare(password, hashedPassword);
   }
 }

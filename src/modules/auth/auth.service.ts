@@ -1,7 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { User } from '../user/entity/user.entity';
 import { UserService } from '../user/user.service';
-import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JWTService } from './jwt.service';
@@ -24,14 +23,14 @@ export class AuthService {
     return !!user?.id;
   }
 
-  public async login(loginDto: LoginDto): Promise<LoginResponseDto> {
+  public async login(loginDto: LoginDto): Promise<string> {
     const user: User = await this.userService.findByUsername(loginDto.username);
-    loginDto.password = await this.userService.hashPassword(
+    const passwordMatch: boolean = await this.userService.comparePassword(
       loginDto.password,
       user.password,
     );
 
-    if (user.password !== loginDto.password) {
+    if (!passwordMatch) {
       throw new HttpException(
         'username or password incorrect',
         HttpStatus.FORBIDDEN,
@@ -41,10 +40,7 @@ export class AuthService {
     return this.createToken(user, loginDto.remember);
   }
 
-  private async createToken(
-    user: User,
-    remember: boolean,
-  ): Promise<LoginResponseDto> {
+  private async createToken(user: User, remember: boolean): Promise<string> {
     if (remember) {
       const longTermToken = await this.jwtService.sign(user, '30d');
       user.token = longTermToken;
@@ -54,8 +50,6 @@ export class AuthService {
 
     const token = await this.jwtService.sign(user, '1d');
 
-    return {
-      token,
-    };
+    return token;
   }
 }

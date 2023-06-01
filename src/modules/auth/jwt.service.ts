@@ -6,6 +6,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JWTConfig } from '../../config/env/jwt.config';
 import { User } from '../user/entity/user.entity';
 import { UserService } from '../user/user.service';
+import { FindUserDto } from '../user/dto/find-user.dto';
 
 @Injectable()
 export class JWTService extends PassportStrategy(Strategy) {
@@ -20,9 +21,9 @@ export class JWTService extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { id: string }): Promise<User> {
+  async validate(payload: { id: string }): Promise<FindUserDto> {
     const { id } = payload;
-    const user: User = await this.userService.find(id);
+    const user = await this.userService.find(id);
 
     if (!user?.id) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);

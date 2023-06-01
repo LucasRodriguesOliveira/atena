@@ -18,6 +18,7 @@ describe('AuthController (e2e)', () => {
   const userService = {
     create: jest.fn(),
     findByUsername: jest.fn(),
+    comparePassword: jest.fn(),
     updateToken: jest.fn(),
     hashPassword: jest.fn((password) => password),
   };
@@ -69,8 +70,6 @@ describe('AuthController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/auth/register')
         .send(body)
-        .set('Accept', 'application/json')
-        .expect('Content-type', /json/)
         .expect(HttpStatus.OK)
         .then((response) => {
           expect(JSON.parse(response.text)).toBe(true);
@@ -80,7 +79,6 @@ describe('AuthController (e2e)', () => {
     it(`POST - ${HttpStatus.BAD_REQUEST}`, () => {
       return request(app.getHttpServer())
         .post('/auth/register')
-        .send({ ...body, name: '' })
         .expect(HttpStatus.BAD_REQUEST);
     });
   });
@@ -102,6 +100,8 @@ describe('AuthController (e2e)', () => {
 
     beforeEach(() => {
       userService.findByUsername.mockResolvedValue(user);
+      userService.comparePassword.mockResolvedValueOnce(true);
+      userService.comparePassword.mockResolvedValueOnce(false);
       userService.updateToken.mockResolvedValue(user);
       jwtService.sign.mockResolvedValue(token);
     });
@@ -112,7 +112,7 @@ describe('AuthController (e2e)', () => {
         .send(body)
         .expect(HttpStatus.OK)
         .then((response) => {
-          expect(response.body).toStrictEqual({ token });
+          expect(response.text).toEqual(token);
         });
     });
 

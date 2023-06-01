@@ -9,22 +9,26 @@ import { User } from '../src/modules/user/entity/user.entity';
 import { UserModule } from '../src/modules/user/user.module';
 import * as request from 'supertest';
 import { AuthModule } from '../src/modules/auth/auth.module';
-import { LoginDto } from '../src/modules/auth/dto/login.dto';
 import { UserService } from '../src/modules/user/user.service';
 import { UserResult } from '../src/modules/user/dto/user-result.dto';
 import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
 import { UpdateUserDto } from 'src/modules/user/dto/update-user.dto';
+import { getTokenFactory } from './utils/get-token';
+import { UpdateUserResponseDto } from '../src/modules/user/dto/update-user-response.dto';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
+  const basePath = '/user';
   const userService = {
     findByUsername: jest.fn(),
     hashPassword: jest.fn((password) => password),
+    comparePassword: jest.fn(),
     find: jest.fn(),
     list: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
   };
+  let getToken: () => Promise<string>;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -40,6 +44,7 @@ describe('UserController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    getToken = getTokenFactory(app, userService);
     await app.init();
   });
 
@@ -50,69 +55,52 @@ describe('UserController (e2e)', () => {
   describe('/', () => {
     it(`GET - ${HttpStatus.UNAUTHORIZED}`, () => {
       return request(app.getHttpServer())
-        .get('/user')
+        .get(basePath)
         .expect(HttpStatus.UNAUTHORIZED);
     });
 
-    const user: Partial<User> = {
-      id: '0',
-      password: '12345',
-    };
-
-    const userResult: UserResult = {
-      id: '0',
-      type: UserTypeEnum.ADMIN,
-      name: 'test',
-      username: 'test.test',
-    };
-
-    const loginDto: LoginDto = {
-      username: 'test',
-      password: '12345',
-      remember: false,
-    };
-
-    let token: string;
-
-    const userList = [user, { ...user, id: '1' }, { ...user, id: '2' }];
-
     describe(UserTypeEnum.ADMIN, () => {
+      const userResult: UserResult = {
+        id: '0',
+        type: UserTypeEnum.ADMIN,
+        name: 'test',
+        username: 'test.test',
+      };
+      let token: string;
+      const userList = [{ id: '0' }, { id: '1' }];
+
       beforeEach(async () => {
-        userService.findByUsername.mockResolvedValueOnce(user);
         userService.find.mockResolvedValueOnce(userResult);
         userService.list.mockResolvedValueOnce(userList);
 
-        const { body } = await request(app.getHttpServer())
-          .post('/auth/login')
-          .send(loginDto);
-
-        token = `Bearer ${body.token}`;
+        token = await getToken();
       });
 
       it(`GET - ${HttpStatus.OK}`, () => {
         return request(app.getHttpServer())
-          .get('/user')
+          .get(basePath)
           .set('authorization', token)
           .expect(HttpStatus.OK)
           .then((response) => {
-            expect(response.body).toHaveLength(3);
+            expect(response.body).toHaveLength(2);
             expect(response.body).toStrictEqual(userList);
           });
       });
     });
 
     describe(UserTypeEnum.DEFAULT, () => {
+      const userResult: UserResult = {
+        id: '0',
+        type: UserTypeEnum.DEFAULT,
+        name: 'test',
+        username: 'test.test',
+      };
+      let token: string;
+
       beforeEach(async () => {
-        userResult.type = UserTypeEnum.DEFAULT;
-        userService.findByUsername.mockResolvedValueOnce(user);
         userService.find.mockResolvedValueOnce(userResult);
-        userService.list.mockResolvedValueOnce(userList);
 
-        const { body } = await request(app.getHttpServer())
-          .post('/auth/login')
-          .send(loginDto);
-
-        token = `Bearer ${body.token}`;
+        token = await getToken();
       });
 
       it(`GET - ${HttpStatus.FORBIDDEN}`, () => {
@@ -125,47 +113,33 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/:userId', () => {
-    describe('GET', () => {
-      const user: Partial<User> = {
-        id: '0',
-        password: '12345',
-      };
+    const userId = '0';
+    const path = `${basePath}/${userId}`;
 
+    describe('GET', () => {
       const userResult: UserResult = {
-        id: '0',
+        id: userId,
         type: UserTypeEnum.DEFAULT,
         name: 'test',
         username: 'test.test',
       };
 
-      const loginDto: LoginDto = {
-        username: 'test',
-        password: '12345',
-        remember: false,
-      };
-
       let token: string;
 
       beforeEach(async () => {
-        userService.findByUsername.mockResolvedValueOnce(user);
         userService.find.mockResolvedValue(userResult);
-
-        const { body } = await request(app.getHttpServer())
-          .post('/auth/login')
-          .send(loginDto);
-
-        token = `Bearer ${body.token}`;
+        token = await getToken();
       });
 
       it(`${HttpStatus.UNAUTHORIZED}`, () => {
         return request(app.getHttpServer())
-          .get(`/user/${user.id}`)
+          .get(path)
           .expect(HttpStatus.UNAUTHORIZED);
       });
 
       it(`${HttpStatus.OK}`, () => {
         return request(app.getHttpServer())
-          .get(`/user/${user.id}`)
+          .get(path)
           .set('authorization', token)
           .expect(HttpStatus.OK)
           .then((response) => {
@@ -175,11 +149,6 @@ describe('UserController (e2e)', () => {
     });
 
     describe('PUT', () => {
-      const user: Partial<User> = {
-        id: '0',
-        password: '12345',
-      };
-
       const userResult: UserResult = {
         id: '0',
         type: UserTypeEnum.DEFAULT,
@@ -187,91 +156,87 @@ describe('UserController (e2e)', () => {
         username: 'test.test',
       };
 
-      const loginDto: LoginDto = {
-        username: 'test',
-        password: '12345',
-        remember: false,
-      };
-
       const updateUserDto: UpdateUserDto = {
         name: 'updated test',
       };
 
+      const userExpected = UpdateUserResponseDto.from({
+        id: userId,
+        name: 'test',
+        password: '123',
+        token: null,
+        username: 'test',
+        type: {
+          id: 0,
+          description: 'test',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+          users: [],
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+      });
+
       let token: string;
 
       beforeEach(async () => {
-        userService.findByUsername.mockResolvedValueOnce(user);
         userService.find.mockResolvedValue(userResult);
-        userService.update.mockResolvedValueOnce(user);
-
-        const { body } = await request(app.getHttpServer())
-          .post('/auth/login')
-          .send(loginDto);
-
-        token = `Bearer ${body.token}`;
+        userService.update.mockResolvedValueOnce(userExpected);
+        token = await getToken();
       });
 
       it(`${HttpStatus.UNAUTHORIZED}`, () => {
         return request(app.getHttpServer())
-          .put(`/user/${user.id}`)
+          .put(path)
           .expect(HttpStatus.UNAUTHORIZED);
       });
 
       it(`${HttpStatus.OK}`, () => {
         return request(app.getHttpServer())
-          .put(`/user/${user.id}`)
+          .put(path)
           .set('authorization', token)
           .send(updateUserDto)
           .expect(HttpStatus.OK)
           .then((response) => {
-            expect(response.body).toStrictEqual(user);
+            expect(response.body).toHaveProperty('id', userExpected.id);
+            expect(response.body).toHaveProperty('name', userExpected.name);
+            expect(response.body).toHaveProperty(
+              'username',
+              userExpected.username,
+            );
+            expect(response.body).toHaveProperty('type', userExpected.type);
           });
       });
     });
 
     describe('DELETE', () => {
-      const user: Partial<User> = {
-        id: '0',
-        password: '12345',
-      };
-
-      const userResult: UserResult = {
-        id: '0',
-        type: UserTypeEnum.ADMIN,
-        name: 'test',
-        username: 'test.test',
-      };
-
-      const loginDto: LoginDto = {
-        username: 'test',
-        password: '12345',
-        remember: false,
-      };
-
       let token: string;
 
       it(`${HttpStatus.UNAUTHORIZED}`, () => {
         return request(app.getHttpServer())
-          .delete(`/user/${user.id}`)
+          .delete(path)
           .expect(HttpStatus.UNAUTHORIZED);
       });
 
       describe('ADMIN', () => {
+        const userResult: UserResult = {
+          id: '0',
+          type: UserTypeEnum.ADMIN,
+          name: 'test',
+          username: 'test.test',
+        };
+
         beforeEach(async () => {
-          userService.findByUsername.mockResolvedValueOnce(user);
           userService.find.mockResolvedValue(userResult);
           userService.delete.mockResolvedValueOnce(true);
-
-          const { body } = await request(app.getHttpServer())
-            .post('/auth/login')
-            .send(loginDto);
-
-          token = `Bearer ${body.token}`;
+          token = await getToken();
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .delete(`/user/${user.id}`)
+            .delete(path)
             .set('authorization', token)
             .expect(HttpStatus.OK)
             .then((response) => {
@@ -281,22 +246,22 @@ describe('UserController (e2e)', () => {
       });
 
       describe('DEFAULT', () => {
+        const userResult: UserResult = {
+          id: '0',
+          type: UserTypeEnum.DEFAULT,
+          name: 'test',
+          username: 'test.test',
+        };
+
         beforeEach(async () => {
-          userResult.type = UserTypeEnum.DEFAULT;
-          userService.findByUsername.mockResolvedValueOnce(user);
           userService.find.mockResolvedValue(userResult);
           userService.delete.mockResolvedValueOnce(true);
-
-          const { body } = await request(app.getHttpServer())
-            .post('/auth/login')
-            .send(loginDto);
-
-          token = `Bearer ${body.token}`;
+          token = await getToken();
         });
 
         it(`${HttpStatus.FORBIDDEN}`, () => {
           return request(app.getHttpServer())
-            .delete(`/user/${user.id}`)
+            .delete(path)
             .set('authorization', token)
             .expect(HttpStatus.FORBIDDEN);
         });
