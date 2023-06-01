@@ -10,6 +10,7 @@ import {
   Put,
   UseGuards,
   HttpException,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePermissionResponse } from './dto/create-permission-response.dto';
@@ -77,9 +78,11 @@ export class PermissionController {
   @ApiBearerAuth()
   @ApiResponse({
     status: HttpStatus.CREATED,
+    type: CreatePermissionResponse,
+    description: 'Permission created',
   })
   public async create(
-    @Body() createPermissionDto: CreatePermissionDto,
+    @Body(ValidationPipe) createPermissionDto: CreatePermissionDto,
   ): Promise<CreatePermissionResponse> {
     return this.permissionService.create(createPermissionDto);
   }
@@ -94,7 +97,7 @@ export class PermissionController {
   })
   public async update(
     @Param('id') id: number,
-    @Body() updatePermissionDto: UpdatePermissionDto,
+    @Body(ValidationPipe) updatePermissionDto: UpdatePermissionDto,
   ): Promise<UpdatePermissionResponse> {
     return this.permissionService.update(id, updatePermissionDto);
   }
