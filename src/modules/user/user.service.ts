@@ -9,6 +9,7 @@ import { User } from './entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FindUserDto } from './dto/find-user.dto';
+import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -114,14 +115,16 @@ export class UserService {
   public async update(
     userId: string,
     { name, password, userTypeId, username }: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<UpdateUserResponseDto> {
     const userType: UserType = await this.userTypeService.find(userTypeId);
     await this.userRepository.update(
       { id: userId },
       { name, password, username, type: userType },
     );
 
-    return this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOneBy({ id: userId });
+
+    return UpdateUserResponseDto.from(user);
   }
 
   public async updateToken(userId: string, token: string): Promise<User> {

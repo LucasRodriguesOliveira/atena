@@ -6,6 +6,8 @@ import { UserTypeService } from '../user-type/user-type.service';
 import { UserType } from '../user-type/entity/user-type.entity';
 import { UserController } from './user.controller';
 import { FindUserDto } from './dto/find-user.dto';
+import { UpdateUserResponseDto } from './dto/update-user-response.dto';
+import { HttpException } from '@nestjs/common';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -53,59 +55,100 @@ describe('UserController', () => {
   });
 
   describe('Read', () => {
-    const user: User = {
-      id: '0',
-      name: 'test',
-      password: '123',
-      token: null,
-      username: 'test.test',
-      type: {
-        id: 0,
-        description: 'test type',
-        users: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: new Date(),
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: new Date(),
-    };
+    describe('List', () => {
+      const userList = [
+        { id: 1, name: 'test 1' },
+        { id: 2, name: 'test 2' },
+      ];
 
-    const userList: User[] = [
-      user,
-      {
-        ...user,
-        id: '1',
-        name: 'test 2',
-      },
-    ];
+      beforeEach(() => {
+        userRepository.find.mockResolvedValueOnce(userList);
+      });
 
-    beforeEach(() => {
-      userRepository.find.mockResolvedValueOnce(userList);
-      userRepository.findOne.mockResolvedValueOnce(user);
+      it('should return a list of users', async () => {
+        const result = await userController.list();
+
+        expect(result).toHaveLength(2);
+        expect(result).toBe(userList);
+        expect(userRepository.find).toHaveBeenCalled();
+      });
+
+      it('should return a list of users by name or username', async () => {
+        const result = await userController.list('test', 'test');
+
+        expect(result).toHaveLength(2);
+        expect(result).toBe(userList);
+        expect(userRepository.find).toHaveBeenCalled();
+      });
     });
 
-    it('should return a list of users', async () => {
-      const result = await userController.list();
+    describe('Find', () => {
+      describe('Sucess', () => {
+        const user: User = {
+          id: '0',
+          name: 'test',
+          type: {
+            id: 0,
+            description: 'test type',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: new Date(),
+            users: [],
+          },
+          username: 'test.test',
+          password: '123',
+          token: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+        };
 
-      expect(result).toHaveLength(2);
-      expect(result).toBe(userList);
-      expect(userRepository.find).toHaveBeenCalled();
-    });
+        beforeEach(() => {
+          userRepository.findOne.mockResolvedValueOnce(user);
+        });
 
-    it('should return a user', async () => {
-      const result = await userController.find('0');
+        it('should return a user', async () => {
+          const result = await userController.find('0');
 
-      expect(result).toStrictEqual(FindUserDto.from(user));
-      expect(userRepository.findOne).toHaveBeenCalled();
+          expect(result).toStrictEqual(FindUserDto.from(user));
+          expect(userRepository.findOne).toHaveBeenCalled();
+        });
+      });
+
+      describe('Fail', () => {
+        beforeEach(() => {
+          userRepository.findOne.mockResolvedValueOnce({});
+        });
+
+        it('should throw an error', async () => {
+          await expect(() => userController.find('0')).rejects.toThrow(
+            HttpException,
+          );
+
+          expect(userRepository.findOne).toHaveBeenCalled();
+        });
+      });
     });
   });
 
   describe('Update', () => {
-    const user = {
+    const user: User = {
       id: '0',
       name: 'test',
+      username: 'test',
+      password: 'test',
+      token: null,
+      type: {
+        id: 0,
+        description: 'test',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+        users: [],
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: new Date(),
     };
 
     beforeEach(() => {
@@ -115,7 +158,7 @@ describe('UserController', () => {
     it('should update the user ', async () => {
       const result = await userController.update('0', { name: 'test' });
 
-      expect(result).toBe(user);
+      expect(result).toStrictEqual(UpdateUserResponseDto.from(user));
       expect(userRepository.update).toHaveBeenCalled();
       expect(userRepository.findOneBy).toHaveBeenCalled();
     });

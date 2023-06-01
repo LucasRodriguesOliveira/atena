@@ -15,12 +15,18 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';
 import { UserService } from './user.service';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
 import { UserRole } from '../auth/decorator/user-type.decorator';
 import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { FindUserDto } from './dto/find-user.dto';
+import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 
 @Controller('user')
 @ApiTags('user')
@@ -67,10 +73,14 @@ export class UserController {
   @Put(':userId')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: UpdateUserResponseDto,
+  })
   public async update(
     @Param('userId') userId: string,
     @Body(ValidationPipe) updateUserDto: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<UpdateUserResponseDto> {
     return this.userService.update(userId, updateUserDto);
   }
 
