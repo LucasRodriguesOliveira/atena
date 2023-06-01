@@ -1,56 +1,64 @@
-import { Repository } from 'typeorm';
-import { MockType } from '../../../test/utils/mock-type';
 import { UserService } from './user.service';
 import { User } from './entity/user.entity';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { repositoryMockFactory } from '../../../test/utils/repository-mock-factory';
 import { UserTypeService } from '../user-type/user-type.service';
 import { UserType } from '../user-type/entity/user-type.entity';
+import { FindUserDto } from './dto/find-user.dto';
 
 describe('UserService', () => {
   let userService: UserService;
   let userTypeService: UserTypeService;
-  let userRepository: MockType<Repository<User>>;
-  let userTypeRepository: MockType<Repository<UserType>>;
+
+  const userRepository = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    save: jest.fn(),
+    update: jest.fn(),
+    findOneBy: jest.fn(),
+    softDelete: jest.fn(),
+  };
+  const userTypeRepository = {
+    findOneBy: jest.fn(),
+  };
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
         UserTypeService,
-        {
-          provide: getRepositoryToken(User),
-          useFactory: repositoryMockFactory,
-        },
-        {
-          provide: getRepositoryToken(UserType),
-          useFactory: repositoryMockFactory,
-        },
+        { provide: getRepositoryToken(User), useValue: userRepository },
+        { provide: getRepositoryToken(UserType), useValue: userTypeRepository },
       ],
     }).compile();
 
     userService = moduleRef.get<UserService>(UserService);
     userTypeService = moduleRef.get<UserTypeService>(UserTypeService);
-    userRepository = moduleRef.get<MockType<Repository<User>>>(
-      getRepositoryToken(User),
-    );
-    userTypeRepository = moduleRef.get<MockType<Repository<UserType>>>(
-      getRepositoryToken(UserType),
-    );
   });
 
   it('should be defined', () => {
-    expect(userRepository).toBeDefined();
-    expect(userTypeRepository).toBeDefined();
     expect(userService).toBeDefined();
     expect(userTypeService).toBeDefined();
   });
 
   describe('Read', () => {
-    const user = {
-      id: 0,
+    const user: User = {
+      id: '0',
       name: 'test',
+      type: {
+        id: 0,
+        description: 'test type',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+        users: [],
+      },
+      username: 'test.test',
+      password: '123',
+      token: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: new Date(),
     };
 
     const userList = [
@@ -62,12 +70,8 @@ describe('UserService', () => {
     ];
 
     beforeEach(() => {
-      userRepository.findOneBy.mockClear();
-      userRepository.find.mockClear();
-      userRepository.findOne.mockClear();
-      userRepository.findOneBy.mockImplementationOnce(() => user);
-      userRepository.find.mockImplementationOnce(() => userList);
-      userRepository.findOne.mockImplementationOnce(() => user);
+      userRepository.find.mockResolvedValue(userList);
+      userRepository.findOne.mockResolvedValue(user);
     });
 
     it('should return a list of users', async () => {
@@ -92,7 +96,7 @@ describe('UserService', () => {
     it('should return a user', async () => {
       const result = await userService.find('0');
 
-      expect(result).toBe(user);
+      expect(result).toStrictEqual(FindUserDto.from(user));
       expect(userRepository.findOne).toHaveBeenCalled();
     });
 
@@ -118,10 +122,8 @@ describe('UserService', () => {
     };
 
     beforeEach(() => {
-      userRepository.save.mockClear();
-      userTypeRepository.findOneBy.mockClear();
-      userRepository.save.mockImplementationOnce(() => user);
-      userTypeRepository.findOneBy.mockImplementationOnce(() => userType);
+      userRepository.save.mockResolvedValueOnce(user);
+      userTypeRepository.findOneBy.mockResolvedValueOnce(userType);
     });
 
     it('should create successfully a user ', async () => {
@@ -143,11 +145,15 @@ describe('UserService', () => {
       id: '0',
       name: 'test',
     };
+    const userType = {
+      id: 0,
+      description: 'test',
+    };
 
-    beforeEach(() => {
-      userRepository.findOneBy.mockClear();
-      userRepository.update.mockClear();
-      userRepository.findOneBy.mockImplementationOnce(() => user);
+    beforeAll(() => {
+      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.update.mockResolvedValue({ affected: 1 });
+      userTypeRepository.findOneBy.mockResolvedValue(userType);
     });
 
     it('should update the user ', async () => {
@@ -156,6 +162,7 @@ describe('UserService', () => {
       expect(result).toBe(user);
       expect(userRepository.update).toHaveBeenCalled();
       expect(userRepository.findOneBy).toHaveBeenCalled();
+      expect(userTypeRepository.findOneBy).toHaveBeenCalled();
     });
 
     it('should update the user token', async () => {
@@ -170,16 +177,13 @@ describe('UserService', () => {
   describe('Delete', () => {
     const userId = '0';
     beforeEach(() => {
-      userRepository.softDelete.mockClear();
-      userRepository.softDelete.mockImplementationOnce(() => ({
-        affected: 1,
-      }));
+      userRepository.softDelete.mockResolvedValueOnce({ affected: 1 });
     });
 
     it('should delete the user ', async () => {
       const result = await userService.delete(userId);
 
-      expect(result).toBeTruthy();
+      expect(result).toBe(true);
       expect(userRepository.softDelete).toHaveBeenCalled();
     });
   });

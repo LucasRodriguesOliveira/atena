@@ -8,6 +8,7 @@ export const typeOrmModuleConfig = (entities): TypeOrmModuleAsyncOptions => ({
   useFactory: async (configService: ConfigService) => {
     const { database, host, password, port, username } =
       configService.get<TypeOrmConfig>('database');
+    const { NODE_ENV: env } = process.env;
 
     return {
       type: 'postgres',
@@ -18,6 +19,7 @@ export const typeOrmModuleConfig = (entities): TypeOrmModuleAsyncOptions => ({
       database,
       synchronize: true,
       entities,
+      logging: !['develop', 'dev', 'development'].includes(env),
     };
   },
 });

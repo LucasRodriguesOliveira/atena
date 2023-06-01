@@ -1,23 +1,24 @@
-import { Repository } from 'typeorm';
-import { MockType } from '../../../test/utils/mock-type';
 import { UserService } from '../user/user.service';
 import { JWTService } from './jwt.service';
 import { User } from '../user/entity/user.entity';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { repositoryMockFactory } from '../../../test/utils/repository-mock-factory';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserType } from '../user-type/entity/user-type.entity';
 import { UserTypeService } from '../user-type/user-type.service';
 import { HttpException } from '@nestjs/common';
+import { FindUserDto } from '../user/dto/find-user.dto';
 
 describe.only('JwtService', () => {
   let jwtService: JWTService;
   let userService: UserService;
   let userTypeService: UserTypeService;
-  let userRepository: MockType<Repository<User>>;
-  let userTypeRepository: MockType<Repository<UserType>>;
+
+  const userRepository = {
+    findOne: jest.fn(),
+  };
+  const userTypeRepository = {};
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -27,11 +28,11 @@ describe.only('JwtService', () => {
         UserTypeService,
         {
           provide: getRepositoryToken(User),
-          useFactory: repositoryMockFactory,
+          useValue: userRepository,
         },
         {
           provide: getRepositoryToken(UserType),
-          useFactory: repositoryMockFactory,
+          useValue: userTypeRepository,
         },
         {
           provide: ConfigService,
@@ -59,17 +60,9 @@ describe.only('JwtService', () => {
     jwtService = moduleRef.get<JWTService>(JWTService);
     userService = moduleRef.get<UserService>(UserService);
     userTypeService = moduleRef.get<UserTypeService>(UserTypeService);
-    userRepository = moduleRef.get<MockType<Repository<User>>>(
-      getRepositoryToken(User),
-    );
-    userTypeRepository = moduleRef.get<MockType<Repository<UserType>>>(
-      getRepositoryToken(UserType),
-    );
   });
 
   it('should be defined', () => {
-    expect(userTypeRepository).toBeDefined();
-    expect(userRepository).toBeDefined();
     expect(userService).toBeDefined();
     expect(userTypeService).toBeDefined();
     expect(jwtService).toBeDefined();
@@ -77,14 +70,27 @@ describe.only('JwtService', () => {
 
   describe('validate', () => {
     describe('successfully validates', () => {
-      const user = {
+      const user: User = {
         id: '0',
         name: 'test',
+        username: 'test.test',
+        type: {
+          id: 0,
+          description: 'test',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+          users: [],
+        },
+        password: 'test',
+        token: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
       };
 
       beforeEach(() => {
-        userRepository.findOne.mockClear();
-        userRepository.findOne.mockImplementationOnce(() => user);
+        userRepository.findOne.mockResolvedValueOnce(user);
       });
 
       it('should validate a jwt token returning a user', async () => {
@@ -92,14 +98,13 @@ describe.only('JwtService', () => {
           id: '0',
         });
 
-        expect(result).toBe(user);
+        expect(result).toStrictEqual(FindUserDto.from(user));
       });
     });
 
     describe('throws an error', () => {
       beforeEach(() => {
-        userRepository.findOne.mockClear();
-        userRepository.findOne.mockImplementationOnce(() => ({}));
+        userRepository.findOne.mockResolvedValueOnce({});
       });
 
       it('should thrown an error for not finding a user', async () => {

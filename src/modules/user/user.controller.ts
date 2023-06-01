@@ -10,15 +10,17 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entity/user.entity';
 import { UserService } from './user.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
 import { UserRole } from '../auth/decorator/user-type.decorator';
 import { UserTypeEnum } from '../user-type/type/user-type.enum';
+import { FindUserDto } from './dto/find-user.dto';
 
 @Controller('user')
 @ApiTags('user')
@@ -40,8 +42,26 @@ export class UserController {
 
   @Get(':userId')
   @UseGuards(JwtGuard)
-  public async find(@Param('userId') userId: string): Promise<User> {
-    return this.userService.find(userId);
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiResponse({
+    type: FindUserDto,
+    status: HttpStatus.OK,
+    description: 'Expected User to receive',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: HttpException,
+    description: 'User could not be found',
+  })
+  public async find(@Param('userId') userId: string): Promise<FindUserDto> {
+    const user = await this.userService.find(userId);
+
+    if (!user?.id) {
+      throw new HttpException('User could not be found', HttpStatus.NOT_FOUND);
+    }
+
+    return user;
   }
 
   @Put(':userId')

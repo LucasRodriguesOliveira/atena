@@ -6,6 +6,7 @@ import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionResponse } from './dto/update-permission-response.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { Permission } from './entity/permission.entity';
+import { ListPermissionDto } from './dto/list-permission.dto';
 
 @Injectable()
 export class PermissionService {
@@ -21,10 +22,14 @@ export class PermissionService {
     });
   }
 
-  public async list(): Promise<Permission[]> {
-    return this.permissionRepository.find({
+  public async list(): Promise<ListPermissionDto[]> {
+    const permissionList = await this.permissionRepository.find({
       select: ['id', 'description'],
     });
+
+    return permissionList.map((permission) =>
+      ListPermissionDto.from(permission),
+    );
   }
 
   public async create({

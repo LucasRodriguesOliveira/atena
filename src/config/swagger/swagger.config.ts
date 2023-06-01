@@ -15,7 +15,13 @@ export function createSwaggerConfig(
   const config = new DocumentBuilder()
     .setTitle(appName)
     .setDescription(description)
-    .setVersion(version);
+    .setVersion(version)
+    .addBearerAuth({
+      type: 'http',
+      description: 'token',
+      bearerFormat: 'JWT',
+      scheme: 'bearer',
+    });
 
   swaggerTags.forEach((tag) => {
     config.addTag(tag);

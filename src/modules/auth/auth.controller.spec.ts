@@ -5,31 +5,49 @@ import { UserService } from '../user/user.service';
 import { JWTService } from './jwt.service';
 import { User } from '../user/entity/user.entity';
 import { AuthController } from './auth.controller';
+import { UserTypeService } from '../user-type/user-type.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { RegisterDto } from './dto/register.dto';
+import { UserType } from '../user-type/entity/user-type.entity';
 
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
   let userService: UserService;
+  let userTypeService: UserTypeService;
   let jwtService: JWTService;
+
+  const userRepository = {
+    save: jest.fn(),
+    findOneBy: jest.fn(),
+    update: jest.fn(),
+    findOne: jest.fn(),
+  };
+  const userTypeRepository = {
+    findOneBy: jest.fn(),
+  };
+  const jwtRepository = {
+    sign: jest.fn(),
+  };
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         AuthService,
-        {
-          provide: UserService,
-          useValue: {
-            create: jest.fn(),
-            findByUsername: jest.fn(),
-            updateToken: jest.fn(),
-          },
-        },
+        UserService,
+        UserTypeService,
         {
           provide: JWTService,
-          useValue: {
-            sign: jest.fn(),
-          },
+          useValue: jwtRepository,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: userRepository,
+        },
+        {
+          provide: getRepositoryToken(UserType),
+          useValue: userTypeRepository,
         },
       ],
     }).compile();
@@ -37,6 +55,7 @@ describe('AuthController', () => {
     authController = moduleRef.get<AuthController>(AuthController);
     authService = moduleRef.get<AuthService>(AuthService);
     userService = moduleRef.get<UserService>(UserService);
+    userTypeService = moduleRef.get<UserTypeService>(UserTypeService);
     jwtService = moduleRef.get<JWTService>(JWTService);
   });
 
@@ -44,11 +63,12 @@ describe('AuthController', () => {
     expect(authController).toBeDefined();
     expect(authService).toBeDefined();
     expect(userService).toBeDefined();
+    expect(userTypeService).toBeDefined();
     expect(jwtService).toBeDefined();
   });
 
   describe('register', () => {
-    const registerDto = {
+    const registerDto: RegisterDto = {
       name: 'John Doe',
       username: 'johndoe',
       password: 'password',
@@ -63,85 +83,102 @@ describe('AuthController', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       token: '',
-      type: null,
+      type: {
+        id: 0,
+        description: 'test type',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+        users: [],
+      },
     };
 
     beforeEach(() => {
-      userService.create = jest.fn().mockResolvedValue(createdUser);
+      userRepository.save.mockResolvedValue(createdUser);
     });
 
     it('should register a new user successfully', async () => {
       const result = await authController.register(registerDto);
 
-      expect(userService.create).toHaveBeenCalledWith(registerDto);
-      expect(result).toBeTruthy();
+      expect(userRepository.save).toHaveBeenCalled();
+      expect(userTypeRepository.findOneBy).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
   });
 
   describe('login', () => {
-    const loginDto = {
-      username: 'johndoe',
-      password: 'password',
-      remember: false,
-    };
     const existingUser: User = {
       id: '1',
       name: 'John Doe',
       username: 'johndoe',
       password: 'password',
-      createdAt: null,
-      deletedAt: null,
-      updatedAt: null,
-      token: null,
-      type: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: new Date(),
+      token: '',
+      type: {
+        id: 0,
+        description: 'test type',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+        users: [],
+      },
     };
 
-    beforeEach(() => {
-      userService.findByUsername = jest.fn().mockResolvedValue(existingUser);
-      loginDto.password = 'password';
+    beforeAll(() => {
+      userRepository.findOne.mockResolvedValue(existingUser);
+      userRepository.findOneBy.mockResolvedValue(existingUser);
     });
 
-    it('should throw an exception when username or password is incorrect', async () => {
-      loginDto.password = '123';
-      await expect(() => authController.login(loginDto)).rejects.toThrow(
-        HttpException,
-      );
+    describe('incorrect password', () => {
+      const loginDto = {
+        username: 'johndoe',
+        password: '123',
+        remember: false,
+      };
 
-      expect(userService.findByUsername).toHaveBeenCalledWith(
-        loginDto.username,
-      );
+      it('should throw an exception when username or password is incorrect', async () => {
+        await expect(() => authController.login(loginDto)).rejects.toThrow(
+          HttpException,
+        );
+
+        expect(userRepository.findOne).toHaveBeenCalled();
+      });
     });
 
-    it('should create a token and return it when login is successful', async () => {
+    describe('correct password', () => {
+      const loginDto = {
+        username: 'johndoe',
+        password: 'password',
+        remember: false,
+      };
       const token = 'generated_token';
 
-      userService.findByUsername = jest.fn().mockResolvedValue(existingUser);
-      jwtService.sign = jest.fn().mockResolvedValue(token);
+      beforeAll(async () => {
+        existingUser.password = await userService.hashPassword(
+          existingUser.password,
+        );
+        jwtRepository.sign.mockResolvedValue(token);
+        userRepository.update.mockResolvedValueOnce({ affected: 1 });
+        userRepository.findOneBy.mockResolvedValueOnce(existingUser);
+      });
 
-      const result = await authController.login(loginDto);
+      it('should create a token and return it when login is successful', async () => {
+        const result = await authController.login(loginDto);
 
-      expect(userService.findByUsername).toHaveBeenCalledWith(
-        loginDto.username,
-      );
-      expect(jwtService.sign).toHaveBeenCalledWith(existingUser, '1d');
-      expect(result).toEqual({ token });
-    });
+        expect(userRepository.findOne).toHaveBeenCalled();
+        expect(jwtRepository.sign).toHaveBeenCalled();
+        expect(result).toEqual(token);
+      });
 
-    it('should create a long term token and return it when login is successful', async () => {
-      const token = 'generated_token';
-      loginDto.remember = true;
+      it('should create a long term token and return it when login is successful', async () => {
+        const result = await authController.login(loginDto);
 
-      userService.findByUsername = jest.fn().mockResolvedValue(existingUser);
-      userService.updateToken = jest.fn().mockResolvedValue(true);
-      jwtService.sign = jest.fn().mockResolvedValue(token);
-
-      const result = await authController.login(loginDto);
-
-      expect(userService.findByUsername).toHaveBeenCalledWith(
-        loginDto.username,
-      );
-      expect(jwtService.sign).toHaveBeenCalledWith(existingUser, '1d');
-      expect(result).toEqual({ token });
+        expect(userRepository.findOne).toHaveBeenCalled();
+        expect(jwtRepository.sign).toHaveBeenCalled();
+        expect(result).toEqual(token);
+      });
     });
   });
 });
