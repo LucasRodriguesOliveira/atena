@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Module as ModuleEntity } from '../entity/module.entity';
+import { Module } from '../entity/module.entity';
 
-export class CreateModuleResponse {
+export class FindModuleDto {
   @ApiProperty({
     type: Number,
     example: 1,
@@ -15,10 +15,17 @@ export class CreateModuleResponse {
   })
   description: string;
 
-  static from({ id, description }: ModuleEntity): CreateModuleResponse {
+  @ApiProperty({
+    type: Date,
+    example: new Date(),
+  })
+  createdAt: Date;
+
+  static from({ id, description, createdAt }: Module): FindModuleDto {
     return {
       id,
       description,
+      createdAt,
     };
   }
 }

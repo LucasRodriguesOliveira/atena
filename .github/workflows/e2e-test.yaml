@@ -1,4 +1,6 @@
-name: Unit test
+name: e2e test
+
+run-name: [${{ github.event_name }}] at ${{ github.ref_name }} - ${{ github.actor }}
 
 on:
   push:
