@@ -1,9 +1,10 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { migrations } from './migrations';
+import { sep } from 'path';
 
 const result = config({
-  path: `${process.cwd()}\\.env.test`,
+  path: `${process.cwd()}${sep}.env.test`,
 });
 
 console.log(result);
