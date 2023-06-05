@@ -1,4 +1,5 @@
-name: unit test
+name: unit_test
+
 run-name: [${{ github.event_name }}] at ${{ github.ref_name }} - ${{ github.actor }}
 
 on:

@@ -1,4 +1,5 @@
-name: e2e test
+name: e2e_test
+
 run-name: [${{ github.event_name }}] at ${{ github.ref_name }} - ${{ github.actor }}
 
 on:
