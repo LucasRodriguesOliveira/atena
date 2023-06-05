@@ -5,6 +5,7 @@ import { CreateUserTable1685914446039 } from './1685914446039-CreateUserTable';
 import { CreatePermissionGroup1685915534635 } from './1685915534635-CreatePermissionGroup';
 import { InsertUserTypeAdmin1685926970751 } from './1685926970751-InsertUserTypeAdmin';
 import { InsertUserTypeDefault1685927681434 } from './1685927681434-InsertUserTypeDefault';
+import { CreateCompanyTable1685952673621 } from './1685952673621-CreateCompanyTable';
 
 export const migrations = [
   CreateUserTypeTable1685899894356,
@@ -14,4 +15,5 @@ export const migrations = [
   CreatePermissionGroup1685915534635,
   InsertUserTypeAdmin1685926970751,
   InsertUserTypeDefault1685927681434,
+  CreateCompanyTable1685952673621,
 ];

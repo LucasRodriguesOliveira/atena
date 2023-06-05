@@ -55,6 +55,7 @@ Table PermissionGroup {
 Table Company {
   id             varchar       [pk, not null]
   name           varchar (50)  [not null]
+  displayName    varchar (50)  [not null]
   email          varchar (100) [not null]
   status         boolean       [not null, default: true]
   createdAt      timestamp     [not null, default: 'now()']
