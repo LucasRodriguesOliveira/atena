@@ -1,8 +1,10 @@
+import { PermissionGroup } from '../../permissionGroup/entity/permission-group.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,6 +16,12 @@ export class Permission {
 
   @Column({ type: 'varchar', length: 50 })
   description: string;
+
+  @OneToMany(
+    () => PermissionGroup,
+    (permissionGroup) => permissionGroup.permission,
+  )
+  permissionGroups: PermissionGroup[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

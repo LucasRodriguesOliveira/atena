@@ -4,6 +4,10 @@ import { Repository } from 'typeorm';
 import { CreateUserTypeDto } from './dto/create-user-type.dto';
 import { UpdateUserTypeDto } from './dto/update-user-type.dto';
 import { UserType } from './entity/user-type.entity';
+import { FindUserTypeDto } from './dto/find-user-type.dto';
+import { ListUserTypeResponse } from './dto/list-user-type-response.dto';
+import { CreateUserTypeResponse } from './dto/create-user-type-response.dto';
+import { UpdateUserTypeResponse } from './dto/update-user-type-response.dto';
 
 @Injectable()
 export class UserTypeService {
@@ -12,27 +16,44 @@ export class UserTypeService {
     private readonly userTypeRepository: Repository<UserType>,
   ) {}
 
-  public async list(): Promise<UserType[]> {
-    return this.userTypeRepository.find({
+  public async list(): Promise<ListUserTypeResponse[]> {
+    const userTypeList = await this.userTypeRepository.find({
       select: ['id', 'description'],
     });
+
+    return userTypeList.map((userType) => ListUserTypeResponse.from(userType));
   }
 
-  public async find(userTypeId: number): Promise<UserType> {
-    return this.userTypeRepository.findOneBy({ id: userTypeId });
+  public async find(userTypeId: number): Promise<FindUserTypeDto | null> {
+    const userType = await this.userTypeRepository.findOneBy({
+      id: userTypeId,
+    });
+
+    if (!userType?.id) {
+      return null;
+    }
+
+    return FindUserTypeDto.from(userType);
   }
 
-  public async create(createUserTypeDto: CreateUserTypeDto): Promise<UserType> {
-    return this.userTypeRepository.save(createUserTypeDto);
+  public async create(
+    createUserTypeDto: CreateUserTypeDto,
+  ): Promise<CreateUserTypeResponse> {
+    const userType = await this.userTypeRepository.save(createUserTypeDto);
+
+    return CreateUserTypeResponse.from(userType);
   }
 
   public async update(
     userTypeId: number,
     updateUserTypeDto: UpdateUserTypeDto,
-  ): Promise<UserType> {
+  ): Promise<UpdateUserTypeResponse> {
     await this.userTypeRepository.update({ id: userTypeId }, updateUserTypeDto);
+    const userType = await this.userTypeRepository.findOneBy({
+      id: userTypeId,
+    });
 
-    return this.userTypeRepository.findOneBy({ id: userTypeId });
+    return UpdateUserTypeResponse.from(userType);
   }
 
   public async delete(userTypeId: number): Promise<boolean> {

@@ -44,6 +44,7 @@ describe('PermissionService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        permissionGroups: [],
       };
 
       beforeAll(() => {
@@ -80,6 +81,7 @@ describe('PermissionService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        permissionGroups: [],
       },
       {
         id: 2,
@@ -87,6 +89,7 @@ describe('PermissionService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        permissionGroups: [],
       },
     ];
     const permissionListExpected = permissionList.map((permission) =>
@@ -112,6 +115,7 @@ describe('PermissionService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      permissionGroups: [],
     };
     const createPermissionDto: CreatePermissionDto = {
       description: 'test',
@@ -136,6 +140,7 @@ describe('PermissionService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      permissionGroups: [],
     };
 
     const updatePermissionDto: UpdatePermissionDto = {

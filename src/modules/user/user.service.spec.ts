@@ -85,6 +85,7 @@ describe('UserService', () => {
             updatedAt: new Date(),
             deletedAt: new Date(),
             users: [],
+            permissionGroups: [],
           },
           username: 'test.test',
           password: '123',
@@ -168,6 +169,7 @@ describe('UserService', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       users: [],
+      permissionGroups: [],
     };
 
     const user: User = {
@@ -182,8 +184,10 @@ describe('UserService', () => {
       deletedAt: new Date(),
     };
 
+    const expectedUser = UpdateUserResponseDto.from(user);
+
     beforeAll(() => {
-      userRepository.findOneBy.mockResolvedValue(user);
+      userRepository.findOne.mockResolvedValue(user);
       userRepository.update.mockResolvedValue({ affected: 1 });
       userTypeRepository.findOneBy.mockResolvedValue(userType);
     });
@@ -191,18 +195,18 @@ describe('UserService', () => {
     it('should update the user ', async () => {
       const result = await userService.update('0', { name: 'test' });
 
-      expect(result).toStrictEqual(UpdateUserResponseDto.from(user));
+      expect(result).toStrictEqual(expectedUser);
       expect(userRepository.update).toHaveBeenCalled();
-      expect(userRepository.findOneBy).toHaveBeenCalled();
+      expect(userRepository.findOne).toHaveBeenCalled();
       expect(userTypeRepository.findOneBy).toHaveBeenCalled();
     });
 
     it('should update the user token', async () => {
       const result = await userService.updateToken('0', 'test');
 
-      expect(result).toBe(user);
+      expect(result).toStrictEqual(expectedUser);
       expect(userRepository.update).toHaveBeenCalled();
-      expect(userRepository.findOneBy).toHaveBeenCalled();
+      expect(userRepository.findOne).toHaveBeenCalled();
     });
   });
 

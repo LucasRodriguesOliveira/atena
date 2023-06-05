@@ -5,6 +5,7 @@ COPY package*.json ./
 COPY yarn.lock ./
 
 RUN yarn
+RUN yarn add bcrypt
 
 COPY . .
 

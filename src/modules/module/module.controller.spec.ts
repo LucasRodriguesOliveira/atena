@@ -48,6 +48,7 @@ describe('ModuleController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        permissionGroups: [],
       };
 
       const expectedModule = FindModuleDto.from(moduleItem);
@@ -89,6 +90,7 @@ describe('ModuleController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        permissionGroups: [],
       },
       {
         id: 2,
@@ -96,6 +98,7 @@ describe('ModuleController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        permissionGroups: [],
       },
     ];
 
@@ -122,6 +125,7 @@ describe('ModuleController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      permissionGroups: [],
     };
     const expectedModuleItem = CreateModuleResponse.from(moduleItem);
     const createModuleDto: CreateModuleDto = {
@@ -147,6 +151,7 @@ describe('ModuleController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      permissionGroups: [],
     };
     const expectedModuleItem = UpdateModuleResponse.from(moduleItem);
     const updateModuleDto: UpdateModuleDto = {

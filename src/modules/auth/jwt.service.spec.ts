@@ -81,6 +81,7 @@ describe.only('JwtService', () => {
           updatedAt: new Date(),
           deletedAt: new Date(),
           users: [],
+          permissionGroups: [],
         },
         password: 'test',
         token: null,

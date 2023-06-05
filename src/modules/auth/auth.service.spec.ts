@@ -78,6 +78,7 @@ describe('AuthService', () => {
         updatedAt: new Date(),
         deletedAt: new Date(),
         users: [],
+        permissionGroups: [],
       },
     };
 
@@ -111,6 +112,7 @@ describe('AuthService', () => {
         updatedAt: new Date(),
         deletedAt: new Date(),
         users: [],
+        permissionGroups: [],
       },
     };
 

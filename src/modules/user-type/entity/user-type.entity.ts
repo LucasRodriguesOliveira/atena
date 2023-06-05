@@ -1,3 +1,4 @@
+import { PermissionGroup } from '../../permissionGroup/entity/permission-group.entity';
 import { User } from '../../../modules/user/entity/user.entity';
 import {
   Column,
@@ -19,6 +20,12 @@ export class UserType {
 
   @OneToMany(() => User, (user) => user.type)
   users: User[];
+
+  @OneToMany(
+    () => PermissionGroup,
+    (permissionGroup) => permissionGroup.userType,
+  )
+  permissionGroups: PermissionGroup[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

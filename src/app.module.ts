@@ -6,6 +6,8 @@ import { TypeormPostgresModule } from './modules/typeorm/typeorm.module';
 import { UserTypeModule } from './modules/user-type/user-type.module';
 import { UserModule } from './modules/user/user.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { ModuleModule } from './modules/module/module.module';
+import { PermissionGroupModule } from './modules/permissionGroup/permission-group.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { PermissionModule } from './modules/permission/permission.module';
     UserTypeModule,
     UserModule,
     PermissionModule,
+    ModuleModule,
+    PermissionGroupModule,
   ],
 })
 export class AppModule {}

@@ -4,5 +4,5 @@ export const swaggerTags: string[] = [
   'auth',
   'permission',
   'module',
-  'permission_group',
+  'permission-group',
 ];

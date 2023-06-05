@@ -90,6 +90,7 @@ describe('AuthController', () => {
         updatedAt: new Date(),
         deletedAt: new Date(),
         users: [],
+        permissionGroups: [],
       },
     };
 
@@ -123,6 +124,7 @@ describe('AuthController', () => {
         updatedAt: new Date(),
         deletedAt: new Date(),
         users: [],
+        permissionGroups: [],
       },
     };
 

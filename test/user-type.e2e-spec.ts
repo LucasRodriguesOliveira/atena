@@ -1,377 +1,332 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { envConfig } from '../src/config/env/env.config';
-import { typeOrmModuleConfig } from '../src/config/typeorm/typeorm-module.config';
-import { UserType } from '../src/modules/user-type/entity/user-type.entity';
-import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
-import { UserTypeModule } from '../src/modules/user-type/user-type.module';
-import { UserTypeService } from '../src/modules/user-type/user-type.service';
-import { UserResult } from '../src/modules/user/dto/user-result.dto';
-import { User } from '../src/modules/user/entity/user.entity';
-import * as request from 'supertest';
 import { AuthModule } from '../src/modules/auth/auth.module';
+import { UserType } from '../src/modules/user-type/entity/user-type.entity';
+import { UserTypeModule } from '../src/modules/user-type/user-type.module';
 import { UserModule } from '../src/modules/user/user.module';
-import { UserService } from '../src/modules/user/user.service';
+import * as request from 'supertest';
+import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
 import { CreateUserTypeDto } from '../src/modules/user-type/dto/create-user-type.dto';
 import { CreateUserTypeResponse } from '../src/modules/user-type/dto/create-user-type-response.dto';
 import { UpdateUserTypeDto } from '../src/modules/user-type/dto/update-user-type.dto';
-import { UpdateUserTypeResponse } from '../src/modules/user-type/dto/update-user-type-response.dto';
-import { getTokenFactory } from './utils/get-token';
+import { UserTypeController } from '../src/modules/user-type/user-type.controller';
+import { addRepository } from './utils/repository';
+import { createUserType } from './utils/create/create-user-type';
+import { removeAndCheck } from './utils/remove-and-check';
+import { removeUserType } from './utils/remove/remove-user-type';
+import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 
 describe('UserTypeController (e2e)', () => {
   let app: INestApplication;
+  let getToken: TokenFactoryResponse;
+
   const basePath = '/user-type';
-  const userService = {
-    findByUsername: jest.fn(),
-    find: jest.fn(),
-    hashPassword: jest.fn((password) => password),
-    comparePassword: jest.fn(),
+  const headers = {
+    auth: 'authorization',
   };
-  const userTypeService = {
-    list: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  };
-  let getToken: () => Promise<string>;
+
+  let userTypeController: UserTypeController;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(envConfig),
-        TypeOrmModule.forRootAsync(typeOrmModuleConfig([User, UserType])),
+        TypeormPostgresModule,
         AuthModule,
         UserModule,
         UserTypeModule,
       ],
-    })
-      .overrideProvider(UserTypeService)
-      .useValue(userTypeService)
-      .overrideProvider(UserService)
-      .useValue(userService)
-      .compile();
+    }).compile();
+
+    userTypeController =
+      moduleFixture.get<UserTypeController>(UserTypeController);
+
+    addRepository({
+      testingModule: moduleFixture,
+      name: [UserType.name],
+    });
 
     app = moduleFixture.createNestApplication();
-    getToken = getTokenFactory(app, userService);
-
     await app.init();
+
+    getToken = await getTokenFactory({
+      testingModule: moduleFixture,
+    });
   });
 
   afterAll(async () => {
+    await getToken.clear();
     await app.close();
   });
 
   describe('/', () => {
-    describe('GET', () => {
-      const userTypeList: Partial<UserType>[] = [
-        {
-          id: 0,
-          description: 'ADMIN',
-        },
-        {
-          id: 1,
-          description: 'DEFAULT',
-        },
-      ];
-
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .get(basePath)
-          .expect(HttpStatus.UNAUTHORIZED);
-      });
-
-      describe('FORBIDDEN', () => {
-        let token: string;
-        const userResult: UserResult = {
-          id: '0',
-          type: UserTypeEnum.DEFAULT,
-          name: 'test',
-          username: 'test.test',
-        };
-
-        beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(userResult);
-          token = await getToken();
-        });
-
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+    describe('(GET)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
           return request(app.getHttpServer())
             .get(basePath)
-            .set('authorization', token)
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
+      });
+
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        let token: string;
+
+        beforeAll(async () => {
+          token = await getToken.default();
+        });
+
+        it('should not allow access to the route due to user type is not admin', () => {
+          return request(app.getHttpServer())
+            .get(basePath)
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('OK', () => {
+      describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        const userResult: UserResult = {
-          id: '0',
-          type: UserTypeEnum.ADMIN,
-          name: 'test',
-          username: 'test.test',
-        };
+        let createUserTypeResponse: CreateUserTypeResponse;
 
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(userResult);
-          userTypeService.list.mockResolvedValueOnce(userTypeList);
-          token = await getToken();
+          token = await getToken.admin();
+          createUserTypeResponse = await createUserType({
+            userTypeController,
+          });
         });
 
-        it(`${HttpStatus.OK}`, () => {
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `UserType (${createUserTypeResponse.id})`,
+            removeFunction: async () =>
+              removeUserType({ id: createUserTypeResponse.id }),
+          });
+        });
+
+        it('should return a list of userTypes', () => {
           return request(app.getHttpServer())
             .get(basePath)
-            .set('authorization', token)
+            .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toStrictEqual(userTypeList);
+              expect(response.body).toHaveProperty('length');
+              expect(response.body.length).toBeGreaterThanOrEqual(1);
             });
         });
       });
     });
 
-    describe('POST', () => {
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .post(basePath)
-          .expect(HttpStatus.UNAUTHORIZED);
-      });
-
-      describe('FORBIDDEN', () => {
-        let token: string;
-        const userResult: UserResult = {
-          id: '0',
-          type: UserTypeEnum.DEFAULT,
-          name: 'test',
-          username: 'test.test',
-        };
-
-        beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(userResult);
-          token = await getToken();
-        });
-
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+    describe('(POST)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
           return request(app.getHttpServer())
             .post(basePath)
-            .set('authorization', token)
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
+      });
+
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        let token: string;
+
+        beforeAll(async () => {
+          token = await getToken.default();
+        });
+
+        it('should not allow access to the route due to user type is not admin', () => {
+          return request(app.getHttpServer())
+            .post(basePath)
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('CREATED', () => {
+      describe(`CREATED - ${HttpStatus.CREATED}`, () => {
         let token: string;
-        const userResult: UserResult = {
-          id: '0',
-          type: UserTypeEnum.ADMIN,
-          name: 'test',
-          username: 'test.test',
-        };
-        const createUserType: CreateUserTypeDto = {
-          description: 'new user type',
+
+        const createUserTypeDto: CreateUserTypeDto = {
+          description: 'test',
         };
 
-        const userType: UserType = {
-          id: 0,
-          description: createUserType.description,
-          createdAt: null,
-          deletedAt: null,
-          updatedAt: null,
-          users: [],
-        };
+        let userTypeId: number;
 
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(userResult);
-          userTypeService.create.mockResolvedValueOnce(userType);
-          token = await getToken();
+          token = await getToken.admin();
         });
 
-        it(`${HttpStatus.CREATED}`, () => {
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `UserType (${userTypeId})`,
+            removeFunction: async () => removeUserType({ id: userTypeId }),
+          });
+        });
+
+        it('should create a userType', () => {
           return request(app.getHttpServer())
             .post(basePath)
-            .set('authorization', token)
-            .send(createUserType)
+            .set(headers.auth, token)
+            .send(createUserTypeDto)
             .expect(HttpStatus.CREATED)
             .then((response) => {
-              expect(response.body).toStrictEqual(
-                CreateUserTypeResponse.from(userType),
-              );
+              expect(response.body).toHaveProperty('id');
+
+              userTypeId = response.body.id;
             });
         });
       });
 
-      describe('BAD_REQUEST', () => {
+      describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
         let token: string;
-        const userResult: UserResult = {
-          id: '0',
-          type: UserTypeEnum.ADMIN,
-          name: 'test',
-          username: 'test.test',
-        };
 
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(userResult);
-          token = await getToken();
+          token = await getToken.admin();
         });
 
-        it(`${HttpStatus.BAD_REQUEST}`, () => {
+        it('should throw an error due to the lack of data sent', () => {
           return request(app.getHttpServer())
             .post(basePath)
-            .set('authorization', token)
+            .set(headers.auth, token)
             .expect(HttpStatus.BAD_REQUEST);
         });
       });
     });
+  });
 
-    describe('/:userTypeId', () => {
-      const userTypeId = 1;
-      const path = `${basePath}/${userTypeId}`;
+  describe('/:userTypeId', () => {
+    const path = `${basePath}/:userTypeId`;
+    const pathTo = (userTypeId: number) =>
+      path.replace(/:userTypeId/, `${userTypeId}`);
 
-      describe('PUT', () => {
-        it(`${HttpStatus.UNAUTHORIZED}`, () => {
+    describe('(PUT)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
           return request(app.getHttpServer())
-            .put(path)
+            .put(pathTo(-1))
             .expect(HttpStatus.UNAUTHORIZED);
-        });
-
-        describe('FORBIDDEN', () => {
-          let token: string;
-          const userResult: UserResult = {
-            id: '0',
-            type: UserTypeEnum.DEFAULT,
-            name: 'test',
-            username: 'test.test',
-          };
-
-          beforeAll(async () => {
-            userService.find.mockResolvedValueOnce(userResult);
-            token = await getToken();
-          });
-
-          it(`${HttpStatus.FORBIDDEN}`, () => {
-            return request(app.getHttpServer())
-              .put(path)
-              .set('authorization', token)
-              .expect(HttpStatus.FORBIDDEN);
-          });
-        });
-
-        describe('BAD_REQUEST', () => {
-          let token: string;
-          const userResult: UserResult = {
-            id: '0',
-            type: UserTypeEnum.ADMIN,
-            name: 'test',
-            username: 'test.test',
-          };
-
-          beforeAll(async () => {
-            userService.find.mockResolvedValueOnce(userResult);
-            token = await getToken();
-          });
-
-          it(`${HttpStatus.BAD_REQUEST}`, () => {
-            return request(app.getHttpServer())
-              .put(path)
-              .set('authorization', token)
-              .expect(HttpStatus.BAD_REQUEST);
-          });
-        });
-
-        describe('OK', () => {
-          const updateUserType: UpdateUserTypeDto = {
-            description: 'update user type description',
-          };
-          let token: string;
-          const userType: UserType = {
-            id: 0,
-            description: updateUserType.description,
-            createdAt: null,
-            deletedAt: null,
-            updatedAt: null,
-            users: [],
-          };
-          const userResult: UserResult = {
-            id: '0',
-            type: UserTypeEnum.ADMIN,
-            name: 'test',
-            username: 'test.test',
-          };
-
-          beforeAll(async () => {
-            userService.find.mockResolvedValue(userResult);
-            userTypeService.update.mockResolvedValueOnce(userType);
-            token = await getToken();
-          });
-
-          it(`${HttpStatus.OK}`, () => {
-            return request(app.getHttpServer())
-              .put(path)
-              .set('authorization', token)
-              .send(updateUserType)
-              .expect(HttpStatus.OK)
-              .then((response) => {
-                expect(response.body).toStrictEqual(
-                  UpdateUserTypeResponse.from(userType),
-                );
-              });
-          });
         });
       });
 
-      describe('DELETE', () => {
-        it(`${HttpStatus.UNAUTHORIZED}`, () => {
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        let token: string;
+
+        beforeAll(async () => {
+          token = await getToken.default();
+        });
+
+        it('should not allow access to the route due to user type is not admin', () => {
           return request(app.getHttpServer())
-            .delete(path)
+            .put(pathTo(-1))
+            .set(headers.auth, token)
+            .expect(HttpStatus.FORBIDDEN);
+        });
+      });
+
+      describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
+        let token: string;
+
+        beforeAll(async () => {
+          token = await getToken.admin();
+        });
+
+        it('should throw an error due to the lack of data sent', () => {
+          return request(app.getHttpServer())
+            .put(pathTo(-1))
+            .set(headers.auth, token)
+            .expect(HttpStatus.BAD_REQUEST);
+        });
+      });
+
+      describe(`OK - ${HttpStatus.OK}`, () => {
+        let token: string;
+
+        const updateUserTypeDto: UpdateUserTypeDto = {
+          description: 'test',
+        };
+
+        let userType: CreateUserTypeResponse;
+
+        beforeAll(async () => {
+          token = await getToken.admin();
+          userType = await createUserType({
+            userTypeController,
+          });
+        });
+
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `UserType (${userType.id})`,
+            removeFunction: async () => removeUserType({ id: userType.id }),
+          });
+        });
+
+        it('should update a userType', () => {
+          return request(app.getHttpServer())
+            .put(pathTo(userType.id))
+            .set(headers.auth, token)
+            .send(updateUserTypeDto)
+            .expect(HttpStatus.OK)
+            .then((response) => {
+              expect(response.body).toHaveProperty('id', userType.id);
+              expect(response.body).toHaveProperty(
+                'description',
+                updateUserTypeDto.description,
+              );
+            });
+        });
+      });
+    });
+
+    describe('(DELETE)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
+          return request(app.getHttpServer())
+            .delete(pathTo(-1))
             .expect(HttpStatus.UNAUTHORIZED);
         });
+      });
 
-        describe('FORBIDDEN', () => {
-          let token: string;
-          const userResult: UserResult = {
-            id: '0',
-            type: UserTypeEnum.DEFAULT,
-            name: 'test',
-            username: 'test.test',
-          };
-          beforeAll(async () => {
-            userService.find.mockResolvedValue(userResult);
-            token = await getToken();
-          });
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        let token: string;
 
-          it(`${HttpStatus.FORBIDDEN}`, () => {
-            return request(app.getHttpServer())
-              .delete(path)
-              .set('authorization', token)
-              .expect(HttpStatus.FORBIDDEN);
+        beforeAll(async () => {
+          token = await getToken.default();
+        });
+
+        it('should not allow access to the route due to user type is not admin', () => {
+          return request(app.getHttpServer())
+            .delete(pathTo(-1))
+            .set(headers.auth, token)
+            .expect(HttpStatus.FORBIDDEN);
+        });
+      });
+
+      describe(`OK - ${HttpStatus.OK}`, () => {
+        let token: string;
+        let userType: CreateUserTypeResponse;
+
+        beforeAll(async () => {
+          token = await getToken.admin();
+          userType = await createUserType({
+            userTypeController,
           });
         });
 
-        describe('OK', () => {
-          let token: string;
-          const userResult: UserResult = {
-            id: '0',
-            type: UserTypeEnum.ADMIN,
-            name: 'test',
-            username: 'test.test',
-          };
-
-          beforeAll(async () => {
-            userService.find.mockResolvedValueOnce(userResult);
-            userTypeService.delete.mockResolvedValueOnce(true);
-            token = await getToken();
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `UserType (${userType.id})`,
+            removeFunction: async () => removeUserType({ id: userType.id }),
           });
+        });
 
-          it(`${HttpStatus.OK}`, () => {
-            return request(app.getHttpServer())
-              .delete(path)
-              .set('authorization', token)
-              .expect(HttpStatus.OK)
-              .then((response) => {
-                expect(JSON.parse(response.text)).toBe(true);
-              });
-          });
+        it(`${HttpStatus.OK}`, () => {
+          return request(app.getHttpServer())
+            .delete(pathTo(userType.id))
+            .set(headers.auth, token)
+            .expect(HttpStatus.OK)
+            .then((response) => {
+              expect(JSON.parse(response.text)).toBe(true);
+            });
         });
       });
     });
