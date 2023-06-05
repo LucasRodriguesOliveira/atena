@@ -123,7 +123,10 @@ describe('CompanyController', () => {
       };
 
       beforeEach(() => {
-        getManyAndCount.mockResolvedValueOnce(queryBuilderResult);
+        getManyAndCount.mockResolvedValueOnce([
+          queryBuilderResult.companies,
+          queryBuilderResult.count,
+        ]);
       });
 
       it('should return a paginated list of companies', async () => {
@@ -143,7 +146,10 @@ describe('CompanyController', () => {
       };
 
       beforeEach(() => {
-        getManyAndCount.mockResolvedValueOnce(queryBuilderResult);
+        getManyAndCount.mockResolvedValueOnce([
+          queryBuilderResult.companies,
+          queryBuilderResult.count,
+        ]);
       });
 
       it('should return a paginated list of active companies', async () => {
@@ -163,7 +169,10 @@ describe('CompanyController', () => {
       };
 
       beforeEach(() => {
-        getManyAndCount.mockResolvedValueOnce(queryBuilderResult);
+        getManyAndCount.mockResolvedValueOnce([
+          queryBuilderResult.companies,
+          queryBuilderResult.count,
+        ]);
       });
 
       it('should return a paginated list of inactive companies', async () => {
