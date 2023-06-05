@@ -41,7 +41,7 @@ export class CompanyController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: ListCompanyResponseDto,
+    type: [ListCompanyResponseDto],
     description: 'List of companies',
   })
   @UseGuards(JwtGuard, RoleGuard)
