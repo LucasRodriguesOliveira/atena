@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../entity/user.entity';
+import { randomUUID } from 'crypto';
 
 export class FindUserDto {
   @ApiProperty({
-    example: '3719923c-5d59-44fd-bbdd-6e35ac6f1937',
+    example: randomUUID(),
     type: String,
   })
   id: string;

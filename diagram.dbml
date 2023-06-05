@@ -8,8 +8,8 @@ Project Zeus {
 Table UserType {
   id          int          [pk, increment, not null]
   description varchar (50) [not null]
-  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt   timestamp    [not null, default: 'now()']
+  updatedAt   timestamp    [not null, default: 'now()']
   deletedAt   timestamp
 }
 
@@ -20,24 +20,24 @@ Table User {
   password   varchar (150) [not null]
   userTypeId int           [not null]
   token      varchar (150)
-  createdAt  timestamp     [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt  timestamp     [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt  timestamp     [not null, default: 'now()']
+  updatedAt  timestamp     [not null, default: 'now()']
   deletedAt  timestamp
 }
 
 Table Permission {
   id          int          [pk, increment, not null]
   description varchar (50) [not null]
-  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt   timestamp    [not null, default: 'now()']
+  updatedAt   timestamp    [not null, default: 'now()']
   deletedAt   timestamp
 }
 
 Table Module {
   id          int          [pk, increment, not null]
   description varchar (50) [not null]
-  createdAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt   timestamp    [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt   timestamp    [not null, default: 'now()']
+  updatedAt   timestamp    [not null, default: 'now()']
   deletedAt   timestamp
 }
 
@@ -47,20 +47,27 @@ Table PermissionGroup {
   permissionId int       [not null]
   moduleId     int       [not null]
   status       boolean   [not null, default: true]
-  createdAt    timestamp [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt    timestamp [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt    timestamp [not null, default: 'now()']
+  updatedAt    timestamp [not null, default: 'now()']
   deletedAt    timestamp
 }
 
 Table Company {
   id             varchar       [pk, not null]
   name           varchar (50)  [not null]
+  displayName    varchar (50)  [not null]
   email          varchar (100) [not null]
-  password       varchar (100) [not null]
   status         boolean       [not null, default: true]
-  createdAt      timestamp     [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt      timestamp     [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt      timestamp     [not null, default: 'now()']
+  updatedAt      timestamp     [not null, default: 'now()']
   deletedAt      timestamp
+}
+
+Table UserCompany {
+  id        int       [pk, increment, not null]
+  userId    int       [not null]
+  companyId int       [not null]
+  deletedAt timestamp
 }
 
 Table ServicePack {
@@ -69,16 +76,16 @@ Table ServicePack {
   description    varchar   (100) [not null]
   duration       int             [not null, default: 12, Note: 'in months']
   status         boolean         [not null, default: true]
-  createdAt      timestamp       [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt      timestamp       [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt      timestamp       [not null, default: 'now()']
+  updatedAt      timestamp       [not null, default: 'now()']
   deletedAt      timestamp
 }
 
 Table ServicePackItemType {
   id             int            [pk, increment, not null]
   description    varchar   (50) [not null]
-  createdAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt      timestamp      [not null, default: 'now()']
+  updatedAt      timestamp      [not null, default: 'now()']
 }
 
 Table ServicePackItem {
@@ -87,8 +94,8 @@ Table ServicePackItem {
   servicePackId  varchar        [not null]
   amount         int            [not null]
   status         boolean        [not null, default: true]
-  createdAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt      timestamp      [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt      timestamp      [not null, default: 'now()']
+  updatedAt      timestamp      [not null, default: 'now()']
   deletedAt      timestamp
 }
 
@@ -99,8 +106,8 @@ Table Contract {
   price         decimal (10, 4) [not null]
   expiresAt     date            [not null]
   status        boolean         [not null, default: true]
-  createdAt     timestamp       [not null, default: 'CURRENT_TIMESTAMP']
-  updatedAt     timestamp       [not null, default: 'CURRENT_TIMESTAMP']
+  createdAt     timestamp       [not null, default: 'now()']
+  updatedAt     timestamp       [not null, default: 'now()']
   deletedAt     timestamp
 }
 
@@ -112,3 +119,5 @@ Ref "ServicePackItem_ServicePackItemType_fk": ServicePackItem.itemTypeId < Servi
 Ref "ServicePackItem_ServicePack_fk": ServicePackItem.servicePackId < ServicePack.id
 Ref "Contract_ServicePack_fk": Contract.servicePackId < ServicePack.id
 Ref "Contract_Company_fk": Contract.companyId < Company.id
+Ref "UserCompany_User_fk": UserCompany.userId < User.id
+Ref "UserCompany_Company_fk": UserCompany.companyId < Company.id

@@ -13,14 +13,14 @@ const {
   DATABASE_HOST: host,
   DATABASE_USER: user,
   DATABASE_PASSWORD: pass,
-  DATABASE_PORT: port,
+  DATABASE_PORT: port = '5432',
   DATABASE_NAME: name,
 } = process.env;
 
 export const PostgresMigration = new DataSource({
   type: 'postgres',
   host,
-  port: parseInt(port, 10) || 5432,
+  port: parseInt(port, 10),
   username: user,
   password: pass,
   database: name,

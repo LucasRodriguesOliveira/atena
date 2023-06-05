@@ -8,6 +8,7 @@ import { UserModule } from './modules/user/user.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { ModuleModule } from './modules/module/module.module';
 import { PermissionGroupModule } from './modules/permissionGroup/permission-group.module';
+import { CompanyModule } from './modules/company/company.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PermissionGroupModule } from './modules/permissionGroup/permission-grou
     PermissionModule,
     ModuleModule,
     PermissionGroupModule,
+    CompanyModule,
   ],
 })
 export class AppModule {}

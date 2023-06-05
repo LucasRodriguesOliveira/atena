@@ -6,13 +6,15 @@ import { PermissionGroup } from '../../../src/modules/permissionGroup/entity/per
 import { Repository } from 'typeorm';
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Company } from '../../../src/modules/company/entity/company.entity';
 
 type RepositoryEntity =
   | Repository<Module>
   | Repository<Permission>
   | Repository<UserType>
   | Repository<User>
-  | Repository<PermissionGroup>;
+  | Repository<PermissionGroup>
+  | Repository<Company>;
 
 export const repository = new Map<string, RepositoryEntity>();
 
@@ -47,6 +49,10 @@ function addItem({ testingModule, name }: RepositoryItem) {
     item = testingModule.get<Repository<UserType>>(
       getRepositoryToken(UserType),
     );
+  }
+
+  if (name === Company.name) {
+    item = testingModule.get<Repository<Company>>(getRepositoryToken(Company));
   }
 
   if (name === PermissionGroup.name) {
