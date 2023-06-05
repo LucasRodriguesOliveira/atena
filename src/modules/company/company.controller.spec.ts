@@ -4,7 +4,7 @@ import { Company } from './entity/company.entity';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { FindCompanyResponseDto } from './dto/find-company-response.dto';
-import { PaginatedResult } from 'src/shared/paginated-result.interface';
+import { PaginatedResult } from '../../shared/paginated-result.interface';
 import { ListCompanyResponseDto } from './dto/list-company-response.dto';
 import { QueryListCompanyDto } from './dto/query-list-company.dto';
 import { CompanyStatusEnum } from './type/company-status.enum';
