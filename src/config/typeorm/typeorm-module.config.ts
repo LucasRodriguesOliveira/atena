@@ -19,7 +19,7 @@ export const typeOrmModuleConfig = (entities): TypeOrmModuleAsyncOptions => ({
       database,
       synchronize: true,
       entities,
-      logging: !['develop', 'dev', 'development'].includes(env),
+      logging: ['develop', 'dev', 'development'].includes(env),
     };
   },
 });

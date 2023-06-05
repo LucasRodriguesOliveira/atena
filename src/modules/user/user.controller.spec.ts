@@ -94,6 +94,7 @@ describe('UserController', () => {
             updatedAt: new Date(),
             deletedAt: new Date(),
             users: [],
+            permissionGroups: [],
           },
           username: 'test.test',
           password: '123',
@@ -145,6 +146,7 @@ describe('UserController', () => {
         updatedAt: new Date(),
         deletedAt: new Date(),
         users: [],
+        permissionGroups: [],
       },
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -152,7 +154,7 @@ describe('UserController', () => {
     };
 
     beforeEach(() => {
-      userRepository.findOneBy.mockResolvedValueOnce(user);
+      userRepository.findOne.mockResolvedValueOnce(user);
     });
 
     it('should update the user ', async () => {
@@ -160,7 +162,7 @@ describe('UserController', () => {
 
       expect(result).toStrictEqual(UpdateUserResponseDto.from(user));
       expect(userRepository.update).toHaveBeenCalled();
-      expect(userRepository.findOneBy).toHaveBeenCalled();
+      expect(userRepository.findOne).toHaveBeenCalled();
     });
   });
 

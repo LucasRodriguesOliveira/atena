@@ -2,16 +2,29 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Module as ModuleEntity } from '../entity/module.entity';
 
 export class UpdateModuleResponse {
-  @ApiProperty()
+  @ApiProperty({
+    type: Number,
+    example: 1,
+  })
   id: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: String,
+    example: 'Contract',
+    examples: ['Contract', 'User', 'Permission'],
+  })
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: Date,
+    example: new Date(),
+  })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: Date,
+    example: new Date(),
+  })
   updatedAt: Date;
 
   static from({

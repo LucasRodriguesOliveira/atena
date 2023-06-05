@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserType } from '../user-type/entity/user-type.entity';
 import { UserTypeService } from '../user-type/user-type.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
@@ -102,7 +101,7 @@ export class UserService {
     userTypeId,
     username,
   }: CreateUserDto): Promise<User> {
-    const userType: UserType = await this.userTypeService.find(userTypeId);
+    const userType = await this.userTypeService.find(userTypeId);
 
     return this.userRepository.save({
       name,
@@ -116,21 +115,36 @@ export class UserService {
     userId: string,
     { name, password, userTypeId, username }: UpdateUserDto,
   ): Promise<UpdateUserResponseDto> {
-    const userType: UserType = await this.userTypeService.find(userTypeId);
+    const userType = await this.userTypeService.find(userTypeId);
     await this.userRepository.update(
       { id: userId },
       { name, password, username, type: userType },
     );
 
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: {
+        type: true,
+      },
+    });
 
     return UpdateUserResponseDto.from(user);
   }
 
-  public async updateToken(userId: string, token: string): Promise<User> {
+  public async updateToken(
+    userId: string,
+    token: string,
+  ): Promise<UpdateUserResponseDto> {
     await this.userRepository.update({ id: userId }, { token });
 
-    return this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: {
+        type: true,
+      },
+    });
+
+    return UpdateUserResponseDto.from(user);
   }
 
   public async delete(userId: string): Promise<boolean> {

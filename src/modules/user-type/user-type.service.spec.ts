@@ -2,13 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserTypeService } from './user-type.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserType } from './entity/user-type.entity';
-import { repositoryMockFactory } from '../../../test/utils/repository-mock-factory';
-import { MockType } from '../../../test/utils/mock-type';
-import { Repository } from 'typeorm';
+import { FindUserTypeDto } from './dto/find-user-type.dto';
+import { ListUserTypeResponse } from './dto/list-user-type-response.dto';
+import { CreateUserTypeResponse } from './dto/create-user-type-response.dto';
+import { CreateUserTypeDto } from './dto/create-user-type.dto';
+import { UpdateUserTypeResponse } from './dto/update-user-type-response.dto';
+import { UpdateUserTypeDto } from './dto/update-user-type.dto';
 
 describe('UserTypeService', () => {
   let service: UserTypeService;
-  let repository: MockType<Repository<UserType>>;
+  const repository = {
+    find: jest.fn(),
+    findOneBy: jest.fn(),
+    save: jest.fn(),
+    update: jest.fn(),
+    softDelete: jest.fn(),
+  };
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -16,122 +25,119 @@ describe('UserTypeService', () => {
         UserTypeService,
         {
           provide: getRepositoryToken(UserType),
-          useFactory: repositoryMockFactory,
+          useValue: repository,
         },
       ],
     }).compile();
 
     service = moduleRef.get<UserTypeService>(UserTypeService);
-    repository = moduleRef.get<MockType<Repository<UserType>>>(
-      getRepositoryToken(UserType),
-    );
   });
 
   it('should be defined', () => {
-    expect(repository).toBeDefined();
     expect(service).toBeDefined();
   });
 
-  describe('Read', () => {
-    const userType = {
-      id: 0,
-      description: 'test',
-    };
+  const userType: UserType = {
+    id: 1,
+    description: 'test',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: new Date(),
+    users: [],
+    permissionGroups: [],
+  };
 
-    const userTypeList = [
-      userType,
-      {
-        id: 1,
-        description: 'test 2',
-      },
-    ];
+  describe('List', () => {
+    const userTypeExpected = ListUserTypeResponse.from(userType);
 
     beforeEach(() => {
-      repository.findOneBy.mockClear();
-      repository.find.mockClear();
-      repository.findOneBy.mockImplementationOnce(() => userType);
-      repository.find.mockImplementationOnce(() => userTypeList);
+      repository.find.mockResolvedValueOnce([userType]);
     });
 
     it('should return a list of user types', async () => {
       const result = await service.list();
 
-      expect(result).toHaveLength(2);
-      expect(result).toBe(userTypeList);
+      expect(result).toStrictEqual([userTypeExpected]);
       expect(repository.find).toHaveBeenCalled();
     });
+  });
 
-    it('should return a user type', async () => {
-      const result = await service.find(0);
+  describe('Find', () => {
+    describe('Success', () => {
+      const userTypeExpected = FindUserTypeDto.from(userType);
 
-      expect(result).toBe(userType);
-      expect(repository.findOneBy).toHaveBeenCalled();
+      beforeEach(() => {
+        repository.findOneBy.mockResolvedValueOnce(userType);
+      });
+
+      it('should return a user type', async () => {
+        const result = await service.find(userType.id);
+
+        expect(result).toStrictEqual(userTypeExpected);
+        expect(repository.findOneBy).toHaveBeenCalled();
+      });
+    });
+
+    describe('Fail', () => {
+      beforeEach(() => {
+        repository.findOneBy.mockResolvedValueOnce({});
+      });
+
+      it('should return null for not finding a user type', async () => {
+        const result = await service.find(userType.id);
+
+        expect(result).toBeNull();
+        expect(repository.findOneBy).toHaveBeenCalled();
+      });
     });
   });
 
   describe('Create', () => {
-    const userType: UserType = {
-      id: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: null,
-      description: 'test',
-      users: [],
+    const userTypeExpected = CreateUserTypeResponse.from(userType);
+    const createUserTypeDto: CreateUserTypeDto = {
+      description: userType.description,
     };
 
     beforeEach(() => {
-      repository.save.mockClear();
-      repository.save.mockImplementationOnce(() => userType);
+      repository.save.mockResolvedValueOnce(userType);
     });
 
     it('should create successfully a user type', async () => {
-      const result = await service.create({
-        description: 'test',
-      });
+      const result = await service.create(createUserTypeDto);
 
-      expect(result).toBe(userType);
+      expect(result).toStrictEqual(userTypeExpected);
       expect(repository.save).toHaveBeenCalled();
     });
   });
 
   describe('Update', () => {
-    const userType: UserType = {
-      id: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: null,
-      description: 'test',
-      users: [],
+    const userTypeExpected = UpdateUserTypeResponse.from(userType);
+    const updateUserTypeDto: UpdateUserTypeDto = {
+      description: userType.description,
     };
 
     beforeEach(() => {
-      repository.findOneBy.mockClear();
-      repository.update.mockClear();
-      repository.findOneBy.mockImplementationOnce(() => userType);
+      repository.findOneBy.mockResolvedValueOnce(userType);
     });
 
     it('should update the user type', async () => {
-      const result = await service.update(0, { description: 'test' });
+      const result = await service.update(userType.id, updateUserTypeDto);
 
-      expect(result).toBe(userType);
+      expect(result).toStrictEqual(userTypeExpected);
       expect(repository.update).toHaveBeenCalled();
       expect(repository.findOneBy).toHaveBeenCalled();
     });
   });
 
   describe('Delete', () => {
-    const userTypeId = 0;
     beforeEach(() => {
-      repository.softDelete.mockClear();
-      repository.softDelete.mockImplementationOnce(() => ({
-        affected: 1,
-      }));
+      repository.softDelete.mockResolvedValueOnce({ affected: 1 });
     });
 
     it('should delete the user type', async () => {
-      const result = await service.delete(userTypeId);
+      const result = await service.delete(userType.id);
 
-      expect(result).toBeTruthy();
+      expect(result).toBe(true);
       expect(repository.softDelete).toHaveBeenCalled();
     });
   });

@@ -1,229 +1,194 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { envConfig } from '../src/config/env/env.config';
-import { typeOrmModuleConfig } from '../src/config/typeorm/typeorm-module.config';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { Permission } from '../src/modules/permission/entity/permission.entity';
 import { PermissionModule } from '../src/modules/permission/permission.module';
-import { PermissionService } from '../src/modules/permission/permission.service';
-import { UserType } from '../src/modules/user-type/entity/user-type.entity';
-import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
 import { UserTypeModule } from '../src/modules/user-type/user-type.module';
-import { UserResult } from '../src/modules/user/dto/user-result.dto';
-import { User } from '../src/modules/user/entity/user.entity';
 import { UserModule } from '../src/modules/user/user.module';
-import { UserService } from '../src/modules/user/user.service';
 import * as request from 'supertest';
-import { getTokenFactory } from './utils/get-token';
+import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
 import { CreatePermissionDto } from '../src/modules/permission/dto/create-permission.dto';
 import { CreatePermissionResponse } from '../src/modules/permission/dto/create-permission-response.dto';
-import { FindPermissionDto } from '../src/modules/permission/dto/find-permission.dto';
-import { UpdatePermissionResponse } from '../src/modules/permission/dto/update-permission-response.dto';
 import { UpdatePermissionDto } from '../src/modules/permission/dto/update-permission.dto';
+import { PermissionController } from '../src/modules/permission/permission.controller';
+import { addRepository } from './utils/repository';
+import { createPermission } from './utils/create/create-permission';
+import { removeAndCheck } from './utils/remove-and-check';
+import { removePermission } from './utils/remove/remove-permission';
+import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 
 describe('PermissionController (e2e)', () => {
   let app: INestApplication;
+  let getToken: TokenFactoryResponse;
+
   const basePath = '/permission';
-  const userService = {
-    findByUsername: jest.fn(),
-    comparePassword: jest.fn(),
-    find: jest.fn(),
+  const headers = {
+    auth: 'authorization',
   };
-  const permissionService = {
-    list: jest.fn(),
-    create: jest.fn(),
-    find: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  };
-  let getToken: () => Promise<string>;
+
+  let permissionController: PermissionController;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(envConfig),
-        TypeOrmModule.forRootAsync(
-          typeOrmModuleConfig([User, UserType, Permission]),
-        ),
+        TypeormPostgresModule,
         AuthModule,
         UserModule,
         UserTypeModule,
         PermissionModule,
       ],
-    })
-      .overrideProvider(UserService)
-      .useValue(userService)
-      .overrideProvider(PermissionService)
-      .useValue(permissionService)
-      .compile();
+    }).compile();
+
+    permissionController =
+      moduleFixture.get<PermissionController>(PermissionController);
+
+    addRepository({
+      testingModule: moduleFixture,
+      name: [Permission.name],
+    });
 
     app = moduleFixture.createNestApplication();
-    getToken = getTokenFactory(app, userService);
-
     await app.init();
+
+    getToken = await getTokenFactory({
+      testingModule: moduleFixture,
+    });
   });
 
   afterAll(async () => {
+    await getToken.clear();
     await app.close();
   });
 
   describe('/', () => {
-    describe('GET', () => {
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .get(basePath)
-          .expect(HttpStatus.UNAUTHORIZED);
-      });
-
-      describe('FORBIDDEN', () => {
-        let token: string;
-
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.DEFAULT,
-          username: 'test',
-        };
-
-        beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
-        });
-
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+    describe('(GET)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
           return request(app.getHttpServer())
             .get(basePath)
-            .set('authorization', token)
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
+      });
+
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        let token: string;
+
+        beforeAll(async () => {
+          token = await getToken.default();
+        });
+
+        it('should not allow access to the route due to user type is not admin', () => {
+          return request(app.getHttpServer())
+            .get(basePath)
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('OK', () => {
+      describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
-
-        const permissionList = [
-          {
-            id: 0,
-            description: 'test',
-          },
-        ];
+        let createPermissionResponse: CreatePermissionResponse;
 
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          permissionService.list.mockResolvedValueOnce(permissionList);
-          token = await getToken();
+          token = await getToken.admin();
+          createPermissionResponse = await createPermission({
+            permissionController,
+          });
         });
 
-        it(`${HttpStatus.OK}`, () => {
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `Permission (${createPermissionResponse.id})`,
+            removeFunction: async () =>
+              removePermission({ id: createPermissionResponse.id }),
+          });
+        });
+
+        it('should return a list of permissions', () => {
           return request(app.getHttpServer())
             .get(basePath)
-            .set('authorization', token)
+            .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toStrictEqual(permissionList);
+              expect(response.body).toHaveProperty('length');
+              expect(response.body.length).toBeGreaterThanOrEqual(1);
             });
         });
       });
     });
 
-    describe('POST', () => {
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .post(basePath)
-          .expect(HttpStatus.UNAUTHORIZED);
-      });
-
-      describe('FORBIDDEN', () => {
-        let token: string;
-
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.DEFAULT,
-          username: 'test',
-        };
-
-        beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
-        });
-
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+    describe('(POST)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
           return request(app.getHttpServer())
             .post(basePath)
-            .set('authorization', token)
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
+      });
+
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        let token: string;
+
+        beforeAll(async () => {
+          token = await getToken.default();
+        });
+
+        it('should not allow access to the route due to user type is not admin', () => {
+          return request(app.getHttpServer())
+            .post(basePath)
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('OK', () => {
+      describe(`CREATED - ${HttpStatus.CREATED}`, () => {
         let token: string;
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
 
         const createPermissionDto: CreatePermissionDto = {
           description: 'test',
         };
 
-        const permissionResult = CreatePermissionResponse.from({
-          id: 0,
-          description: createPermissionDto.description,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: new Date(),
-        });
+        let permissionId: number;
 
         beforeAll(async () => {
-          permissionService.create.mockResolvedValueOnce(permissionResult);
-          token = await getToken();
+          token = await getToken.admin();
         });
 
-        beforeEach(() => {
-          userService.find.mockResolvedValueOnce(user);
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `Permission (${permissionId})`,
+            removeFunction: async () => removePermission({ id: permissionId }),
+          });
         });
 
-        it(`${HttpStatus.CREATED}`, () => {
+        it('should create a permission', () => {
           return request(app.getHttpServer())
             .post(basePath)
-            .set('authorization', token)
+            .set(headers.auth, token)
             .send(createPermissionDto)
             .expect(HttpStatus.CREATED)
             .then((response) => {
-              expect(response.body).toStrictEqual(permissionResult);
+              expect(response.body).toHaveProperty('id');
+
+              permissionId = response.body.id;
             });
         });
       });
 
-      describe('BAD_REQUEST', () => {
+      describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
         let token: string;
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
 
         beforeAll(async () => {
-          token = await getToken();
-          userService.find.mockResolvedValueOnce(user);
+          token = await getToken.admin();
         });
 
-        it(`${HttpStatus.BAD_REQUEST}`, () => {
+        it('should throw an error due to the lack of data sent', () => {
           return request(app.getHttpServer())
             .post(basePath)
-            .set('authorization', token)
+            .set(headers.auth, token)
             .expect(HttpStatus.BAD_REQUEST);
         });
       });
@@ -231,71 +196,66 @@ describe('PermissionController (e2e)', () => {
   });
 
   describe('/:permissionId', () => {
-    const permissionId = 1;
-    const path = `${basePath}/${permissionId}`;
+    const path = `${basePath}/:permissionId`;
+    const pathTo = (permissionId: number) =>
+      path.replace(/:permissionId/, `${permissionId}`);
 
-    describe('GET', () => {
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .get(path)
-          .expect(HttpStatus.UNAUTHORIZED);
+    describe('(GET)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
+          return request(app.getHttpServer())
+            .get(pathTo(-1))
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
       });
 
-      describe('FORBIDDEN', () => {
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
         let token: string;
 
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.DEFAULT,
-          username: 'test',
-        };
-
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.default();
         });
 
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+        it('should not allow access to the route due to user type is not admin', () => {
           return request(app.getHttpServer())
-            .get(path)
-            .set('authorization', token)
+            .get(pathTo(-1))
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('OK', () => {
+      describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
-        const permissionExpected = FindPermissionDto.from({
-          id: permissionId,
-          description: 'test',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: new Date(),
-        });
+        let createPermissionResponse: CreatePermissionResponse;
 
         beforeAll(async () => {
-          permissionService.find.mockResolvedValueOnce(permissionExpected);
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.admin();
+          createPermissionResponse = await createPermission({
+            permissionController,
+          });
+        });
+
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `Permission (${createPermissionResponse.id})`,
+            removeFunction: async () =>
+              removePermission({ id: createPermissionResponse.id }),
+          });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .get(path)
-            .set('authorization', token)
+            .get(pathTo(createPermissionResponse.id))
+            .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toHaveProperty('id', permissionExpected.id);
+              expect(response.body).toHaveProperty(
+                'id',
+                createPermissionResponse.id,
+              );
               expect(response.body).toHaveProperty(
                 'description',
-                permissionExpected.description,
+                createPermissionResponse.description,
               );
               expect(response.body).toHaveProperty('createdAt');
             });
@@ -303,98 +263,79 @@ describe('PermissionController (e2e)', () => {
       });
     });
 
-    describe('PUT', () => {
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .put(path)
-          .expect(HttpStatus.UNAUTHORIZED);
+    describe('(PUT)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
+          return request(app.getHttpServer())
+            .put(pathTo(-1))
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
       });
 
-      describe('FORBIDDEN', () => {
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
         let token: string;
 
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.DEFAULT,
-          username: 'test',
-        };
-
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.default();
         });
 
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+        it('should not allow access to the route due to user type is not admin', () => {
           return request(app.getHttpServer())
-            .put(path)
-            .set('authorization', token)
+            .put(pathTo(-1))
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('BAD_REQUEST', () => {
+      describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
         let token: string;
 
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
-
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.admin();
         });
 
-        it(`${HttpStatus.BAD_REQUEST}`, () => {
+        it('should throw an error due to the lack of data sent', () => {
           return request(app.getHttpServer())
-            .put(path)
-            .set('authorization', token)
+            .put(pathTo(-1))
+            .set(headers.auth, token)
             .expect(HttpStatus.BAD_REQUEST);
         });
       });
 
-      describe('OK', () => {
+      describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
-
-        const permissionExpected = UpdatePermissionResponse.from({
-          id: 1,
-          description: 'test',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: new Date(),
-        });
 
         const updatePermissionDto: UpdatePermissionDto = {
           description: 'test',
         };
 
+        let permission: CreatePermissionResponse;
+
         beforeAll(async () => {
-          permissionService.update.mockResolvedValueOnce(permissionExpected);
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.admin();
+          permission = await createPermission({
+            permissionController,
+          });
         });
 
-        it(`${HttpStatus.OK}`, () => {
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `Permission (${permission.id})`,
+            removeFunction: async () => removePermission({ id: permission.id }),
+          });
+        });
+
+        it('should update a permission', () => {
           return request(app.getHttpServer())
-            .put(path)
-            .set('authorization', token)
+            .put(pathTo(permission.id))
+            .set(headers.auth, token)
             .send(updatePermissionDto)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toHaveProperty('id', permissionExpected.id);
+              expect(response.body).toHaveProperty('id', permission.id);
               expect(response.body).toHaveProperty(
                 'description',
-                permissionExpected.description,
+                updatePermissionDto.description,
               );
               expect(response.body).toHaveProperty('createdAt');
               expect(response.body).toHaveProperty('updatedAt');
@@ -403,56 +344,52 @@ describe('PermissionController (e2e)', () => {
       });
     });
 
-    describe('DELETE', () => {
-      it(`${HttpStatus.UNAUTHORIZED}`, () => {
-        return request(app.getHttpServer())
-          .delete(path)
-          .expect(HttpStatus.UNAUTHORIZED);
+    describe('(DELETE)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a jwt token', () => {
+          return request(app.getHttpServer())
+            .delete(pathTo(-1))
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
       });
 
-      describe('FORBIDDEN', () => {
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
         let token: string;
 
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.DEFAULT,
-          username: 'test',
-        };
-
         beforeAll(async () => {
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.default();
         });
 
-        it(`${HttpStatus.FORBIDDEN}`, () => {
+        it('should not allow access to the route due to user type is not admin', () => {
           return request(app.getHttpServer())
-            .delete(path)
-            .set('authorization', token)
+            .delete(pathTo(-1))
+            .set(headers.auth, token)
             .expect(HttpStatus.FORBIDDEN);
         });
       });
 
-      describe('OK', () => {
+      describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-
-        const user: UserResult = {
-          id: '1',
-          name: 'test',
-          type: UserTypeEnum.ADMIN,
-          username: 'test',
-        };
+        let permission: CreatePermissionResponse;
 
         beforeAll(async () => {
-          permissionService.delete.mockResolvedValueOnce(true);
-          userService.find.mockResolvedValueOnce(user);
-          token = await getToken();
+          token = await getToken.admin();
+          permission = await createPermission({
+            permissionController,
+          });
+        });
+
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `Permission (${permission.id})`,
+            removeFunction: async () => removePermission({ id: permission.id }),
+          });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .delete(path)
-            .set('authorization', token)
+            .delete(pathTo(permission.id))
+            .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
               expect(JSON.parse(response.text)).toBe(true);

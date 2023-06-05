@@ -41,9 +41,7 @@ export class UserTypeController {
   public async create(
     @Body(ValidationPipe) createUserTypeDto: CreateUserTypeDto,
   ): Promise<CreateUserTypeResponse> {
-    const userType = await this.userTypeService.create(createUserTypeDto);
-
-    return CreateUserTypeResponse.from(userType);
+    return this.userTypeService.create(createUserTypeDto);
   }
 
   @Put(':userTypeId')
@@ -54,12 +52,7 @@ export class UserTypeController {
     @Param('userTypeId', ValidationPipe) userTypeId: number,
     @Body(ValidationPipe) updateUserTypeDto: UpdateUserTypeDto,
   ): Promise<UpdateUserTypeResponse> {
-    const userType = await this.userTypeService.update(
-      userTypeId,
-      updateUserTypeDto,
-    );
-
-    return UpdateUserTypeResponse.from(userType);
+    return this.userTypeService.update(userTypeId, updateUserTypeDto);
   }
 
   @Delete(':userTypeId')

@@ -1,44 +1,42 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { envConfig } from '../src/config/env/env.config';
-import { typeOrmModuleConfig } from '../src/config/typeorm/typeorm-module.config';
 import { AuthModule } from '../src/modules/auth/auth.module';
-import { User } from '../src/modules/user/entity/user.entity';
 import * as request from 'supertest';
-import { UserService } from '../src/modules/user/user.service';
 import { RegisterDto } from '../src/modules/auth/dto/register.dto';
-import { UserType } from '../src/modules/user-type/entity/user-type.entity';
 import { LoginDto } from '../src/modules/auth/dto/login.dto';
-import { JWTService } from '../src/modules/auth/jwt.service';
+import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
+import { createUser, register } from './utils/create/create-user';
+import { removeAndCheck } from './utils/remove-and-check';
+import { removeUser } from './utils/remove/remove-user';
+import { AuthController } from '../src/modules/auth/auth.controller';
+import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
+import { addRepository } from './utils/repository';
+import { User } from '../src/modules/user/entity/user.entity';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
-  const userService = {
-    create: jest.fn(),
-    findByUsername: jest.fn(),
-    comparePassword: jest.fn(),
-    updateToken: jest.fn(),
-    hashPassword: jest.fn((password) => password),
-  };
-  const jwtService = {
-    sign: jest.fn(),
-  };
+
+  const basePath = '/auth';
+
+  let authController: AuthController;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(envConfig),
-        TypeOrmModule.forRootAsync(typeOrmModuleConfig([User, UserType])),
+        TypeormPostgresModule,
         AuthModule,
       ],
-    })
-      .overrideProvider(UserService)
-      .useValue(userService)
-      .overrideProvider(JWTService)
-      .useValue(jwtService)
-      .compile();
+    }).compile();
+
+    authController = moduleFixture.get<AuthController>(AuthController);
+
+    addRepository({
+      testingModule: moduleFixture,
+      name: [User.name],
+    });
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -49,78 +47,113 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('/register', () => {
-    const body: RegisterDto = {
-      name: 'test',
-      username: 'test.test',
-      password: '12345',
-      userTypeId: 1,
-    };
+    const path = `${basePath}/register`;
 
-    const user = {
-      id: '0',
-      name: 'test',
-      username: 'test.test',
-    };
-
-    beforeEach(() => {
-      userService.create.mockResolvedValueOnce(user);
-    });
-
-    it(`POST - ${HttpStatus.OK}`, () => {
-      return request(app.getHttpServer())
-        .post('/auth/register')
-        .send(body)
-        .expect(HttpStatus.OK)
-        .then((response) => {
-          expect(JSON.parse(response.text)).toBe(true);
+    describe('(POST)', () => {
+      describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
+        it('should throw an error due to the lack of data sent', () => {
+          return request(app.getHttpServer())
+            .post(path)
+            .expect(HttpStatus.BAD_REQUEST);
         });
-    });
+      });
 
-    it(`POST - ${HttpStatus.BAD_REQUEST}`, () => {
-      return request(app.getHttpServer())
-        .post('/auth/register')
-        .expect(HttpStatus.BAD_REQUEST);
+      describe(`OK - ${HttpStatus.OK}`, () => {
+        const registerDto: RegisterDto = register.default;
+
+        beforeAll(() => {
+          registerDto.username = `${registerDto.username}/${Date.now()}`;
+        });
+
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `User (${registerDto.username})`,
+            removeFunction: async () =>
+              removeUser({ username: registerDto.username }),
+          });
+        });
+
+        it('should register a user and return true', () => {
+          return request(app.getHttpServer())
+            .post(path)
+            .send(registerDto)
+            .expect(HttpStatus.OK)
+            .then((response) => {
+              expect(JSON.parse(response.text)).toBe(true);
+            });
+        });
+      });
     });
   });
 
   describe('/login', () => {
-    const body: LoginDto = {
-      password: '12345',
-      remember: false,
-      username: 'test.test',
-    };
+    const path = `${basePath}/login`;
+    describe('(POST)', () => {
+      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
+        const loginDto: LoginDto = {
+          password: 'wrong password',
+          username: '',
+          remember: false,
+        };
 
-    const user = {
-      id: '0',
-      password: '12345',
-      token: null,
-    };
-
-    const token = 'token';
-
-    beforeEach(() => {
-      userService.findByUsername.mockResolvedValue(user);
-      userService.comparePassword.mockResolvedValueOnce(true);
-      userService.comparePassword.mockResolvedValueOnce(false);
-      userService.updateToken.mockResolvedValue(user);
-      jwtService.sign.mockResolvedValue(token);
-    });
-
-    it(`POST - ${HttpStatus.OK}`, () => {
-      return request(app.getHttpServer())
-        .post('/auth/login')
-        .send(body)
-        .expect(HttpStatus.OK)
-        .then((response) => {
-          expect(response.text).toEqual(token);
+        beforeAll(async () => {
+          loginDto.username = await createUser({
+            authController,
+            userType: UserTypeEnum.DEFAULT,
+            override: true,
+          });
         });
-    });
 
-    it(`POST - ${HttpStatus.FORBIDDEN}`, () => {
-      return request(app.getHttpServer())
-        .post('/auth/login')
-        .send({ ...body, password: 'wrong password' })
-        .expect(HttpStatus.FORBIDDEN);
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `User (${loginDto.username})`,
+            removeFunction: async () =>
+              removeUser({ username: loginDto.username }),
+          });
+        });
+
+        it('should throw an error for passing the wrong password', () => {
+          return request(app.getHttpServer())
+            .post(path)
+            .send(loginDto)
+            .expect(HttpStatus.FORBIDDEN);
+        });
+      });
+
+      describe(`OK - ${HttpStatus.OK}`, () => {
+        const loginDto: LoginDto = {
+          password: register.default.password,
+          username: '',
+          remember: false,
+        };
+
+        beforeAll(async () => {
+          loginDto.username = await createUser({
+            authController,
+            userType: UserTypeEnum.DEFAULT,
+            override: true,
+          });
+        });
+
+        afterAll(async () => {
+          await removeAndCheck({
+            name: `User (${loginDto.username})`,
+            removeFunction: async () =>
+              removeUser({ username: loginDto.username }),
+          });
+        });
+
+        it('should login successfully and get a access token', () => {
+          return request(app.getHttpServer())
+            .post(path)
+            .send(loginDto)
+            .expect(HttpStatus.OK)
+            .then((response) => {
+              expect(response.text).toBeTruthy();
+              expect(response.text.length).toBeGreaterThanOrEqual(50);
+            });
+        });
+      });
     });
   });
 });
