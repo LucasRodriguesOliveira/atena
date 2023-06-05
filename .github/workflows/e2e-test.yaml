@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: yarn --frozen-lockfile
       - run: yarn build
-      - run: yarn typeorm migration:run -- -d db/postgres.ts 
+      - run: yarn typeorm migration:run -- -d ./db/postgres.ts 
       - run: yarn test:e2e
         env:
           NODE_ENV: test
