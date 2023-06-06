@@ -8,6 +8,7 @@ import { UserController } from './user.controller';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 import { HttpException } from '@nestjs/common';
+import { ListUserResponseDto } from './dto/list-user-response.dto';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -56,28 +57,44 @@ describe('UserController', () => {
 
   describe('Read', () => {
     describe('List', () => {
-      const userList = [
-        { id: 1, name: 'test 1' },
-        { id: 2, name: 'test 2' },
-      ];
+      const user: User = {
+        id: '0',
+        name: 'test',
+        type: {
+          id: 0,
+          description: 'test type',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+          users: [],
+          permissionGroups: [],
+        },
+        userCompanies: [],
+        username: 'test.test',
+        password: '123',
+        token: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+      };
+
+      const expected = ListUserResponseDto.from([user]);
 
       beforeEach(() => {
-        userRepository.find.mockResolvedValueOnce(userList);
+        userRepository.find.mockResolvedValueOnce([user]);
       });
 
       it('should return a list of users', async () => {
         const result = await userController.list();
 
-        expect(result).toHaveLength(2);
-        expect(result).toBe(userList);
+        expect(result).toStrictEqual(expected);
         expect(userRepository.find).toHaveBeenCalled();
       });
 
       it('should return a list of users by name or username', async () => {
         const result = await userController.list('test', 'test');
 
-        expect(result).toHaveLength(2);
-        expect(result).toBe(userList);
+        expect(result).toStrictEqual(expected);
         expect(userRepository.find).toHaveBeenCalled();
       });
     });
@@ -87,6 +104,7 @@ describe('UserController', () => {
         const user: User = {
           id: '0',
           name: 'test',
+          userCompanies: [],
           type: {
             id: 0,
             description: 'test type',
@@ -139,6 +157,7 @@ describe('UserController', () => {
       username: 'test',
       password: 'test',
       token: null,
+      userCompanies: [],
       type: {
         id: 0,
         description: 'test',

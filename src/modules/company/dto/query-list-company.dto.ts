@@ -16,6 +16,7 @@ export class QueryListCompanyDto {
   @ApiProperty({
     type: String,
     example: 'Company co.',
+    required: false,
   })
   @IsString()
   @MaxLength(50)
@@ -25,7 +26,10 @@ export class QueryListCompanyDto {
   @ApiProperty({
     type: CompanyStatusEnum,
     example: CompanyStatusEnum.ACTIVE,
+    enum: CompanyStatusEnum,
     description: 'in the example, filters only active companies',
+    required: false,
+    default: CompanyStatusEnum.BOTH,
   })
   @IsEnum(CompanyStatusEnum)
   @IsOptional()
@@ -37,6 +41,7 @@ export class QueryListCompanyDto {
     description: 'page number',
     default: 0,
     minimum: 0,
+    required: true,
   })
   @IsNumber()
   @Min(0)

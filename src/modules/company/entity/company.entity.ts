@@ -1,8 +1,10 @@
+import { UserCompany } from './user-company.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,6 +25,9 @@ export class Company {
 
   @Column({ type: 'boolean', default: true })
   status: boolean;
+
+  @OneToMany(() => UserCompany, (userCompany) => userCompany.company)
+  userCompanies: UserCompany[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

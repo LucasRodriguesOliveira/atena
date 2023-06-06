@@ -31,11 +31,16 @@ import { CreateCompanyResponseDto } from './dto/create-company-response.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyResponseDto } from './dto/update-company-response.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { UserCompanyService } from './user-company.service';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Controller('company')
 @ApiTags('company')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) {}
+  constructor(
+    private readonly companyService: CompanyService,
+    private readonly userCompanyService: UserCompanyService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -58,6 +63,7 @@ export class CompanyController {
     type: CreateCompanyResponseDto,
     description: 'Company created',
   })
+  @ApiBearerAuth()
   public async create(
     @Body(ValidationPipe) createCompanyDto: CreateCompanyDto,
   ): Promise<CreateCompanyResponseDto> {
@@ -108,5 +114,35 @@ export class CompanyController {
     @Param('companyId', ValidationPipe) companyId: string,
   ): Promise<boolean> {
     return this.companyService.delete(companyId);
+  }
+
+  @Get(':companyId/user')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: [FindUsersDto],
+  })
+  @UseGuards(JwtGuard, RoleGuard)
+  @UserRole(UserTypeEnum.ADMIN)
+  public async findUsers(
+    @Param('companyId') companyId: string,
+  ): Promise<FindUsersDto[]> {
+    return this.userCompanyService.findUsers(companyId);
+  }
+
+  @Delete(':userCompanyId/user')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: Boolean,
+    description:
+      'Confirmation of the exclusion of the connection between company and user',
+  })
+  @UseGuards(JwtGuard, RoleGuard)
+  @UserRole(UserTypeEnum.ADMIN)
+  public async deleteUserCompany(
+    @Param('companyId', ValidationPipe) userCompanyId: number,
+  ): Promise<boolean> {
+    return this.userCompanyService.delete(userCompanyId);
   }
 }

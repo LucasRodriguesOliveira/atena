@@ -13,7 +13,6 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entity/user.entity';
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
@@ -27,6 +26,7 @@ import { UserRole } from '../auth/decorator/user-type.decorator';
 import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
+import { ListUserResponseDto } from './dto/list-user-response.dto';
 
 @Controller('user')
 @ApiTags('user')
@@ -34,12 +34,18 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard, RoleGuard)
   @UserRole(UserTypeEnum.ADMIN)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: [ListUserResponseDto],
+    description: 'List of users',
+  })
   public async list(
     @Query('name', ValidationPipe) name?: string,
     @Query('username', ValidationPipe) username?: string,
-  ): Promise<User[]> {
+  ): Promise<ListUserResponseDto[]> {
     return this.userService.list({
       name,
       username,
@@ -57,7 +63,6 @@ export class UserController {
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    type: HttpException,
     description: 'User could not be found',
   })
   public async find(@Param('userId') userId: string): Promise<FindUserDto> {
@@ -88,6 +93,11 @@ export class UserController {
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: Boolean,
+    description: 'confirmation of exclusion of the user',
+  })
   public async delete(@Param('userId') userId: string): Promise<boolean> {
     return this.userService.delete(userId);
   }

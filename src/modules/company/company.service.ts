@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Company } from './entity/company.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { FindCompanyResponseDto } from './dto/find-company-response.dto';
 import { QueryListCompanyDto } from './dto/query-list-company.dto';
 import { ListCompanyResponseDto } from './dto/list-company-response.dto';
@@ -40,26 +40,37 @@ export class CompanyService {
     status,
   }: QueryListCompanyDto): Promise<PaginatedResult<ListCompanyResponseDto>> {
     const maxResults = 10;
-    let queryBuilder = this.companyRepository.createQueryBuilder();
+    let query;
 
     if (name) {
-      queryBuilder = queryBuilder.where(
-        'name LIKE %:name OR displayName LIKE %:name',
-        { name },
-      );
+      query = [{ name: Like(name) }, { displayName: Like(name) }];
     }
 
-    switch (status) {
-      case CompanyStatusEnum.ACTIVE:
-        queryBuilder.andWhere('status = true');
-      case CompanyStatusEnum.INACTIVE:
-        queryBuilder.andWhere('status = false');
+    if (status) {
+      let statusQuery = {};
+      switch (status) {
+        case CompanyStatusEnum.ACTIVE:
+          statusQuery = { status: true };
+          break;
+        case CompanyStatusEnum.INACTIVE:
+          statusQuery = { status: false };
+          break;
+      }
+
+      if (Object.keys(statusQuery).length > 0) {
+        if (Array.isArray(query)) {
+          query.push(statusQuery);
+        } else {
+          query = statusQuery;
+        }
+      }
     }
 
-    const [companies, count] = await queryBuilder
-      .skip(page)
-      .take(maxResults)
-      .getManyAndCount();
+    const [companies, count] = await this.companyRepository.findAndCount({
+      where: query,
+      skip: page,
+      take: maxResults,
+    });
 
     return ListCompanyResponseDto.from({
       companies,
