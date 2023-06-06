@@ -8,6 +8,7 @@ import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Company } from '../../../src/modules/company/entity/company.entity';
 import { UserCompany } from '../../../src/modules/company/entity/user-company.entity';
+import { ServicePackItemType } from '../../../src/modules/service-pack-item-type/entity/service-pack-item-type.entity';
 
 type RepositoryEntity =
   | Repository<Module>
@@ -16,7 +17,8 @@ type RepositoryEntity =
   | Repository<User>
   | Repository<PermissionGroup>
   | Repository<Company>
-  | Repository<UserCompany>;
+  | Repository<UserCompany>
+  | Repository<ServicePackItemType>;
 
 export const repository = new Map<string, RepositoryEntity>();
 
@@ -30,46 +32,60 @@ interface RepositoryItem {
   name: string;
 }
 
-function addItem({ testingModule, name }: RepositoryItem) {
-  let item: RepositoryEntity;
+interface GetRepositoryOptions {
+  testingModule: TestingModule;
+  name: string;
+}
 
+function getRepository({
+  testingModule,
+  name,
+}: GetRepositoryOptions): RepositoryEntity {
   if (name === Module.name) {
-    item = testingModule.get<Repository<Module>>(getRepositoryToken(Module));
+    return testingModule.get<Repository<Module>>(getRepositoryToken(Module));
   }
 
   if (name === Permission.name) {
-    item = testingModule.get<Repository<Permission>>(
+    return testingModule.get<Repository<Permission>>(
       getRepositoryToken(Permission),
     );
   }
 
   if (name === User.name) {
-    item = testingModule.get<Repository<User>>(getRepositoryToken(User));
+    return testingModule.get<Repository<User>>(getRepositoryToken(User));
   }
 
   if (name === UserType.name) {
-    item = testingModule.get<Repository<UserType>>(
+    return testingModule.get<Repository<UserType>>(
       getRepositoryToken(UserType),
     );
   }
 
   if (name === Company.name) {
-    item = testingModule.get<Repository<Company>>(getRepositoryToken(Company));
+    return testingModule.get<Repository<Company>>(getRepositoryToken(Company));
   }
 
   if (name === PermissionGroup.name) {
-    item = testingModule.get<Repository<PermissionGroup>>(
+    return testingModule.get<Repository<PermissionGroup>>(
       getRepositoryToken(PermissionGroup),
     );
   }
 
   if (name === UserCompany.name) {
-    item = testingModule.get<Repository<UserCompany>>(
+    return testingModule.get<Repository<UserCompany>>(
       getRepositoryToken(UserCompany),
     );
   }
 
-  repository.set(name, item);
+  if (name === ServicePackItemType.name) {
+    return testingModule.get<Repository<ServicePackItemType>>(
+      getRepositoryToken(ServicePackItemType),
+    );
+  }
+}
+
+function addItem({ testingModule, name }: RepositoryItem) {
+  repository.set(name, getRepository({ testingModule, name }));
 }
 
 export function addRepository({ testingModule, name }: AddRepositoryOption) {

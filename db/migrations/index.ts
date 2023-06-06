@@ -7,6 +7,7 @@ import { InsertUserTypeAdmin1685926970751 } from './1685926970751-InsertUserType
 import { InsertUserTypeDefault1685927681434 } from './1685927681434-InsertUserTypeDefault';
 import { CreateCompanyTable1685952673621 } from './1685952673621-CreateCompanyTable';
 import { CreateUserCompanyTable1686013139886 } from './1686013139886-CreateUserCompanyTable';
+import { CreateServicePackItemType1686058866888 } from './1686058866888-CreateServicePackItemType';
 
 export const migrations = [
   CreateUserTypeTable1685899894356,
@@ -18,4 +19,5 @@ export const migrations = [
   InsertUserTypeDefault1685927681434,
   CreateCompanyTable1685952673621,
   CreateUserCompanyTable1686013139886,
+  CreateServicePackItemType1686058866888,
 ];
