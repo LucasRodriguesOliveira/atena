@@ -9,6 +9,7 @@ import { PermissionModule } from './modules/permission/permission.module';
 import { ModuleModule } from './modules/module/module.module';
 import { PermissionGroupModule } from './modules/permissionGroup/permission-group.module';
 import { CompanyModule } from './modules/company/company.module';
+import { ServicePackItemTypeModule } from './modules/service-pack-item-type/service-pack-item-type.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CompanyModule } from './modules/company/company.module';
     ModuleModule,
     PermissionGroupModule,
     CompanyModule,
+    ServicePackItemTypeModule,
   ],
 })
 export class AppModule {}
