@@ -71,14 +71,19 @@ Table UserCompany {
 }
 
 Table ServicePack {
-  id             varchar         [pk, not null]
-  name           varchar   (50)  [not null]
-  description    varchar   (100) [not null]
-  duration       int             [not null, default: 12, Note: 'in months']
-  status         boolean         [not null, default: true]
-  createdAt      timestamp       [not null, default: 'now()']
-  updatedAt      timestamp       [not null, default: 'now()']
-  deletedAt      timestamp
+  id                varchar           [pk, not null]
+  name              varchar   (50)    [not null]
+  description       varchar   (100)   [not null]
+  duration          int               [not null, default: 12, Note: 'in months']
+  subscriptionPrice decimal   (10, 4) [not null]
+  monthlyPayment    decimal   (10, 4) [not null]
+  lateFee           decimal   (10, 4) [not null]
+  monthlyFee        decimal   (10, 5) [not null]
+  status            boolean           [not null, default: true]
+  coinId            int               [not null, Note: 'Defines the main coin to make conversion to others, if needed']
+  createdAt         timestamp         [not null, default: 'now()']
+  updatedAt         timestamp         [not null, default: 'now()']
+  deletedAt         timestamp
 }
 
 Table ServicePackItemType {
@@ -100,15 +105,127 @@ Table ServicePackItem {
 }
 
 Table Contract {
-  id            varchar         [pk, not null]
-  servicePackId varchar         [not null]
-  companyId     varchar         [not null]
-  price         decimal (10, 4) [not null]
-  expiresAt     date            [not null]
-  status        boolean         [not null, default: true]
-  createdAt     timestamp       [not null, default: 'now()']
-  updatedAt     timestamp       [not null, default: 'now()']
-  deletedAt     timestamp
+  id                varchar           [pk, not null]
+  servicePackId     varchar           [not null]
+  companyId         varchar           [not null]
+  clientId          varchar           [not null]
+  subscriptionPrice decimal   (10, 4) [not null]
+  monthlyPayment    decimal   (10, 4) [not null]
+  lateFee           decimal   (10, 4) [not null]
+  monthlyFee        decimal   (10, 5) [not null]
+  expiresAt         date              [not null]
+  coinId            int               [not null]
+  status            boolean           [not null, default: true]
+  createdAt         timestamp         [not null, default: 'now()']
+  updatedAt         timestamp         [not null, default: 'now()']
+  deletedAt         timestamp
+}
+
+Table PaymentMethod {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  status      boolean      [not null, default: true]
+  createdAt   timestamp    [not null, default: 'now()']
+  updatedAt   timestamp    [not null, default: 'now()']
+  deletedAt   timestamp
+
+  note: 'Credit Card, Boleto, Cash, ...'
+}
+
+Table InstallmentType {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  status      boolean      [not null, default: true]
+  createdAt   timestamp    [not null, default: 'now()']
+  updatedAt   timestamp    [not null, default: 'now()']
+  deletedAt   timestamp
+
+  note: 'Subscription, Monthly Payment, Annual Payment'
+}
+
+Table Coin {
+  id          int             [pk, increment, not null]
+  name        varchar (50)    [not null]
+  acronym     varchar (3)     [not null]
+  value       decimal (10, 4) [not null, Note: 'Uses USD as base']
+  status      boolean         [not null, default: true]
+  createdAt   timestamp       [not null, default: 'now()']
+  updatedAt   timestamp       [not null, default: 'now()']
+  deletedAt   timestamp
+}
+
+Table Installment {
+  id                varchar           [pk, not null]
+  contractId        varchar           [not null]
+  installmentTypeId int               [not null]
+  paymentMethodId   int               [not null]
+  coinId            int               [not null]
+  value             decimal   (10, 4) [not null]
+  valuePaid         decimal   (10, 4) [not null]
+  expiresAt         datetime          [not null]
+  paidAt            timestamp         [not null]
+  createdAt         timestamp         [not null, default: 'now()']
+  updatedAt         timestamp         [not null, default: 'now()']
+  deletedAt         timestamp
+}
+
+Table Client {
+  id        varchar         [pk, not null]
+  name      varchar   (50)  [not null]
+  email     varchar   (100) [not null]
+  createdAt timestamp       [not null, default: 'now()']
+  updatedAt timestamp       [not null, default: 'now()']
+  deletedAt timestamp
+}
+
+Table ServiceStage {
+  id          int          [pk, increment, not null]
+  description varchar (50) [not null]
+  status      boolean      [not null, default: true]
+  createdAt   timestamp    [not null, default: 'now()']
+  updatedAt   timestamp    [not null, default: 'now()']
+  deletedAt   timestamp
+
+  note: 'Waiting for service, in attendance, refused services, accepted services, ...'
+}
+
+Table ClientService {
+  id             int       [pk, increment, not null]
+  clientId       varchar   [not null]
+  userId         varchar   [not null]
+  serviceStageId int       [not null]
+  createdAt      timestamp [not null, default: 'now()']
+  updatedAt      timestamp [not null, default: 'now()']
+  deletedAt      timestamp
+}
+
+Table ClientBlackListReason {
+  id          int            [pk, increment, not null]
+  title       varchar   (50) [not null]
+  details     text           [not null]
+  createdAt   timestamp      [not null, default: 'now()']
+  updatedAt   timestamp      [not null, default: 'now()']
+  deletedAt   timestamp
+}
+
+Table ClientBlackList {
+  id                      int       [pk, increment, not null]
+  clientId                varchar   [not null]
+  clientBlackListReasonId int       [not null]
+  createdAt               timestamp [not null, default: 'now()']
+  updatedAt               timestamp [not null, default: 'now()']
+  deletedAt               timestamp
+}
+
+Table SupportTicket {
+  id        varchar        [pk, not null]
+  clientId  varchar        [not null]
+  userId    varchar        [not null]
+  reason    varchar   (50) [not null]
+  details   text           [not null]
+  createdAt timestamp      [not null, default: 'now()']
+  updatedAt timestamp      [not null, default: 'now()']
+  deletedAt timestamp
 }
 
 Ref "User_UserType_fk": User.userTypeId < UserType.id
@@ -119,5 +236,17 @@ Ref "ServicePackItem_ServicePackItemType_fk": ServicePackItem.itemTypeId < Servi
 Ref "ServicePackItem_ServicePack_fk": ServicePackItem.servicePackId < ServicePack.id
 Ref "Contract_ServicePack_fk": Contract.servicePackId < ServicePack.id
 Ref "Contract_Company_fk": Contract.companyId < Company.id
+Ref "Contract_Client_fk": Contract.clientId < Client.id
 Ref "UserCompany_User_fk": UserCompany.userId < User.id
 Ref "UserCompany_Company_fk": UserCompany.companyId < Company.id
+Ref "Installment_PaymentMethod_fk": Installment.paymentMethodId < PaymentMethod.id
+Ref "Installment_InstallmentType_fk": Installment.installmentTypeId < InstallmentType.id
+Ref "Installment_Coin_fk": Installment.coinId < Coin.id
+Ref "Installment_Contract_fk": Installment.contractId < Contract.id
+Ref "ClientService_Client_fk": ClientService.clientId < Client.id
+Ref "ClientService_ServiceStage_fk": ClientService.serviceStageId < ServiceStage.id
+Ref "ClientService_User_fk": ClientService.userId < User.id
+Ref "ClientBlackList_ClientBlackListReason_fk": ClientBlackList.clientBlackListReasonId < ClientBlackListReason.id
+Ref "ClientBlackList_Client_fk": ClientBlackList.clientId < Client.id
+Ref "SupportTicket_Client_fk": SupportTicket.clientId < Client.id
+Ref "SupportTicket_User_fk": SupportTicket.userId < User.id
