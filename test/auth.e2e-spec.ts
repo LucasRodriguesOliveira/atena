@@ -101,6 +101,7 @@ describe('AuthController (e2e)', () => {
             authController,
             userType: UserTypeEnum.DEFAULT,
             override: true,
+            testName: 'auth.e2e',
           });
         });
 
@@ -132,6 +133,7 @@ describe('AuthController (e2e)', () => {
             authController,
             userType: UserTypeEnum.DEFAULT,
             override: true,
+            testName: 'auth.e2e',
           });
         });
 

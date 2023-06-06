@@ -26,13 +26,15 @@ import { RoleGuard } from '../auth/guard/role.guard';
 import { UserRole } from '../auth/decorator/user-type.decorator';
 import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { QueryListCompanyDto } from './dto/query-list-company.dto';
-import { PaginatedResult } from 'src/shared/paginated-result.interface';
+import { PaginatedResult } from '../../shared/paginated-result.interface';
 import { CreateCompanyResponseDto } from './dto/create-company-response.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyResponseDto } from './dto/update-company-response.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UserCompanyService } from './user-company.service';
 import { FindUsersDto } from './dto/find-users.dto';
+import { CreateUserCompanyResponseDto } from './dto/create-user-company-response.dto';
+import { CreateUserCompanyDto } from './dto/create-user-company.dto';
 
 @Controller('company')
 @ApiTags('company')
@@ -130,6 +132,21 @@ export class CompanyController {
     return this.userCompanyService.findUsers(companyId);
   }
 
+  @Post(':companyId/user')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    type: CreateUserCompanyResponseDto,
+  })
+  @UseGuards(JwtGuard, RoleGuard)
+  @UserRole(UserTypeEnum.ADMIN)
+  public async attachUser(
+    @Param('companyId', ValidationPipe) companyId: string,
+    @Body(ValidationPipe) createUserCompanyDto: CreateUserCompanyDto,
+  ): Promise<CreateUserCompanyResponseDto> {
+    return this.userCompanyService.attachUser(companyId, createUserCompanyDto);
+  }
+
   @Delete(':userCompanyId/user')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -140,9 +157,10 @@ export class CompanyController {
   })
   @UseGuards(JwtGuard, RoleGuard)
   @UserRole(UserTypeEnum.ADMIN)
-  public async deleteUserCompany(
-    @Param('companyId', ValidationPipe) userCompanyId: number,
+  public async deattachUser(
+    @Param('userCompanyId', ValidationPipe) userCompanyId: number,
   ): Promise<boolean> {
-    return this.userCompanyService.delete(userCompanyId);
+    console.log('userCompanyId', userCompanyId);
+    return this.userCompanyService.deattachUser(userCompanyId);
   }
 }

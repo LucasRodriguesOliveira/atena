@@ -16,6 +16,9 @@ import { CompanyController } from './company.controller';
 import { UserCompanyService } from './user-company.service';
 import { UserCompany } from './entity/user-company.entity';
 import { FindUsersDto } from './dto/find-users.dto';
+import { CreateUserCompanyDto } from './dto/create-user-company.dto';
+import { CreateUserCompanyResponseDto } from './dto/create-user-company-response.dto';
+import { User } from '../user/entity/user.entity';
 
 describe('CompanyController', () => {
   let controller: CompanyController;
@@ -23,6 +26,7 @@ describe('CompanyController', () => {
   const companyRepository = {
     findOne: jest.fn(),
     findAndCount: jest.fn(),
+    findOneBy: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     softDelete: jest.fn(),
@@ -30,6 +34,10 @@ describe('CompanyController', () => {
   const userCompanyRepository = {
     find: jest.fn(),
     delete: jest.fn(),
+    save: jest.fn(),
+  };
+  const userRepository = {
+    findOneBy: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -43,6 +51,7 @@ describe('CompanyController', () => {
           provide: getRepositoryToken(UserCompany),
           useValue: userCompanyRepository,
         },
+        { provide: getRepositoryToken(User), useValue: userRepository },
       ],
     }).compile();
 
@@ -319,6 +328,68 @@ describe('CompanyController', () => {
     });
   });
 
+  describe('Attach User to Company', () => {
+    const userCompany: UserCompany = {
+      id: 1,
+      createdAt: new Date(),
+      company: {
+        id: randomUUID(),
+        name: 'test',
+        displayName: 'test',
+        email: 'test',
+        status: true,
+        userCompanies: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+      },
+      user: {
+        id: randomUUID(),
+        name: 'test',
+        username: 'test',
+        password: 'test',
+        token: null,
+        type: {
+          id: 1,
+          description: 'test',
+          permissionGroups: [],
+          users: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+        },
+        userCompanies: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+      },
+    };
+
+    const createUserCompanyDto: CreateUserCompanyDto = {
+      userId: userCompany.user.id,
+    };
+
+    const expected = CreateUserCompanyResponseDto.from(userCompany);
+
+    beforeEach(() => {
+      companyRepository.findOneBy.mockResolvedValueOnce(userCompany.company);
+      userRepository.findOneBy.mockResolvedValueOnce(userCompany.user);
+      userCompanyRepository.save.mockResolvedValueOnce(userCompany);
+    });
+
+    it('should create a user company', async () => {
+      const result = await controller.attachUser(
+        userCompany.company.id,
+        createUserCompanyDto,
+      );
+
+      expect(result).toStrictEqual(expected);
+      expect(userRepository.findOneBy).toHaveBeenCalled();
+      expect(companyRepository.findOneBy).toHaveBeenCalled();
+      expect(userCompanyRepository.save).toHaveBeenCalled();
+    });
+  });
+
   describe('Delete User Company', () => {
     const userCompanyId = 1;
 
@@ -327,7 +398,7 @@ describe('CompanyController', () => {
     });
 
     it('should delete a user company by id', async () => {
-      const result = await controller.deleteUserCompany(userCompanyId);
+      const result = await controller.deattachUser(userCompanyId);
 
       expect(result).toBe(true);
       expect(userCompanyRepository.delete).toHaveBeenCalled();

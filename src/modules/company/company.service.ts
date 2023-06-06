@@ -6,7 +6,7 @@ import { FindCompanyResponseDto } from './dto/find-company-response.dto';
 import { QueryListCompanyDto } from './dto/query-list-company.dto';
 import { ListCompanyResponseDto } from './dto/list-company-response.dto';
 import { CompanyStatusEnum } from './type/company-status.enum';
-import { PaginatedResult } from 'src/shared/paginated-result.interface';
+import { PaginatedResult } from '../../shared/paginated-result.interface';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { CreateCompanyResponseDto } from './dto/create-company-response.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';

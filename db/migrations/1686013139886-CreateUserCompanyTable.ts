@@ -41,7 +41,7 @@ export class CreateUserCompanyTable1686013139886 implements MigrationInterface {
         referencedTableName: 'company',
       }),
       new TableForeignKey({
-        name: 'UserCompany_Company_fk',
+        name: 'UserCompany_User_fk',
         columnNames: ['userId'],
         referencedColumnNames: ['id'],
         referencedTableName: 'user',
