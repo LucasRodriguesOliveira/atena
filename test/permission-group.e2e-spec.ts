@@ -25,7 +25,7 @@ import { PermissionController } from '../src/modules/permission/permission.contr
 import { UserTypeController } from '../src/modules/user-type/user-type.controller';
 import { PermissionGroup } from '../src/modules/permissionGroup/entity/permission-group.entity';
 import { PermissionGroupController } from '../src/modules/permissionGroup/permission-group.controller';
-import { CreatePermissionGroupDto } from 'src/modules/permissionGroup/dto/create-permission-group.dto';
+import { CreatePermissionGroupDto } from '../src/modules/permissionGroup/dto/create-permission-group.dto';
 import { createPermission } from './utils/create/create-permission';
 import { createModule } from './utils/create/create-module';
 import { createUserType } from './utils/create/create-user-type';

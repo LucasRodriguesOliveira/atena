@@ -6,6 +6,7 @@ import { UserTypeService } from '../user-type/user-type.service';
 import { UserType } from '../user-type/entity/user-type.entity';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
+import { ListUserResponseDto } from './dto/list-user-response.dto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -44,20 +45,37 @@ describe('UserService', () => {
 
   describe('Read', () => {
     describe('List', () => {
-      const userList = [
-        { id: 1, name: 'test 1' },
-        { id: 2, name: 'test 2' },
-      ];
+      const user: User = {
+        id: '0',
+        name: 'test',
+        type: {
+          id: 0,
+          description: 'test type',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+          users: [],
+          permissionGroups: [],
+        },
+        userCompanies: [],
+        username: 'test.test',
+        password: '123',
+        token: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+      };
+
+      const expected = ListUserResponseDto.from([user]);
 
       beforeEach(() => {
-        userRepository.find.mockResolvedValueOnce(userList);
+        userRepository.find.mockResolvedValueOnce([user]);
       });
 
       it('should return a list of users', async () => {
         const result = await userService.list({});
 
-        expect(result).toHaveLength(2);
-        expect(result).toBe(userList);
+        expect(result).toStrictEqual(expected);
         expect(userRepository.find).toHaveBeenCalled();
       });
 
@@ -67,8 +85,7 @@ describe('UserService', () => {
           username: 'test',
         });
 
-        expect(result).toHaveLength(2);
-        expect(result).toBe(userList);
+        expect(result).toStrictEqual(expected);
         expect(userRepository.find).toHaveBeenCalled();
       });
     });
@@ -87,6 +104,7 @@ describe('UserService', () => {
             users: [],
             permissionGroups: [],
           },
+          userCompanies: [],
           username: 'test.test',
           password: '123',
           token: null,
@@ -178,6 +196,7 @@ describe('UserService', () => {
       password: 'test',
       username: 'test',
       token: null,
+      userCompanies: [],
       type: userType,
       createdAt: new Date(),
       updatedAt: new Date(),

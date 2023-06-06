@@ -4,7 +4,7 @@ import { Company } from './entity/company.entity';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { FindCompanyResponseDto } from './dto/find-company-response.dto';
-import { PaginatedResult } from 'src/shared/paginated-result.interface';
+import { PaginatedResult } from '../../shared/paginated-result.interface';
 import { ListCompanyResponseDto } from './dto/list-company-response.dto';
 import { QueryListCompanyDto } from './dto/query-list-company.dto';
 import { CompanyStatusEnum } from './type/company-status.enum';
@@ -16,17 +16,9 @@ import { UpdateCompanyResponseDto } from './dto/update-company-response.dto';
 describe('CompanyService', () => {
   let service: CompanyService;
 
-  const getManyAndCount = jest.fn();
   const repository = {
     findOne: jest.fn(),
-    createQueryBuilder: jest.fn(() => ({
-      addSelect: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      skip: jest.fn().mockReturnThis(),
-      take: jest.fn().mockReturnThis(),
-      getManyAndCount,
-    })),
+    findAndCount: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     softDelete: jest.fn(),
@@ -55,6 +47,7 @@ describe('CompanyService', () => {
         displayName: 'test',
         email: 'test',
         status: true,
+        userCompanies: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
@@ -97,6 +90,7 @@ describe('CompanyService', () => {
       displayName: 'test',
       email: 'test',
       status: true,
+      userCompanies: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -118,7 +112,7 @@ describe('CompanyService', () => {
       };
 
       beforeEach(() => {
-        getManyAndCount.mockResolvedValueOnce([
+        repository.findAndCount.mockResolvedValueOnce([
           queryBuilderResult.companies,
           queryBuilderResult.count,
         ]);
@@ -128,8 +122,7 @@ describe('CompanyService', () => {
         const result = await service.list(queryListCompanyDto);
 
         expect(result).toStrictEqual(expected);
-        expect(repository.createQueryBuilder).toHaveBeenCalled();
-        expect(getManyAndCount).toHaveBeenCalled();
+        expect(repository.findAndCount).toHaveBeenCalled();
       });
     });
 
@@ -141,7 +134,7 @@ describe('CompanyService', () => {
       };
 
       beforeEach(() => {
-        getManyAndCount.mockResolvedValueOnce([
+        repository.findAndCount.mockResolvedValueOnce([
           queryBuilderResult.companies,
           queryBuilderResult.count,
         ]);
@@ -151,8 +144,7 @@ describe('CompanyService', () => {
         const result = await service.list(queryListCompanyDto);
 
         expect(result).toStrictEqual(expected);
-        expect(repository.createQueryBuilder).toHaveBeenCalled();
-        expect(getManyAndCount).toHaveBeenCalled();
+        expect(repository.findAndCount).toHaveBeenCalled();
       });
     });
 
@@ -164,7 +156,7 @@ describe('CompanyService', () => {
       };
 
       beforeEach(() => {
-        getManyAndCount.mockResolvedValueOnce([
+        repository.findAndCount.mockResolvedValueOnce([
           queryBuilderResult.companies,
           queryBuilderResult.count,
         ]);
@@ -174,8 +166,7 @@ describe('CompanyService', () => {
         const result = await service.list(queryListCompanyDto);
 
         expect(result).toStrictEqual(expected);
-        expect(repository.createQueryBuilder).toHaveBeenCalled();
-        expect(getManyAndCount).toHaveBeenCalled();
+        expect(repository.findAndCount).toHaveBeenCalled();
       });
     });
   });
@@ -187,6 +178,7 @@ describe('CompanyService', () => {
       displayName: 'test',
       email: 'test',
       status: true,
+      userCompanies: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -219,6 +211,7 @@ describe('CompanyService', () => {
       displayName: 'test',
       email: 'test',
       status: true,
+      userCompanies: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),

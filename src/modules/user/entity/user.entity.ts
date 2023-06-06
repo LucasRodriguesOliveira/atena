@@ -1,4 +1,5 @@
-import { UserType } from '../../../modules/user-type/entity/user-type.entity';
+import { UserCompany } from '../../company/entity/user-company.entity';
+import { UserType } from '../../user-type/entity/user-type.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -34,6 +36,9 @@ export class User {
   })
   @ManyToOne(() => UserType, (userType) => userType.users)
   type: UserType;
+
+  @OneToMany(() => UserCompany, (userCompany) => userCompany.user)
+  userCompanies: UserCompany[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

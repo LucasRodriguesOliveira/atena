@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Company } from '../../../src/modules/company/entity/company.entity';
+import { UserCompany } from '../../../src/modules/company/entity/user-company.entity';
 
 type RepositoryEntity =
   | Repository<Module>
@@ -14,7 +15,8 @@ type RepositoryEntity =
   | Repository<UserType>
   | Repository<User>
   | Repository<PermissionGroup>
-  | Repository<Company>;
+  | Repository<Company>
+  | Repository<UserCompany>;
 
 export const repository = new Map<string, RepositoryEntity>();
 
@@ -58,6 +60,12 @@ function addItem({ testingModule, name }: RepositoryItem) {
   if (name === PermissionGroup.name) {
     item = testingModule.get<Repository<PermissionGroup>>(
       getRepositoryToken(PermissionGroup),
+    );
+  }
+
+  if (name === UserCompany.name) {
+    item = testingModule.get<Repository<UserCompany>>(
+      getRepositoryToken(UserCompany),
     );
   }
 

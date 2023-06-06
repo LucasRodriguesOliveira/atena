@@ -7,6 +7,7 @@ import { User } from '../user/entity/user.entity';
 import { Module as ModuleEntity } from '../module/entity/module.entity';
 import { PermissionGroup } from '../permissionGroup/entity/permission-group.entity';
 import { Company } from '../company/entity/company.entity';
+import { UserCompany } from '../company/entity/user-company.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { Company } from '../company/entity/company.entity';
         ModuleEntity,
         PermissionGroup,
         Company,
+        UserCompany,
       ]),
     ),
   ],

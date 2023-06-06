@@ -21,7 +21,12 @@ import { UserTypeService } from './user-type.service';
 import { CreateUserTypeResponse } from './dto/create-user-type-response.dto';
 import { ListUserTypeResponse } from './dto/list-user-type-response.dto';
 import { UpdateUserTypeResponse } from './dto/update-user-type-response.dto';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @Controller('user-type')
 @ApiTags('user-type')
@@ -31,6 +36,12 @@ export class UserTypeController {
   @Get()
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: [ListUserTypeResponse],
+    description: 'list of user types',
+  })
   public async list(): Promise<ListUserTypeResponse[]> {
     return this.userTypeService.list();
   }
@@ -38,6 +49,11 @@ export class UserTypeController {
   @Post()
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    type: CreateUserTypeResponse,
+  })
+  @HttpCode(HttpStatus.CREATED)
   public async create(
     @Body(ValidationPipe) createUserTypeDto: CreateUserTypeDto,
   ): Promise<CreateUserTypeResponse> {
@@ -48,6 +64,10 @@ export class UserTypeController {
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: UpdateUserTypeResponse,
+  })
   public async update(
     @Param('userTypeId', ValidationPipe) userTypeId: number,
     @Body(ValidationPipe) updateUserTypeDto: UpdateUserTypeDto,
@@ -59,6 +79,11 @@ export class UserTypeController {
   @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: Boolean,
+    description: 'confirmation of the exclusion of the user type',
+  })
   public async delete(
     @Param('userTypeId', ValidationPipe) userTypeId: number,
   ): Promise<boolean> {

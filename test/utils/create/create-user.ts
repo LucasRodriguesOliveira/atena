@@ -22,6 +22,7 @@ interface CreateUserOptions {
    * @returns random `username`
    */
   override?: boolean;
+  testName?: string;
 }
 
 export const registerDto: RegisterDto = {
@@ -58,6 +59,7 @@ export async function createUser({
   authController,
   userType,
   override = false,
+  testName = '',
 }: CreateUserOptions): Promise<string> {
   let user: RegisterDto;
 
@@ -70,7 +72,9 @@ export async function createUser({
   }
 
   if (override) {
-    user.username = `${user.username}/${Date.now()}`;
+    user.username = `${
+      user.username
+    }/${testName}/${new Date().getMilliseconds()}`;
   }
 
   await authController.register(user);

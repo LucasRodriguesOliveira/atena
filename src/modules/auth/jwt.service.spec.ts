@@ -85,6 +85,7 @@ describe.only('JwtService', () => {
         },
         password: 'test',
         token: null,
+        userCompanies: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
@@ -127,6 +128,7 @@ describe.only('JwtService', () => {
       createdAt: null,
       updatedAt: null,
       deletedAt: null,
+      userCompanies: [],
     };
     const token = 'test';
 

@@ -102,6 +102,7 @@ describe('UserController (e2e)', () => {
             authController,
             userType: UserTypeEnum.DEFAULT,
             override: true,
+            testName: 'user.e2e',
           });
         });
 
@@ -156,6 +157,8 @@ describe('UserController (e2e)', () => {
           username = await createUser({
             authController,
             userType: UserTypeEnum.DEFAULT,
+            override: true,
+            testName: 'user.e2e',
           });
 
           const userRepository = repository.get(User.name) as Repository<User>;
@@ -207,6 +210,8 @@ describe('UserController (e2e)', () => {
           username = await createUser({
             authController,
             userType: UserTypeEnum.DEFAULT,
+            override: true,
+            testName: 'user.e2e',
           });
           const userRepository = repository.get(User.name) as Repository<User>;
           const { id } = await userRepository.findOneBy({
@@ -272,6 +277,8 @@ describe('UserController (e2e)', () => {
           username = await createUser({
             authController,
             userType: UserTypeEnum.DEFAULT,
+            override: true,
+            testName: 'user.e2e',
           });
           const userRepository = repository.get(User.name) as Repository<User>;
           const { id } = await userRepository.findOneBy({

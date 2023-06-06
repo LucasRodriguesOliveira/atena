@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
+import { ListUserResponseDto } from './dto/list-user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -19,7 +20,9 @@ export class UserService {
     private readonly userTypeService: UserTypeService,
   ) {}
 
-  public async list(queryUserDto: QueryUserDto): Promise<User[]> {
+  public async list(
+    queryUserDto: QueryUserDto,
+  ): Promise<ListUserResponseDto[]> {
     let query = {};
 
     if (queryUserDto.name) {
@@ -34,7 +37,7 @@ export class UserService {
       };
     }
 
-    return this.userRepository.find({
+    const users = await this.userRepository.find({
       select: {
         id: true,
         name: true,
@@ -49,6 +52,8 @@ export class UserService {
         ...query,
       },
     });
+
+    return ListUserResponseDto.from(users);
   }
 
   public async find(userId: string): Promise<FindUserDto | null> {

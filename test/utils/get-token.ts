@@ -39,6 +39,7 @@ export function getFakeTokenFactory(
 
 interface RegisterOptions {
   authController: AuthController;
+  testName?: string;
 }
 
 interface RegisterResponse {
@@ -48,16 +49,19 @@ interface RegisterResponse {
 
 async function registerUser({
   authController,
+  testName,
 }: RegisterOptions): Promise<RegisterResponse> {
   const adminUsername = await createUser({
     authController,
     userType: UserTypeEnum.ADMIN,
     override: true,
+    testName,
   });
   const defaultUsername = await createUser({
     authController,
     userType: UserTypeEnum.DEFAULT,
     override: true,
+    testName,
   });
 
   return {
@@ -82,14 +86,17 @@ export interface TokenFactoryResponse {
 
 interface TokenFactoryOptions {
   testingModule: TestingModule;
+  testName?: string;
 }
 
 export async function getTokenFactory({
   testingModule,
+  testName,
 }: TokenFactoryOptions): Promise<TokenFactoryResponse> {
   const authController = testingModule.get<AuthController>(AuthController);
   const login: RegisterResponse = await registerUser({
     authController,
+    testName: `GetToken - ${testName}`,
   });
 
   addRepository({

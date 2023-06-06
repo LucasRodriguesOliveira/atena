@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
 import { Company } from '../entity/company.entity';
-import { PaginatedResult } from 'src/shared/paginated-result.interface';
+import { PaginatedResult } from '../../../shared/paginated-result.interface';
 
 export class ListCompanyResponseDto {
   @ApiProperty({
