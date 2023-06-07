@@ -10,6 +10,7 @@ import { ModuleModule } from './modules/module/module.module';
 import { PermissionGroupModule } from './modules/permissionGroup/permission-group.module';
 import { CompanyModule } from './modules/company/company.module';
 import { ServicePackItemTypeModule } from './modules/service-pack-item-type/service-pack-item-type.module';
+import { CoinModule } from './modules/coin/coin.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { ServicePackItemTypeModule } from './modules/service-pack-item-type/serv
     ModuleModule,
     PermissionGroupModule,
     CompanyModule,
-    ServicePackItemTypeModule,
+    CoinModule,
+    // ServicePackItemTypeModule,
   ],
 })
 export class AppModule {}

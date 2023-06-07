@@ -9,6 +9,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Company } from '../../../src/modules/company/entity/company.entity';
 import { UserCompany } from '../../../src/modules/company/entity/user-company.entity';
 import { ServicePackItemType } from '../../../src/modules/service-pack-item-type/entity/service-pack-item-type.entity';
+import { Coin } from '../../../src/modules/coin/entity/coin.entity';
 
 type RepositoryEntity =
   | Repository<Module>
@@ -18,7 +19,8 @@ type RepositoryEntity =
   | Repository<PermissionGroup>
   | Repository<Company>
   | Repository<UserCompany>
-  | Repository<ServicePackItemType>;
+  | Repository<ServicePackItemType>
+  | Repository<Coin>;
 
 export const repository = new Map<string, RepositoryEntity>();
 
@@ -75,6 +77,10 @@ function getRepository({
     return testingModule.get<Repository<UserCompany>>(
       getRepositoryToken(UserCompany),
     );
+  }
+
+  if (name === Coin.name) {
+    return testingModule.get<Repository<Coin>>(getRepositoryToken(Coin));
   }
 
   if (name === ServicePackItemType.name) {
