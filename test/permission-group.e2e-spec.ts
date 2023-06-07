@@ -7,16 +7,13 @@ import { PermissionGroupModule } from '../src/modules/permissionGroup/permission
 import { getTokenFactory, TokenFactoryResponse } from './utils/get-token';
 import { FindPermissionGroupDto } from '../src/modules/permissionGroup/dto/find-permission-group.dto';
 import { createPermissionGroup } from './utils/create/create-permission-group';
-import { removePermissionGroup } from './utils/remove/remove-permission-group';
 import * as request from 'supertest';
-import { removeAndCheck } from './utils/remove-and-check';
 import { UserModule } from '../src/modules/user/user.module';
 import { UserTypeModule } from '../src/modules/user-type/user-type.module';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { PermissionModule } from '../src/modules/permission/permission.module';
 import { ModuleModule } from '../src/modules/module/module.module';
 import { Module } from '../src/modules/module/entity/module.entity';
-import { addRepository } from './utils/repository';
 import { Permission } from '../src/modules/permission/entity/permission.entity';
 import { UserType } from '../src/modules/user-type/entity/user-type.entity';
 import { User } from '../src/modules/user/entity/user.entity';
@@ -29,9 +26,8 @@ import { CreatePermissionGroupDto } from '../src/modules/permissionGroup/dto/cre
 import { createPermission } from './utils/create/create-permission';
 import { createModule } from './utils/create/create-module';
 import { createUserType } from './utils/create/create-user-type';
-import { removePermission } from './utils/remove/remove-permission';
-import { removeModule } from './utils/remove/remove-module';
-import { removeUserType } from './utils/remove/remove-user-type';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('PermissionGroupController (e2e)', () => {
   let app: INestApplication;
@@ -46,6 +42,8 @@ describe('PermissionGroupController (e2e)', () => {
   let permissionController: PermissionController;
   let moduleController: ModuleController;
   let permissionGroupController: PermissionGroupController;
+
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -70,21 +68,22 @@ describe('PermissionGroupController (e2e)', () => {
       PermissionGroupController,
     );
 
-    addRepository({
-      testingModule: moduleFixture,
-      name: [
-        Module.name,
-        Permission.name,
-        UserType.name,
-        User.name,
-        PermissionGroup.name,
-      ],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([
+      new RepositoryItem(Module),
+      new RepositoryItem(Permission),
+      new RepositoryItem(UserType),
+      new RepositoryItem(User),
+      new RepositoryItem(PermissionGroup),
+    ]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    getToken = await getTokenFactory({ testingModule: moduleFixture });
+    getToken = await getTokenFactory({
+      testingModule: moduleFixture,
+      testName: 'PermissionGroup.e2e',
+    });
   });
 
   afterAll(async () => {
@@ -135,10 +134,8 @@ describe('PermissionGroupController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Permission Group [${permissionGroup.id}]`,
-            removeFunction: async () =>
-              removePermissionGroup({ permissionGroup }),
+          await repositoryManager.removeAndCheck(PermissionGroup.name, {
+            id: permissionGroup.id,
           });
         });
 
@@ -212,20 +209,14 @@ describe('PermissionGroupController (e2e)', () => {
 
         afterAll(async () => {
           await Promise.all([
-            removeAndCheck({
-              name: `Permission [${permissionGroup.permission.id}]`,
-              removeFunction: async () =>
-                removePermission({ id: permissionGroup.permission.id }),
+            repositoryManager.removeAndCheck(Permission.name, {
+              id: permissionGroup.permission.id,
             }),
-            removeAndCheck({
-              name: `Module [${permissionGroup.module.id}]`,
-              removeFunction: async () =>
-                removeModule({ id: permissionGroup.module.id }),
+            repositoryManager.removeAndCheck(Module.name, {
+              id: permissionGroup.module.id,
             }),
-            removeAndCheck({
-              name: `User Type [${permissionGroup.userType.id}]`,
-              removeFunction: async () =>
-                removeUserType({ id: permissionGroup.userType.id }),
+            repositoryManager.removeAndCheck(UserType.name, {
+              id: permissionGroup.userType.id,
             }),
           ]);
         });
@@ -284,10 +275,8 @@ describe('PermissionGroupController (e2e)', () => {
       });
 
       afterEach(async () => {
-        await removeAndCheck({
-          name: `Permission Group [${permissionGroup.id}]`,
-          removeFunction: async () =>
-            removePermissionGroup({ permissionGroup }),
+        await repositoryManager.removeAndCheck(PermissionGroup.name, {
+          id: permissionGroup.id,
         });
       });
 
@@ -346,10 +335,8 @@ describe('PermissionGroupController (e2e)', () => {
       });
 
       afterEach(async () => {
-        await removeAndCheck({
-          name: `Permission Group [${permissionGroup.id}]`,
-          removeFunction: async () =>
-            removePermissionGroup({ permissionGroup }),
+        await repositoryManager.removeAndCheck(PermissionGroup.name, {
+          id: permissionGroup.id,
         });
       });
 
@@ -414,10 +401,8 @@ describe('PermissionGroupController (e2e)', () => {
       });
 
       afterEach(async () => {
-        await removeAndCheck({
-          name: `Permission Group [${permissionGroup.id}]`,
-          removeFunction: async () =>
-            removePermissionGroup({ permissionGroup }),
+        await repositoryManager.removeAndCheck(PermissionGroup.name, {
+          id: permissionGroup.id,
         });
       });
 
@@ -496,23 +481,8 @@ describe('PermissionGroupController (e2e)', () => {
       });
 
       afterEach(async () => {
-        await removeAndCheck({
-          name: `Permission Group (${permissionGroupId})`,
-          removeFunction: async () =>
-            removePermissionGroup({
-              permissionGroup: {
-                id: permissionGroupId,
-                module: {
-                  id: createPermissionGroupDto.moduleId,
-                },
-                permission: {
-                  id: createPermissionGroupDto.permissionId,
-                },
-                userType: {
-                  id: createPermissionGroupDto.userTypeId,
-                },
-              },
-            }),
+        await repositoryManager.removeAndCheck(PermissionGroup.name, {
+          id: permissionGroupId,
         });
       });
 

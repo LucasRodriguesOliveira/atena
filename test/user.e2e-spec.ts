@@ -9,18 +9,13 @@ import { AuthModule } from '../src/modules/auth/auth.module';
 import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
 import { UpdateUserDto } from '../src/modules/user/dto/update-user.dto';
 import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
-import { addRepository, repository } from './utils/repository';
 import { createUser } from './utils/create/create-user';
 import { AuthController } from '../src/modules/auth/auth.controller';
-import { Repository } from 'typeorm';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeUser } from './utils/remove/remove-user';
 import { UserTypeModule } from '../src/modules/user-type/user-type.module';
-import { PermissionGroupModule } from '../src/modules/permissionGroup/permission-group.module';
-import { PermissionModule } from '../src/modules/permission/permission.module';
-import { ModuleModule } from '../src/modules/module/module.module';
 import { randomUUID } from 'crypto';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
@@ -33,6 +28,8 @@ describe('UserController (e2e)', () => {
 
   let authController: AuthController;
 
+  let repositoryManager: RepositoryManager;
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
@@ -41,18 +38,12 @@ describe('UserController (e2e)', () => {
         AuthModule,
         UserModule,
         UserTypeModule,
-        PermissionGroupModule,
-        PermissionModule,
-        ModuleModule,
       ],
     }).compile();
 
     authController = moduleFixture.get<AuthController>(AuthController);
-
-    addRepository({
-      testingModule: moduleFixture,
-      name: [User.name],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(User)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -107,10 +98,7 @@ describe('UserController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${username})`,
-            removeFunction: async () => removeUser({ username }),
-          });
+          await repositoryManager.removeAndCheck(User.name, { username });
         });
 
         it('should return a list of users', () => {
@@ -161,18 +149,14 @@ describe('UserController (e2e)', () => {
             testName: 'user.e2e',
           });
 
-          const userRepository = repository.get(User.name) as Repository<User>;
-          const { id } = await userRepository.findOneBy({
+          const user = await repositoryManager.find<User>(User.name, {
             username,
           });
-          userId = id;
+          userId = user.id;
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${username})`,
-            removeFunction: async () => removeUser({ username }),
-          });
+          await repositoryManager.removeAndCheck(User.name, { id: userId });
         });
 
         it('should find a user by id', () => {
@@ -213,18 +197,14 @@ describe('UserController (e2e)', () => {
             override: true,
             testName: 'user.e2e',
           });
-          const userRepository = repository.get(User.name) as Repository<User>;
-          const { id } = await userRepository.findOneBy({
+          const user = await repositoryManager.find<User>(User.name, {
             username,
           });
-          userId = id;
+          userId = user.id;
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${username})`,
-            removeFunction: async () => removeUser({ username }),
-          });
+          await repositoryManager.removeAndCheck(User.name, { id: userId });
         });
 
         it('should update a user', () => {
@@ -280,18 +260,14 @@ describe('UserController (e2e)', () => {
             override: true,
             testName: 'user.e2e',
           });
-          const userRepository = repository.get(User.name) as Repository<User>;
-          const { id } = await userRepository.findOneBy({
+          const user = await repositoryManager.find<User>(User.name, {
             username,
           });
-          userId = id;
+          userId = user.id;
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${username})`,
-            removeFunction: async () => removeUser({ username }),
-          });
+          await repositoryManager.removeAndCheck(User.name, { id: userId });
         });
 
         it('should delete a user', () => {

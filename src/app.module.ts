@@ -9,7 +9,8 @@ import { PermissionModule } from './modules/permission/permission.module';
 import { ModuleModule } from './modules/module/module.module';
 import { PermissionGroupModule } from './modules/permissionGroup/permission-group.module';
 import { CompanyModule } from './modules/company/company.module';
-import { ServicePackItemTypeModule } from './modules/service-pack-item-type/service-pack-item-type.module';
+import { ServicePackItemTypeModule } from './modules/service-pack/item-type/service-pack-item-type.module';
+import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ServicePackItemTypeModule } from './modules/service-pack-item-type/serv
     PermissionGroupModule,
     CompanyModule,
     ServicePackItemTypeModule,
+    PaymentMethodModule,
   ],
 })
 export class AppModule {}

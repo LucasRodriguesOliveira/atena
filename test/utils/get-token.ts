@@ -4,11 +4,10 @@ import { LoginDto } from '../../src/modules/auth/dto/login.dto';
 import { createUser, register } from './create/create-user';
 import { AuthController } from '../../src/modules/auth/auth.controller';
 import { UserTypeEnum } from '../../src/modules/user-type/type/user-type.enum';
-import { removeAndCheck } from './remove-and-check';
-import { removeUser } from './remove/remove-user';
-import { addRepository } from './repository';
 import { User } from '../../src/modules/user/entity/user.entity';
 import { TestingModule } from '@nestjs/testing';
+import { RepositoryManager } from './repository';
+import { RepositoryItem } from './repository/repository-item';
 
 const loginDto: LoginDto = {
   username: 'test',
@@ -94,15 +93,13 @@ export async function getTokenFactory({
   testName,
 }: TokenFactoryOptions): Promise<TokenFactoryResponse> {
   const authController = testingModule.get<AuthController>(AuthController);
+  const repositoryManager = new RepositoryManager(testingModule);
   const login: RegisterResponse = await registerUser({
     authController,
     testName: `GetToken - ${testName}`,
   });
 
-  addRepository({
-    testingModule: testingModule,
-    name: User.name,
-  });
+  repositoryManager.add([new RepositoryItem(User)]);
 
   return {
     admin: async (): Promise<string> => {
@@ -129,15 +126,11 @@ export async function getTokenFactory({
     },
     clear: async (): Promise<void> => {
       await Promise.all([
-        removeAndCheck({
-          name: `User [${login.admin.username}]`,
-          removeFunction: async () =>
-            removeUser({ username: login.admin.username }),
+        repositoryManager.removeAndCheck(User.name, {
+          username: login.admin.username,
         }),
-        removeAndCheck({
-          name: `User [${register.default.username}]`,
-          removeFunction: async () =>
-            removeUser({ username: login.default.username }),
+        repositoryManager.removeAndCheck(User.name, {
+          username: login.default.username,
         }),
       ]);
     },

@@ -121,3 +121,15 @@ Ref "Contract_ServicePack_fk": Contract.servicePackId < ServicePack.id
 Ref "Contract_Company_fk": Contract.companyId < Company.id
 Ref "UserCompany_User_fk": UserCompany.userId < User.id
 Ref "UserCompany_Company_fk": UserCompany.companyId < Company.id
+Ref "Installment_PaymentMethod_fk": Installment.paymentMethodId < PaymentMethod.id
+Ref "Installment_InstallmentType_fk": Installment.installmentTypeId < InstallmentType.id
+Ref "Installment_Coin_fk": Installment.coinId < Coin.id
+Ref "Installment_Contract_fk": Installment.contractId < Contract.id
+Ref "ClientService_Client_fk": ClientService.clientId < Client.id
+Ref "ClientService_ServiceStage_fk": ClientService.serviceStageId < ServiceStage.id
+Ref "ClientService_User_fk": ClientService.userId < User.id
+Ref "ClientBlackList_ClientBlackListReason_fk": ClientBlackList.clientBlackListReasonId < ClientBlackListReason.id
+Ref "ClientBlackList_Client_fk": ClientBlackList.clientId < Client.id
+Ref "SupportTicket_Client_fk": SupportTicket.clientId < Client.id
+Ref "SupportTicket_User_fk": SupportTicket.userId < User.id
+Ref "ServicePack_Coin_fk": ServicePack.coinId < Coin.id

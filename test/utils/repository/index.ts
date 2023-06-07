@@ -1,101 +1,103 @@
-import { Permission } from '../../../src/modules/permission/entity/permission.entity';
-import { Module } from '../../../src/modules/module/entity/module.entity';
-import { UserType } from '../../../src/modules/user-type/entity/user-type.entity';
-import { User } from '../../../src/modules/user/entity/user.entity';
-import { PermissionGroup } from '../../../src/modules/permissionGroup/entity/permission-group.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Company } from '../../../src/modules/company/entity/company.entity';
-import { UserCompany } from '../../../src/modules/company/entity/user-company.entity';
-import { ServicePackItemType } from '../../../src/modules/service-pack-item-type/entity/service-pack-item-type.entity';
+import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
+import { RepositoryItem } from './repository-item';
 
-type RepositoryEntity =
-  | Repository<Module>
-  | Repository<Permission>
-  | Repository<UserType>
-  | Repository<User>
-  | Repository<PermissionGroup>
-  | Repository<Company>
-  | Repository<UserCompany>
-  | Repository<ServicePackItemType>;
+type criteria<Entity> = FindOptionsWhere<Entity>;
 
-export const repository = new Map<string, RepositoryEntity>();
-
-interface AddRepositoryOption {
-  testingModule: TestingModule;
-  name: string | string[];
-}
-
-interface RepositoryItem {
-  testingModule: TestingModule;
+interface RepositoryItemDependency<T> {
   name: string;
+  criteria: criteria<T>;
 }
 
-interface GetRepositoryOptions {
-  testingModule: TestingModule;
-  name: string;
-}
+export class RepositoryManager {
+  private repositoryMap = new Map<
+    string,
+    RepositoryItem<EntityClassOrSchema>
+  >();
 
-function getRepository({
-  testingModule,
-  name,
-}: GetRepositoryOptions): RepositoryEntity {
-  if (name === Module.name) {
-    return testingModule.get<Repository<Module>>(getRepositoryToken(Module));
-  }
+  constructor(private readonly testingModule: TestingModule) {}
 
-  if (name === Permission.name) {
-    return testingModule.get<Repository<Permission>>(
-      getRepositoryToken(Permission),
-    );
-  }
-
-  if (name === User.name) {
-    return testingModule.get<Repository<User>>(getRepositoryToken(User));
-  }
-
-  if (name === UserType.name) {
-    return testingModule.get<Repository<UserType>>(
-      getRepositoryToken(UserType),
-    );
-  }
-
-  if (name === Company.name) {
-    return testingModule.get<Repository<Company>>(getRepositoryToken(Company));
-  }
-
-  if (name === PermissionGroup.name) {
-    return testingModule.get<Repository<PermissionGroup>>(
-      getRepositoryToken(PermissionGroup),
-    );
-  }
-
-  if (name === UserCompany.name) {
-    return testingModule.get<Repository<UserCompany>>(
-      getRepositoryToken(UserCompany),
-    );
-  }
-
-  if (name === ServicePackItemType.name) {
-    return testingModule.get<Repository<ServicePackItemType>>(
-      getRepositoryToken(ServicePackItemType),
-    );
-  }
-}
-
-function addItem({ testingModule, name }: RepositoryItem) {
-  repository.set(name, getRepository({ testingModule, name }));
-}
-
-export function addRepository({ testingModule, name }: AddRepositoryOption) {
-  if (!Array.isArray(name)) {
-    addItem({ testingModule, name });
-  }
-
-  if (Array.isArray(name)) {
-    name.forEach((entityName) => {
-      addItem({ testingModule, name: entityName });
+  add(repositoryItems: RepositoryItem<any>[]) {
+    repositoryItems.forEach((repositoryItem) => {
+      const name = repositoryItem.name;
+      if (!this.repositoryMap.has(name)) {
+        repositoryItem.Repository = this.testingModule;
+        this.repositoryMap.set(name, repositoryItem);
+      }
     });
+  }
+
+  private async findDependecies<Entity>(
+    name: string,
+    criteria: criteria<Entity>,
+  ): Promise<RepositoryItemDependency<Entity>[]> {
+    const repository = this.repositoryMap.get(name);
+    const item = await repository.find(criteria, true);
+
+    return Object.keys(item)
+      .filter((key) => key.match(/Id/g))
+      .map((key) => {
+        return {
+          name: key
+            .replace(/\w{1}/, key.charAt(0).toUpperCase())
+            .replace(/Id/, ''),
+          criteria: { id: item[key] },
+        };
+      });
+  }
+
+  private async removeDependencies<Entity>(
+    name: string,
+    criteria: criteria<Entity>,
+  ): Promise<void> {
+    const dependencies = await this.findDependecies(name, criteria);
+
+    if (!dependencies.length) {
+      return;
+    }
+
+    await Promise.all(
+      dependencies.map(({ name: depName, criteria }) =>
+        this.removeAndCheck(depName, criteria),
+      ),
+    );
+  }
+
+  async remove<Entity>(
+    name: string,
+    criteria: criteria<Entity>,
+    checkForDependencies = true,
+  ): Promise<boolean> {
+    const repository = this.repositoryMap.get(name);
+
+    if (checkForDependencies) {
+      await this.removeDependencies(name, criteria);
+    }
+
+    return repository.remove(criteria);
+  }
+
+  async removeAndCheck<Entity>(
+    name: string,
+    criteria: criteria<Entity>,
+    checkForDependencies = true,
+  ): Promise<void> {
+    const repository = this.repositoryMap.get(name);
+
+    if (checkForDependencies) {
+      await this.removeDependencies(name, criteria);
+    }
+
+    return repository.removeAndCheck(criteria);
+  }
+
+  async find<Entity>(
+    name: string,
+    criteria: FindOptionsWhere<Entity>,
+  ): Promise<Entity> {
+    const repository = this.repositoryMap.get(name);
+
+    return repository.find(criteria, false) as Entity;
   }
 }

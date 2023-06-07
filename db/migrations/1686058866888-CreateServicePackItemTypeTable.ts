@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateServicePackItemType1686058866888
+export class CreateServicePackItemTypeTable1686058866888
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {

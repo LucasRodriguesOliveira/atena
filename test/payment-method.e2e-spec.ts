@@ -3,33 +3,32 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { envConfig } from '../src/config/env/env.config';
 import { AuthModule } from '../src/modules/auth/auth.module';
-import { Module } from '../src/modules/module/entity/module.entity';
-import { ModuleModule } from '../src/modules/module/module.module';
+import { PaymentMethod } from '../src/modules/payment-method/entity/payment-method.entity';
+import { PaymentMethodModule } from '../src/modules/payment-method/payment-method.module';
 import { UserTypeModule } from '../src/modules/user-type/user-type.module';
 import { UserModule } from '../src/modules/user/user.module';
 import * as request from 'supertest';
 import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
-import { CreateModuleDto } from '../src/modules/module/dto/create-module.dto';
-import { CreateModuleResponse } from '../src/modules/module/dto/create-module-response.dto';
-import { UpdateModuleDto } from '../src/modules/module/dto/update-module.dto';
-import { ModuleController } from '../src/modules/module/module.controller';
-import { createModule } from './utils/create/create-module';
+import { CreatePaymentMethodDto } from '../src/modules/payment-method/dto/create-payment-method.dto';
+import { CreatePaymentMethodResponseDto } from '../src/modules/payment-method/dto/create-payment-method-response.dto';
+import { UpdatePaymentMethodDto } from '../src/modules/payment-method/dto/update-payment-method.dto';
+import { PaymentMethodController } from '../src/modules/payment-method/payment-method.controller';
+import { createPaymentMethod } from './utils/create/create-payment-method';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { RepositoryManager } from './utils/repository';
 import { RepositoryItem } from './utils/repository/repository-item';
 
-describe('ModuleController (e2e)', () => {
+describe('PaymentMethodController (e2e)', () => {
   let app: INestApplication;
   let getToken: TokenFactoryResponse;
 
-  const basePath = '/module';
+  const basePath = '/payment-method';
   const headers = {
     auth: 'authorization',
   };
-
-  let moduleController: ModuleController;
-
   let repositoryManager: RepositoryManager;
+
+  let paymentMethodController: PaymentMethodController;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -39,21 +38,22 @@ describe('ModuleController (e2e)', () => {
         AuthModule,
         UserModule,
         UserTypeModule,
-        ModuleModule,
+        PaymentMethodModule,
       ],
     }).compile();
 
-    moduleController = moduleFixture.get<ModuleController>(ModuleController);
-    repositoryManager = new RepositoryManager(moduleFixture);
+    paymentMethodController = moduleFixture.get<PaymentMethodController>(
+      PaymentMethodController,
+    );
 
-    repositoryManager.add([new RepositoryItem(Module)]);
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(PaymentMethod)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
-      testName: 'module.e2e',
     });
   });
 
@@ -89,22 +89,22 @@ describe('ModuleController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let createModuleResponse: CreateModuleResponse;
+        let createPaymentMethodResponse: CreatePaymentMethodResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          createModuleResponse = await createModule({
-            moduleController,
+          createPaymentMethodResponse = await createPaymentMethod({
+            paymentMethodController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: createModuleResponse.id,
+          await repositoryManager.removeAndCheck(PaymentMethod.name, {
+            id: createPaymentMethodResponse.id,
           });
         });
 
-        it('should return a list of modules', () => {
+        it('should return a list of paymentMethods', () => {
           return request(app.getHttpServer())
             .get(basePath)
             .set(headers.auth, token)
@@ -144,32 +144,32 @@ describe('ModuleController (e2e)', () => {
       describe(`CREATED - ${HttpStatus.CREATED}`, () => {
         let token: string;
 
-        const createModuleDto: CreateModuleDto = {
+        const createPaymentMethodDto: CreatePaymentMethodDto = {
           description: 'test',
         };
 
-        let moduleId: number;
+        let paymentMethodId: number;
 
         beforeAll(async () => {
           token = await getToken.admin();
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: moduleId,
+          await repositoryManager.removeAndCheck(PaymentMethod.name, {
+            id: paymentMethodId,
           });
         });
 
-        it('should create a module', () => {
+        it('should create a paymentMethod', () => {
           return request(app.getHttpServer())
             .post(basePath)
             .set(headers.auth, token)
-            .send(createModuleDto)
+            .send(createPaymentMethodDto)
             .expect(HttpStatus.CREATED)
             .then((response) => {
               expect(response.body).toHaveProperty('id');
 
-              moduleId = response.body.id;
+              paymentMethodId = response.body.id;
             });
         });
       });
@@ -191,10 +191,10 @@ describe('ModuleController (e2e)', () => {
     });
   });
 
-  describe('/:moduleId', () => {
-    const path = `${basePath}/:moduleId`;
-    const pathTo = (moduleId: number) =>
-      path.replace(/:moduleId/, `${moduleId}`);
+  describe('/:paymentMethodId', () => {
+    const path = `${basePath}/:paymentMethodId`;
+    const pathTo = (paymentMethodId: number) =>
+      path.replace(/:paymentMethodId/, `${paymentMethodId}`);
 
     describe('(GET)', () => {
       describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
@@ -222,34 +222,34 @@ describe('ModuleController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let createModuleResponse: CreateModuleResponse;
+        let createPaymentMethodResponse: CreatePaymentMethodResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          createModuleResponse = await createModule({
-            moduleController,
+          createPaymentMethodResponse = await createPaymentMethod({
+            paymentMethodController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: createModuleResponse.id,
+          await repositoryManager.removeAndCheck(PaymentMethod.name, {
+            id: createPaymentMethodResponse.id,
           });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .get(pathTo(createModuleResponse.id))
+            .get(pathTo(createPaymentMethodResponse.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
               expect(response.body).toHaveProperty(
                 'id',
-                createModuleResponse.id,
+                createPaymentMethodResponse.id,
               );
               expect(response.body).toHaveProperty(
                 'description',
-                createModuleResponse.description,
+                createPaymentMethodResponse.description,
               );
               expect(response.body).toHaveProperty('createdAt');
             });
@@ -299,38 +299,37 @@ describe('ModuleController (e2e)', () => {
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
 
-        const updateModuleDto: UpdateModuleDto = {
+        const updatePaymentMethodDto: UpdatePaymentMethodDto = {
           description: 'test',
         };
 
-        let module: CreateModuleResponse;
+        let paymentMethod: CreatePaymentMethodResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          module = await createModule({
-            moduleController,
+          paymentMethod = await createPaymentMethod({
+            paymentMethodController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: module.id,
+          await repositoryManager.removeAndCheck(PaymentMethod.name, {
+            id: paymentMethod.id,
           });
         });
 
-        it('should update a module', () => {
+        it('should update a paymentMethod', () => {
           return request(app.getHttpServer())
-            .put(pathTo(module.id))
+            .put(pathTo(paymentMethod.id))
             .set(headers.auth, token)
-            .send(updateModuleDto)
+            .send(updatePaymentMethodDto)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toHaveProperty('id', module.id);
+              expect(response.body).toHaveProperty('id', paymentMethod.id);
               expect(response.body).toHaveProperty(
                 'description',
-                updateModuleDto.description,
+                updatePaymentMethodDto.description,
               );
-              expect(response.body).toHaveProperty('createdAt');
               expect(response.body).toHaveProperty('updatedAt');
             });
         });
@@ -363,24 +362,24 @@ describe('ModuleController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let module: CreateModuleResponse;
+        let paymentMethod: CreatePaymentMethodResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          module = await createModule({
-            moduleController,
+          paymentMethod = await createPaymentMethod({
+            paymentMethodController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: module.id,
+          await repositoryManager.removeAndCheck(PaymentMethod.name, {
+            id: paymentMethod.id,
           });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .delete(pathTo(module.id))
+            .delete(pathTo(paymentMethod.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
