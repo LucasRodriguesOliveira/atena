@@ -2,15 +2,15 @@ import { CompanyController } from '../../../src/modules/company/company.controll
 import { AuthController } from '../../../src/modules/auth/auth.controller';
 import { createUser } from './create-user';
 import { UserTypeEnum } from '../../../src/modules/user-type/type/user-type.enum';
-import { repository } from '../repository';
 import { User } from '../../../src/modules/user/entity/user.entity';
-import { Repository } from 'typeorm';
 import { createCompany } from './create-company';
 import { CreateUserCompanyDto } from '../../../src/modules/company/dto/create-user-company.dto';
+import { RepositoryManager } from '../repository';
 
 interface CreateUserCompanyOptions {
   companyController: CompanyController;
   authController: AuthController;
+  repositoryManager: RepositoryManager;
   testName?: string;
 }
 
@@ -23,6 +23,7 @@ export class CreateUserCompanyMockResponse {
 export async function createUserCompany({
   companyController,
   authController,
+  repositoryManager,
   testName,
 }: CreateUserCompanyOptions): Promise<CreateUserCompanyMockResponse> {
   const [username, company] = await Promise.all([
@@ -35,11 +36,12 @@ export async function createUserCompany({
     createCompany({ companyController }),
   ]);
 
-  const userRepository = repository.get(User.name) as Repository<User>;
-  const user = await userRepository.findOneBy({ username });
+  const { id: userId } = await repositoryManager.find<User>(User.name, {
+    username,
+  });
 
   const createUserCompanyDto: CreateUserCompanyDto = {
-    userId: user.id,
+    userId,
   };
 
   const result = await companyController.attachUser(

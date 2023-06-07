@@ -31,10 +31,10 @@ export class RepositoryItem<Entity extends EntityClassOrSchema> {
     );
   }
 
-  async find(criteria: FindOptionsWhere<Entity>): Promise<Entity> {
+  async find(criteria: FindOptionsWhere<Entity>, withDeleted: boolean) {
     return this.repository.findOne({
       where: criteria,
-      withDeleted: true,
+      withDeleted,
     });
   }
 

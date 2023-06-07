@@ -33,7 +33,7 @@ export class RepositoryManager {
     criteria: criteria<Entity>,
   ): Promise<RepositoryItemDependency<Entity>[]> {
     const repository = this.repositoryMap.get(name);
-    const item = await repository.find(criteria);
+    const item = await repository.find(criteria, true);
 
     return Object.keys(item)
       .filter((key) => key.match(/Id/g))
@@ -58,8 +58,8 @@ export class RepositoryManager {
     }
 
     await Promise.all(
-      dependencies.map(({ name, criteria }) =>
-        this.removeAndCheck(name, criteria),
+      dependencies.map(({ name: depName, criteria }) =>
+        this.removeAndCheck(depName, criteria),
       ),
     );
   }
@@ -90,5 +90,14 @@ export class RepositoryManager {
     }
 
     return repository.removeAndCheck(criteria);
+  }
+
+  async find<Entity>(
+    name: string,
+    criteria: FindOptionsWhere<Entity>,
+  ): Promise<Entity> {
+    const repository = this.repositoryMap.get(name);
+
+    return repository.find(criteria, false) as Entity;
   }
 }
