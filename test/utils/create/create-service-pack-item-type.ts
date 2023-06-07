@@ -1,6 +1,6 @@
-import { CreateServicePackItemTypeResponseDto } from '../../../src/modules/service-pack-item-type/dto/create-service-pack-item-type-response.dto';
-import { CreateServicePackItemTypeDto } from '../../../src/modules/service-pack-item-type/dto/create-service-pack-item-type.dto';
-import { ServicePackItemTypeController } from '../../../src/modules/service-pack-item-type/service-pack-item-type.controller';
+import { CreateServicePackItemTypeResponseDto } from '../../../src/modules/service-pack/item-type/dto/create-service-pack-item-type-response.dto';
+import { CreateServicePackItemTypeDto } from '../../../src/modules/service-pack/item-type/dto/create-service-pack-item-type.dto';
+import { ServicePackItemTypeController } from '../../../src/modules/service-pack/item-type/service-pack-item-type.controller';
 
 interface CreateServicePackItemTypeOptions {
   servicePackItemTypeController: ServicePackItemTypeController;
