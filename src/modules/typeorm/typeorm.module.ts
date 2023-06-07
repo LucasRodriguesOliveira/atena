@@ -9,6 +9,7 @@ import { PermissionGroup } from '../permissionGroup/entity/permission-group.enti
 import { Company } from '../company/entity/company.entity';
 import { UserCompany } from '../company/entity/user-company.entity';
 import { ServicePackItemType } from '../service-pack-item-type/entity/service-pack-item-type.entity';
+import { PaymentMethod } from '../payment-method/entity/payment-method.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ServicePackItemType } from '../service-pack-item-type/entity/service-pa
         Company,
         UserCompany,
         ServicePackItemType,
+        PaymentMethod,
       ]),
     ),
   ],

@@ -7,6 +7,8 @@ import { QueryPaymentMethodDto } from './dto/query-payment-method.dto';
 import { ListPaymentMethodResponseDto } from './dto/list-payment-method-response.dto';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { CreatePaymentMethodResponseDto } from './dto/create-payment-method-response.dto';
+import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
+import { UpdatePaymentMethodResponseDto } from './dto/update-payment-method-response.dto';
 
 @Injectable()
 export class PaymentMethodService {
@@ -17,17 +19,27 @@ export class PaymentMethodService {
 
   public async find(
     paymentMethodId: number,
-  ): Promise<FindPaymentMethodResponseDto> {
+  ): Promise<FindPaymentMethodResponseDto | null> {
     const paymentMethod = await this.paymentMethodRepository.findOneBy({
       id: paymentMethodId,
     });
 
+    if (Object.keys(paymentMethod).length === 0) {
+      return null;
+    }
+
     return FindPaymentMethodResponseDto.from(paymentMethod);
   }
 
-  public async list({
-    description,
-  }: QueryPaymentMethodDto): Promise<ListPaymentMethodResponseDto[]> {
+  public async list(
+    queryPaymentMethodDto: QueryPaymentMethodDto,
+  ): Promise<ListPaymentMethodResponseDto[]> {
+    let description: string;
+
+    if (queryPaymentMethodDto) {
+      description = queryPaymentMethodDto.description;
+    }
+
     const paymentMethods = await this.paymentMethodRepository.find({
       select: ['id', 'description'],
       where: {
@@ -46,5 +58,29 @@ export class PaymentMethodService {
     });
 
     return CreatePaymentMethodResponseDto.from(paymentMethod);
+  }
+
+  public async update(
+    paymentMethodId: number,
+    { description }: UpdatePaymentMethodDto,
+  ): Promise<UpdatePaymentMethodResponseDto> {
+    await this.paymentMethodRepository.update(
+      { id: paymentMethodId },
+      { description },
+    );
+
+    const paymentMethod = await this.paymentMethodRepository.findOneBy({
+      id: paymentMethodId,
+    });
+
+    return UpdatePaymentMethodResponseDto.from(paymentMethod);
+  }
+
+  public async delete(paymentMethodId: number): Promise<boolean> {
+    const { affected } = await this.paymentMethodRepository.softDelete({
+      id: paymentMethodId,
+    });
+
+    return affected > 0;
   }
 }
