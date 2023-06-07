@@ -13,11 +13,10 @@ import { CreateModuleDto } from '../src/modules/module/dto/create-module.dto';
 import { CreateModuleResponse } from '../src/modules/module/dto/create-module-response.dto';
 import { UpdateModuleDto } from '../src/modules/module/dto/update-module.dto';
 import { ModuleController } from '../src/modules/module/module.controller';
-import { addRepository } from './utils/repository';
 import { createModule } from './utils/create/create-module';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeModule } from './utils/remove/remove-module';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('ModuleController (e2e)', () => {
   let app: INestApplication;
@@ -29,6 +28,8 @@ describe('ModuleController (e2e)', () => {
   };
 
   let moduleController: ModuleController;
+
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -43,17 +44,16 @@ describe('ModuleController (e2e)', () => {
     }).compile();
 
     moduleController = moduleFixture.get<ModuleController>(ModuleController);
+    repositoryManager = new RepositoryManager(moduleFixture);
 
-    addRepository({
-      testingModule: moduleFixture,
-      name: [Module.name],
-    });
+    repositoryManager.add([new RepositoryItem(Module)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
+      testName: 'module.e2e',
     });
   });
 
@@ -99,10 +99,8 @@ describe('ModuleController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Module (${createModuleResponse.id})`,
-            removeFunction: async () =>
-              removeModule({ id: createModuleResponse.id }),
+          await repositoryManager.removeAndCheck(Module.name, {
+            id: createModuleResponse.id,
           });
         });
 
@@ -157,9 +155,8 @@ describe('ModuleController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Module (${moduleId})`,
-            removeFunction: async () => removeModule({ id: moduleId }),
+          await repositoryManager.removeAndCheck(Module.name, {
+            id: moduleId,
           });
         });
 
@@ -235,10 +232,8 @@ describe('ModuleController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Module (${createModuleResponse.id})`,
-            removeFunction: async () =>
-              removeModule({ id: createModuleResponse.id }),
+          await repositoryManager.removeAndCheck(Module.name, {
+            id: createModuleResponse.id,
           });
         });
 
@@ -318,9 +313,8 @@ describe('ModuleController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Module (${module.id})`,
-            removeFunction: async () => removeModule({ id: module.id }),
+          await repositoryManager.removeAndCheck(Module.name, {
+            id: module.id,
           });
         });
 
@@ -379,9 +373,8 @@ describe('ModuleController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Module (${module.id})`,
-            removeFunction: async () => removeModule({ id: module.id }),
+          await repositoryManager.removeAndCheck(Module.name, {
+            id: module.id,
           });
         });
 
