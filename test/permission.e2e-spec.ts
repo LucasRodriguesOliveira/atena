@@ -13,11 +13,10 @@ import { CreatePermissionDto } from '../src/modules/permission/dto/create-permis
 import { CreatePermissionResponse } from '../src/modules/permission/dto/create-permission-response.dto';
 import { UpdatePermissionDto } from '../src/modules/permission/dto/update-permission.dto';
 import { PermissionController } from '../src/modules/permission/permission.controller';
-import { addRepository } from './utils/repository';
 import { createPermission } from './utils/create/create-permission';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removePermission } from './utils/remove/remove-permission';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('PermissionController (e2e)', () => {
   let app: INestApplication;
@@ -29,6 +28,8 @@ describe('PermissionController (e2e)', () => {
   };
 
   let permissionController: PermissionController;
+
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -45,16 +46,15 @@ describe('PermissionController (e2e)', () => {
     permissionController =
       moduleFixture.get<PermissionController>(PermissionController);
 
-    addRepository({
-      testingModule: moduleFixture,
-      name: [Permission.name],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(Permission)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
+      testName: 'Permission.e2e',
     });
   });
 
@@ -100,10 +100,8 @@ describe('PermissionController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Permission (${createPermissionResponse.id})`,
-            removeFunction: async () =>
-              removePermission({ id: createPermissionResponse.id }),
+          await repositoryManager.removeAndCheck(Permission.name, {
+            id: createPermissionResponse.id,
           });
         });
 
@@ -158,9 +156,8 @@ describe('PermissionController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Permission (${permissionId})`,
-            removeFunction: async () => removePermission({ id: permissionId }),
+          await repositoryManager.removeAndCheck(Permission.name, {
+            id: permissionId,
           });
         });
 
@@ -236,10 +233,8 @@ describe('PermissionController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Permission (${createPermissionResponse.id})`,
-            removeFunction: async () =>
-              removePermission({ id: createPermissionResponse.id }),
+          await repositoryManager.removeAndCheck(Permission.name, {
+            id: createPermissionResponse.id,
           });
         });
 
@@ -319,9 +314,8 @@ describe('PermissionController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Permission (${permission.id})`,
-            removeFunction: async () => removePermission({ id: permission.id }),
+          await repositoryManager.removeAndCheck(Permission.name, {
+            id: permission.id,
           });
         });
 
@@ -380,9 +374,8 @@ describe('PermissionController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Permission (${permission.id})`,
-            removeFunction: async () => removePermission({ id: permission.id }),
+          await repositoryManager.removeAndCheck(Permission.name, {
+            id: permission.id,
           });
         });
 
