@@ -8,12 +8,11 @@ import { RegisterDto } from '../src/modules/auth/dto/register.dto';
 import { LoginDto } from '../src/modules/auth/dto/login.dto';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { createUser, register } from './utils/create/create-user';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeUser } from './utils/remove/remove-user';
 import { AuthController } from '../src/modules/auth/auth.controller';
 import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
-import { addRepository } from './utils/repository';
 import { User } from '../src/modules/user/entity/user.entity';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -21,6 +20,7 @@ describe('AuthController (e2e)', () => {
   const basePath = '/auth';
 
   let authController: AuthController;
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -32,11 +32,9 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     authController = moduleFixture.get<AuthController>(AuthController);
+    repositoryManager = new RepositoryManager(moduleFixture);
 
-    addRepository({
-      testingModule: moduleFixture,
-      name: [User.name],
-    });
+    repositoryManager.add([new RepositoryItem(User)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -66,11 +64,11 @@ describe('AuthController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${registerDto.username})`,
-            removeFunction: async () =>
-              removeUser({ username: registerDto.username }),
-          });
+          await repositoryManager.removeAndCheck(
+            User.name,
+            { username: registerDto.username },
+            false,
+          );
         });
 
         it('should register a user and return true', () => {
@@ -106,11 +104,11 @@ describe('AuthController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${loginDto.username})`,
-            removeFunction: async () =>
-              removeUser({ username: loginDto.username }),
-          });
+          await repositoryManager.removeAndCheck(
+            User.name,
+            { username: loginDto.username },
+            false,
+          );
         });
 
         it('should throw an error for passing the wrong password', () => {
@@ -138,11 +136,11 @@ describe('AuthController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `User (${loginDto.username})`,
-            removeFunction: async () =>
-              removeUser({ username: loginDto.username }),
-          });
+          await repositoryManager.removeAndCheck(
+            User.name,
+            { username: loginDto.username },
+            false,
+          );
         });
 
         it('should login successfully and get a access token', () => {

@@ -67,10 +67,13 @@ export class RepositoryManager {
   async remove<Entity>(
     name: string,
     criteria: criteria<Entity>,
+    checkForDependencies = true,
   ): Promise<boolean> {
     const repository = this.repositoryMap.get(name);
 
-    await this.removeDependencies(name, criteria);
+    if (checkForDependencies) {
+      await this.removeDependencies(name, criteria);
+    }
 
     return repository.remove(criteria);
   }
@@ -78,10 +81,13 @@ export class RepositoryManager {
   async removeAndCheck<Entity>(
     name: string,
     criteria: criteria<Entity>,
+    checkForDependencies = true,
   ): Promise<void> {
     const repository = this.repositoryMap.get(name);
 
-    await this.removeDependencies(name, criteria);
+    if (checkForDependencies) {
+      await this.removeDependencies(name, criteria);
+    }
 
     return repository.removeAndCheck(criteria);
   }
