@@ -13,11 +13,10 @@ import { CreateServicePackItemTypeDto } from '../src/modules/service-pack-item-t
 import { CreateServicePackItemTypeResponseDto } from '../src/modules/service-pack-item-type/dto/create-service-pack-item-type-response.dto';
 import { UpdateServicePackItemTypeDto } from '../src/modules/service-pack-item-type/dto/update-service-pack-item-type.dto';
 import { ServicePackItemTypeController } from '../src/modules/service-pack-item-type/service-pack-item-type.controller';
-import { addRepository } from './utils/repository';
 import { createServicePackItemType } from './utils/create/create-service-pack-item-type';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeServicePackItemType } from './utils/remove/remove-service-pack-item-type';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('ServicePackItemTypeController (e2e)', () => {
   let app: INestApplication;
@@ -29,6 +28,8 @@ describe('ServicePackItemTypeController (e2e)', () => {
   };
 
   let servicePackItemTypeController: ServicePackItemTypeController;
+
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -46,17 +47,15 @@ describe('ServicePackItemTypeController (e2e)', () => {
       moduleFixture.get<ServicePackItemTypeController>(
         ServicePackItemTypeController,
       );
-
-    addRepository({
-      testingModule: moduleFixture,
-      name: [ServicePackItemType.name],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(ServicePackItemType)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
+      testName: 'SP-ItemType.e2e',
     });
   });
 
@@ -102,12 +101,8 @@ describe('ServicePackItemTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `ServicePackItemType (${createServicePackItemTypeResponse.id})`,
-            removeFunction: async () =>
-              removeServicePackItemType({
-                id: createServicePackItemTypeResponse.id,
-              }),
+          await repositoryManager.removeAndCheck(ServicePackItemType.name, {
+            id: createServicePackItemTypeResponse.id,
           });
         });
 
@@ -162,10 +157,8 @@ describe('ServicePackItemTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `ServicePackItemType (${servicePackItemTypeId})`,
-            removeFunction: async () =>
-              removeServicePackItemType({ id: servicePackItemTypeId }),
+          await repositoryManager.removeAndCheck(ServicePackItemType.name, {
+            id: servicePackItemTypeId,
           });
         });
 
@@ -241,12 +234,8 @@ describe('ServicePackItemTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `ServicePackItemType (${createServicePackItemTypeResponse.id})`,
-            removeFunction: async () =>
-              removeServicePackItemType({
-                id: createServicePackItemTypeResponse.id,
-              }),
+          await repositoryManager.removeAndCheck(ServicePackItemType.name, {
+            id: createServicePackItemTypeResponse.id,
           });
         });
 
@@ -326,10 +315,8 @@ describe('ServicePackItemTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `ServicePackItemType (${servicePackItemType.id})`,
-            removeFunction: async () =>
-              removeServicePackItemType({ id: servicePackItemType.id }),
+          await repositoryManager.removeAndCheck(ServicePackItemType.name, {
+            id: servicePackItemType.id,
           });
         });
 
@@ -391,10 +378,8 @@ describe('ServicePackItemTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `ServicePackItemType (${servicePackItemType.id})`,
-            removeFunction: async () =>
-              removeServicePackItemType({ id: servicePackItemType.id }),
+          await repositoryManager.removeAndCheck(ServicePackItemType.name, {
+            id: servicePackItemType.id,
           });
         });
 
