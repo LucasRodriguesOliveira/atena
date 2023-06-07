@@ -13,10 +13,7 @@ import { CreateCompanyDto } from '../src/modules/company/dto/create-company.dto'
 import { CreateCompanyResponseDto } from '../src/modules/company/dto/create-company-response.dto';
 import { UpdateCompanyDto } from '../src/modules/company/dto/update-company.dto';
 import { CompanyController } from '../src/modules/company/company.controller';
-import { addRepository, repository } from './utils/repository';
 import { createCompany } from './utils/create/create-company';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeCompany } from './utils/remove/remove-company';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { randomUUID } from 'crypto';
 import { QueryListCompanyDto } from '../src/modules/company/dto/query-list-company.dto';
@@ -25,14 +22,13 @@ import {
   createUserCompany,
 } from './utils/create/create-user-company';
 import { AuthController } from '../src/modules/auth/auth.controller';
-import { removeUserCompany } from './utils/remove/remove-user-company';
 import { User } from '../src/modules/user/entity/user.entity';
 import { UserCompany } from '../src/modules/company/entity/user-company.entity';
 import { CreateUserCompanyDto } from '../src/modules/company/dto/create-user-company.dto';
 import { createUser } from './utils/create/create-user';
 import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
-import { Repository } from 'typeorm';
-import { removeUser } from './utils/remove/remove-user';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('CompanyController (e2e)', () => {
   let app: INestApplication;
@@ -45,6 +41,8 @@ describe('CompanyController (e2e)', () => {
 
   let companyController: CompanyController;
   let authController: AuthController;
+
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -61,16 +59,19 @@ describe('CompanyController (e2e)', () => {
     companyController = moduleFixture.get<CompanyController>(CompanyController);
     authController = moduleFixture.get<AuthController>(AuthController);
 
-    addRepository({
-      testingModule: moduleFixture,
-      name: [Company.name, User.name, UserCompany.name],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([
+      new RepositoryItem(Company),
+      new RepositoryItem(User),
+      new RepositoryItem(UserCompany),
+    ]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
+      testName: 'company.e2e',
     });
   });
 
@@ -120,10 +121,8 @@ describe('CompanyController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Company (${createCompanyResponse.id})`,
-            removeFunction: async () =>
-              removeCompany({ id: createCompanyResponse.id }),
+          await repositoryManager.removeAndCheck(Company.name, {
+            id: createCompanyResponse.id,
           });
         });
 
@@ -161,9 +160,8 @@ describe('CompanyController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Company (${companyId})`,
-            removeFunction: async () => removeCompany({ id: companyId }),
+          await repositoryManager.removeAndCheck(Company.name, {
+            id: companyId,
           });
         });
 
@@ -238,10 +236,8 @@ describe('CompanyController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Company (${createCompanyResponse.id})`,
-            removeFunction: async () =>
-              removeCompany({ id: createCompanyResponse.id }),
+          await repositoryManager.removeAndCheck(Company.name, {
+            id: createCompanyResponse.id,
           });
         });
 
@@ -309,9 +305,8 @@ describe('CompanyController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Company (${company.id})`,
-            removeFunction: async () => removeCompany({ id: company.id }),
+          await repositoryManager.removeAndCheck(Company.name, {
+            id: company.id,
           });
         });
 
@@ -368,9 +363,8 @@ describe('CompanyController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Company (${company.id})`,
-            removeFunction: async () => removeCompany({ id: company.id }),
+          await repositoryManager.removeAndCheck(Company.name, {
+            id: company.id,
           });
         });
 
@@ -425,14 +419,14 @@ describe('CompanyController (e2e)', () => {
           userCompany = await createUserCompany({
             authController,
             companyController,
+            repositoryManager,
             testName: 'company.e2e',
           });
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `UserCompany (${userCompany.id})`,
-            removeFunction: async () => removeUserCompany({ userCompany }),
+          await repositoryManager.removeAndCheck(UserCompany.name, {
+            id: userCompany.id,
           });
         });
 
@@ -508,8 +502,9 @@ describe('CompanyController (e2e)', () => {
             testName: 'UserCompany',
           });
 
-          const userRepository = repository.get(User.name) as Repository<User>;
-          const { id: userId } = await userRepository.findOneBy({ username });
+          const { id: userId } = await repositoryManager.find<User>(User.name, {
+            username,
+          });
           const company = await createCompany({
             companyController,
           });
@@ -520,10 +515,8 @@ describe('CompanyController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `UserCompany (${createUserCompanyMockResponse.id})`,
-            removeFunction: async () =>
-              removeUserCompany({ userCompany: createUserCompanyMockResponse }),
+          await repositoryManager.removeAndCheck(UserCompany.name, {
+            id: createUserCompanyMockResponse.id,
           });
         });
 
@@ -583,23 +576,18 @@ describe('CompanyController (e2e)', () => {
           createUserCompanyMockResponse = await createUserCompany({
             authController,
             companyController,
+            repositoryManager,
             testName: 'company.e2e',
           });
         });
 
         afterAll(async () => {
           await Promise.all([
-            removeAndCheck({
-              name: `Company (${createUserCompanyMockResponse.companyId})`,
-              removeFunction: async () =>
-                removeCompany({ id: createUserCompanyMockResponse.companyId }),
+            repositoryManager.removeAndCheck(Company.name, {
+              id: createUserCompanyMockResponse.companyId,
             }),
-            removeAndCheck({
-              name: `User (${createUserCompanyMockResponse.username})`,
-              removeFunction: async () =>
-                removeUser({
-                  username: createUserCompanyMockResponse.username,
-                }),
+            repositoryManager.removeAndCheck(User.name, {
+              username: createUserCompanyMockResponse.username,
             }),
           ]);
         });

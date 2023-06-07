@@ -12,11 +12,10 @@ import { CreateUserTypeDto } from '../src/modules/user-type/dto/create-user-type
 import { CreateUserTypeResponse } from '../src/modules/user-type/dto/create-user-type-response.dto';
 import { UpdateUserTypeDto } from '../src/modules/user-type/dto/update-user-type.dto';
 import { UserTypeController } from '../src/modules/user-type/user-type.controller';
-import { addRepository } from './utils/repository';
 import { createUserType } from './utils/create/create-user-type';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeUserType } from './utils/remove/remove-user-type';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('UserTypeController (e2e)', () => {
   let app: INestApplication;
@@ -28,6 +27,8 @@ describe('UserTypeController (e2e)', () => {
   };
 
   let userTypeController: UserTypeController;
+
+  let repositoryManager: RepositoryManager;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -42,17 +43,15 @@ describe('UserTypeController (e2e)', () => {
 
     userTypeController =
       moduleFixture.get<UserTypeController>(UserTypeController);
-
-    addRepository({
-      testingModule: moduleFixture,
-      name: [UserType.name],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(UserType)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
+      testName: 'UserType.e2e',
     });
   });
 
@@ -98,10 +97,8 @@ describe('UserTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `UserType (${createUserTypeResponse.id})`,
-            removeFunction: async () =>
-              removeUserType({ id: createUserTypeResponse.id }),
+          await repositoryManager.removeAndCheck(UserType.name, {
+            id: createUserTypeResponse.id,
           });
         });
 
@@ -156,9 +153,8 @@ describe('UserTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `UserType (${userTypeId})`,
-            removeFunction: async () => removeUserType({ id: userTypeId }),
+          await repositoryManager.removeAndCheck(UserType.name, {
+            id: userTypeId,
           });
         });
 
@@ -254,9 +250,8 @@ describe('UserTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `UserType (${userType.id})`,
-            removeFunction: async () => removeUserType({ id: userType.id }),
+          await repositoryManager.removeAndCheck(UserType.name, {
+            id: userType.id,
           });
         });
 
@@ -313,9 +308,8 @@ describe('UserTypeController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `UserType (${userType.id})`,
-            removeFunction: async () => removeUserType({ id: userType.id }),
+          await repositoryManager.removeAndCheck(UserType.name, {
+            id: userType.id,
           });
         });
 

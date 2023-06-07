@@ -20,10 +20,10 @@ import {
 } from '@nestjs/swagger';
 import { ServicePackItemTypeService } from './service-pack-item-type.service';
 import { ListServicePackItemTypeResponseDto } from './dto/list-service-pack-item-type-response.dto';
-import { JwtGuard } from '../auth/guard/jwt.guard';
-import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
+import { JwtGuard } from '../../auth/guard/jwt.guard';
+import { RoleGuard } from '../../auth/guard/role.guard';
+import { UserRole } from '../../auth/decorator/user-type.decorator';
+import { UserTypeEnum } from '../../user-type/type/user-type.enum';
 import { QueryServicePackItemTypeDto } from './dto/query-service-pack-item-type.dto';
 import { CreateServicePackItemTypeResponseDto } from './dto/create-service-pack-item-type-response.dto';
 import { CreateServicePackItemTypeDto } from './dto/create-service-pack-item-type.dto';

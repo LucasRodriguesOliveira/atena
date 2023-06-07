@@ -9,6 +9,7 @@ import { CreateCompanyTable1685952673621 } from './1685952673621-CreateCompanyTa
 import { CreateUserCompanyTable1686013139886 } from './1686013139886-CreateUserCompanyTable';
 import { CreateCoinTable1686058866888 } from './1686058866888-CreateCoinTable';
 import { CreateServicePackItemType1686094231747 } from './1686094231747-CreateServicePackItemType';
+import { CreatePaymentMethodTable1686143580143 } from './1686143580143-CreatePaymentMethodTable';
 
 export const migrations = [
   CreateUserTypeTable1685899894356,
@@ -21,5 +22,6 @@ export const migrations = [
   CreateCompanyTable1685952673621,
   CreateUserCompanyTable1686013139886,
   CreateCoinTable1686058866888,
-  // CreateServicePackItemType1686094231747,
+  CreateServicePackItemType1686094231747,
+  CreatePaymentMethodTable1686143580143,
 ];
