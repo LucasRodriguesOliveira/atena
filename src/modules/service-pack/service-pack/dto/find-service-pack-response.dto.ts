@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
+import { ServicePack } from '../entity/service-pack.entity';
 
 export class FindServicePackResponseDto {
   @ApiProperty({
@@ -38,4 +39,21 @@ export class FindServicePackResponseDto {
   })
   createdAt: Date;
 
+  static from({
+    id,
+    name,
+    description,
+    duration,
+    status,
+    createdAt,
+  }: ServicePack): FindServicePackResponseDto {
+    return {
+      id,
+      name,
+      description,
+      duration,
+      status,
+      createdAt,
+    };
+  }
 }
