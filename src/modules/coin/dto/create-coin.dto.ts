@@ -1,12 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDecimal,
-  IsNumber,
-  IsString,
-  MaxLength,
-  Min,
-  MinLength,
-} from 'class-validator';
+import { IsNumber, IsString, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateCoinDto {
   @ApiProperty({
@@ -34,7 +27,6 @@ export class CreateCoinDto {
     example: 1.07,
     required: true,
   })
-  @IsDecimal({ decimal_digits: '1,4' })
   @IsNumber()
   @Min(0)
   value: number;

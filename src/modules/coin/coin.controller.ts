@@ -13,6 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
@@ -52,7 +53,7 @@ export class CoinController {
   }
 
   @Post()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiCreatedResponse({
     type: CreateCoinResponseDto,
@@ -103,6 +104,10 @@ export class CoinController {
   @ApiOkResponse({
     type: UpdateCoinResponseDto,
   })
+  @ApiBadRequestResponse({
+    description:
+      'Even though all the properties in body are optional, at least one property is required',
+  })
   @ApiParam({
     type: Number,
     allowEmptyValue: false,
@@ -121,7 +126,15 @@ export class CoinController {
     @Param('coinId', ValidationPipe) coinId: number,
     @Body(ValidationPipe) updateCoinDto: UpdateCoinDto,
   ): Promise<UpdateCoinResponseDto> {
-    return this.coinService.update(coinId, updateCoinDto);
+    let coin: UpdateCoinResponseDto;
+
+    try {
+      coin = await this.coinService.update(coinId, updateCoinDto);
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+    }
+
+    return coin;
   }
 
   @Delete(':coinId')

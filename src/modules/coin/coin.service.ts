@@ -47,6 +47,10 @@ export class CoinService {
     coinId: number,
     updateCoinDto: UpdateCoinDto,
   ): Promise<UpdateCoinResponseDto> {
+    if (Object.keys(updateCoinDto).length === 0) {
+      throw new Error('No data sent to update Coin');
+    }
+
     await this.coinRepository.update({ id: coinId }, { ...updateCoinDto });
 
     const coin = await this.coinRepository.findOneBy({ id: coinId });

@@ -143,7 +143,7 @@ describe('CoinController (e2e)', () => {
         const createCoinDto: CreateCoinDto = {
           name: 'test',
           acronym: 'any',
-          value: 1,
+          value: 1.0,
         };
 
         let coinId: number;
@@ -289,7 +289,8 @@ describe('CoinController (e2e)', () => {
           return request(app.getHttpServer())
             .put(pathTo(-1))
             .set(headers.auth, token)
-            .expect(HttpStatus.BAD_REQUEST);
+            .expect(HttpStatus.BAD_REQUEST)
+            .then((response) => console.log(response.body));
         });
       });
 
