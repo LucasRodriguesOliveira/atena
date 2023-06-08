@@ -22,6 +22,7 @@ describe('ServicePackController', () => {
     update: jest.fn(),
     findOneBy: jest.fn(),
     softDelete: jest.fn(),
+    create: jest.fn(),
   };
   const coinRepository = {
     findOneBy: jest.fn(),
@@ -195,6 +196,7 @@ describe('ServicePackController', () => {
 
     beforeEach(() => {
       servicePackRepository.save.mockResolvedValueOnce(servicePack);
+      servicePackRepository.create.mockReturnValueOnce(servicePack);
     });
 
     it('should create a service pack', async () => {
@@ -240,8 +242,9 @@ describe('ServicePackController', () => {
 
     beforeEach(() => {
       servicePackRepository.update.mockResolvedValueOnce({ affected: 1 });
-      servicePackRepository.findOneBy.mockResolvedValueOnce(servicePack);
+      servicePackRepository.findOne.mockResolvedValueOnce(servicePack);
       coinRepository.findOneBy.mockResolvedValueOnce(servicePack.coin);
+      servicePackRepository.create.mockReturnValueOnce(servicePack);
     });
 
     it('should update a service pack', async () => {
@@ -252,7 +255,7 @@ describe('ServicePackController', () => {
 
       expect(result).toStrictEqual(expected);
       expect(servicePackRepository.update).toHaveBeenCalled();
-      expect(servicePackRepository.findOneBy).toHaveBeenCalled();
+      expect(servicePackRepository.findOne).toHaveBeenCalled();
       expect(coinRepository.findOneBy).toHaveBeenCalled();
     });
   });

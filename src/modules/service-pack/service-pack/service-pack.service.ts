@@ -121,8 +121,6 @@ export class ServicePackService {
       },
     });
 
-    console.log(servicePack);
-
     return UpdateServicePackResponseDto.from(servicePack);
   }
 

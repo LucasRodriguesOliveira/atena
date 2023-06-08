@@ -13,7 +13,7 @@ export class CreateServicePackTable1686186968401 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false,
             isPrimary: true,
             isGenerated: true,
