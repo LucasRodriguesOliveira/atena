@@ -1,8 +1,10 @@
+import { ServicePack } from '../../service-pack/service-pack/entity/service-pack.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,6 +25,9 @@ export class Coin {
 
   @Column({ type: 'boolean', default: true })
   status: boolean;
+
+  @OneToMany(() => ServicePack, (servicePack) => servicePack.coin)
+  servicePacks: ServicePack[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

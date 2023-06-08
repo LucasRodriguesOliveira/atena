@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { randomUUID } from 'crypto';
 import { ServicePack } from '../entity/service-pack.entity';
 import { FindCoinServicePackReponseDto } from './find-coin-service-pack-response.dto';
+import { randomUUID } from 'crypto';
 
-export class FindServicePackResponseDto {
+export class UpdateServicePackResponseDto {
   @ApiProperty({
     type: String,
     example: randomUUID(),
@@ -12,53 +12,43 @@ export class FindServicePackResponseDto {
 
   @ApiProperty({
     type: String,
-    example: 'Basic',
+    example: 'Pro',
   })
   name: string;
 
   @ApiProperty({
     type: String,
-    example: 'New here? Perfect Service Pack to start!',
+    example: 'Professional Services',
   })
   description: string;
 
   @ApiProperty({
     type: Number,
     example: 1,
-    description: 'in months',
   })
   duration: number;
 
   @ApiProperty({
     type: Number,
-    description:
-      'Starting value to subscribe to the service pack and sign a contract',
-    example: 300.0,
+    example: 1,
   })
   subscriptionPrice: number;
 
   @ApiProperty({
     type: Number,
-    description: 'Monthly payment agreed upon contract',
-    example: 50.0,
+    example: 1,
   })
   monthlyPayment: number;
 
   @ApiProperty({
     type: Number,
-    description: `Fee tax applied to monthly payment due to expired payment.
-    1 = 100%; 0.15 = 15%; 15% of 50.0 = 7.5 added to the value = 57.5`,
-    example: 0.15,
+    example: 1,
   })
   lateFee: number;
 
   @ApiProperty({
     type: Number,
-    description: `Fee tax applied to monthly payment due to expired payment.
-    Applied monthly as compound interest.
-    57.5 * 1.01 = 58.075 in the first month.
-    58.075 * 1.01 = 58.6557 in the second month.`,
-    example: 0.01,
+    example: 1,
   })
   monthlyFee: number;
 
@@ -77,7 +67,7 @@ export class FindServicePackResponseDto {
     type: Date,
     example: new Date(),
   })
-  createdAt: Date;
+  updatedAt: Date;
 
   static from({
     id,
@@ -88,10 +78,10 @@ export class FindServicePackResponseDto {
     monthlyPayment,
     lateFee,
     monthlyFee,
-    coin,
     status,
-    createdAt,
-  }: ServicePack): FindServicePackResponseDto {
+    coin,
+    updatedAt,
+  }: ServicePack): UpdateServicePackResponseDto {
     return {
       id,
       name,
@@ -103,7 +93,7 @@ export class FindServicePackResponseDto {
       monthlyFee,
       status,
       coin: FindCoinServicePackReponseDto.from(coin),
-      createdAt,
+      updatedAt,
     };
   }
 }

@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { FindCoinServicePackReponseDto } from './find-coin-service-pack-response.dto';
 import { randomUUID } from 'crypto';
 import { ServicePack } from '../entity/service-pack.entity';
-import { FindCoinServicePackReponseDto } from './find-coin-service-pack-response.dto';
 
-export class FindServicePackResponseDto {
+export class CreateServicePackResponseDto {
   @ApiProperty({
     type: String,
     example: randomUUID(),
@@ -12,53 +12,44 @@ export class FindServicePackResponseDto {
 
   @ApiProperty({
     type: String,
-    example: 'Basic',
+    example: 'Pro',
   })
   name: string;
 
   @ApiProperty({
     type: String,
-    example: 'New here? Perfect Service Pack to start!',
+    example: 'Professional services.',
   })
   description: string;
 
   @ApiProperty({
     type: Number,
-    example: 1,
+    example: 12,
     description: 'in months',
   })
   duration: number;
 
   @ApiProperty({
     type: Number,
-    description:
-      'Starting value to subscribe to the service pack and sign a contract',
-    example: 300.0,
+    example: 299.99,
   })
   subscriptionPrice: number;
 
   @ApiProperty({
     type: Number,
-    description: 'Monthly payment agreed upon contract',
-    example: 50.0,
+    example: 99.99,
   })
   monthlyPayment: number;
 
   @ApiProperty({
     type: Number,
-    description: `Fee tax applied to monthly payment due to expired payment.
-    1 = 100%; 0.15 = 15%; 15% of 50.0 = 7.5 added to the value = 57.5`,
-    example: 0.15,
+    example: 0.07,
   })
   lateFee: number;
 
   @ApiProperty({
     type: Number,
-    description: `Fee tax applied to monthly payment due to expired payment.
-    Applied monthly as compound interest.
-    57.5 * 1.01 = 58.075 in the first month.
-    58.075 * 1.01 = 58.6557 in the second month.`,
-    example: 0.01,
+    example: 0.0035,
   })
   monthlyFee: number;
 
@@ -88,10 +79,10 @@ export class FindServicePackResponseDto {
     monthlyPayment,
     lateFee,
     monthlyFee,
-    coin,
     status,
+    coin,
     createdAt,
-  }: ServicePack): FindServicePackResponseDto {
+  }: ServicePack): CreateServicePackResponseDto {
     return {
       id,
       name,
