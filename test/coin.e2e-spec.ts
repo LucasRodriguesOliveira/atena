@@ -5,19 +5,16 @@ import { ConfigModule } from '@nestjs/config';
 import { envConfig } from '../src/config/env/env.config';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { AuthModule } from '../src/modules/auth/auth.module';
-import { UserModule } from '../src/modules/user/user.module';
-import { UserTypeModule } from '../src/modules/user-type/user-type.module';
 import { CoinModule } from '../src/modules/coin/coin.module';
 import { CoinController } from '../src/modules/coin/coin.controller';
-import { addRepository } from './utils/repository';
 import { Coin } from '../src/modules/coin/entity/coin.entity';
 import * as request from 'supertest';
 import { CreateCoinResponseDto } from '../src/modules/coin/dto/create-coin-response.dto';
 import { createCoin } from './utils/create/create-coin';
-import { removeAndCheck } from './utils/remove-and-check';
-import { removeCoin } from './utils/remove/remove-coin';
 import { CreateCoinDto } from '../src/modules/coin/dto/create-coin.dto';
 import { UpdateCoinDto } from '../src/modules/coin/dto/update-coin.dto';
+import { RepositoryManager } from './utils/repository';
+import { RepositoryItem } from './utils/repository/repository-item';
 
 describe('CoinController (e2e)', () => {
   let app: INestApplication;
@@ -30,24 +27,22 @@ describe('CoinController (e2e)', () => {
 
   let coinController: CoinController;
 
+  let repositoryManager: RepositoryManager;
+
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(envConfig),
         TypeormPostgresModule,
         AuthModule,
-        UserModule,
-        UserTypeModule,
         CoinModule,
       ],
     }).compile();
 
     coinController = moduleFixture.get<CoinController>(CoinController);
 
-    addRepository({
-      testingModule: moduleFixture,
-      name: [Coin.name],
-    });
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(Coin)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -100,10 +95,8 @@ describe('CoinController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Coin (${createCoinResponseDto.id})`,
-            removeFunction: async () =>
-              removeCoin({ id: createCoinResponseDto.id }),
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: createCoinResponseDto.id,
           });
         });
 
@@ -160,9 +153,8 @@ describe('CoinController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Coin (${coinId})`,
-            removeFunction: async () => removeCoin({ id: coinId }),
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: coinId,
           });
         });
 
@@ -237,10 +229,8 @@ describe('CoinController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Coin (${createCoinResponseDto.id})`,
-            removeFunction: async () =>
-              removeCoin({ id: createCoinResponseDto.id }),
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: createCoinResponseDto.id,
           });
         });
 
@@ -320,9 +310,8 @@ describe('CoinController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Coin (${coin.id})`,
-            removeFunction: async () => removeCoin({ id: coin.id }),
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: coin.id,
           });
         });
 
@@ -378,9 +367,8 @@ describe('CoinController (e2e)', () => {
         });
 
         afterAll(async () => {
-          await removeAndCheck({
-            name: `Coin (${coin.id})`,
-            removeFunction: async () => removeCoin({ id: coin.id }),
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: coin.id,
           });
         });
 
