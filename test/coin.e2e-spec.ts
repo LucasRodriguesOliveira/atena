@@ -1,59 +1,55 @@
-import { INestApplication, HttpStatus } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { Test, TestingModule } from '@nestjs/testing';
-import { envConfig } from '../src/config/env/env.config';
-import { AuthModule } from '../src/modules/auth/auth.module';
-import { Module } from '../src/modules/module/entity/module.entity';
-import { ModuleModule } from '../src/modules/module/module.module';
-import { UserTypeModule } from '../src/modules/user-type/user-type.module';
-import { UserModule } from '../src/modules/user/user.module';
-import * as request from 'supertest';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
-import { CreateModuleDto } from '../src/modules/module/dto/create-module.dto';
-import { CreateModuleResponse } from '../src/modules/module/dto/create-module-response.dto';
-import { UpdateModuleDto } from '../src/modules/module/dto/update-module.dto';
-import { ModuleController } from '../src/modules/module/module.controller';
-import { createModule } from './utils/create/create-module';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
+import { envConfig } from '../src/config/env/env.config';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
+import { AuthModule } from '../src/modules/auth/auth.module';
+import { CoinModule } from '../src/modules/coin/coin.module';
+import { CoinController } from '../src/modules/coin/coin.controller';
+import { Coin } from '../src/modules/coin/entity/coin.entity';
+import * as request from 'supertest';
+import { CreateCoinResponseDto } from '../src/modules/coin/dto/create-coin-response.dto';
+import { createCoin } from './utils/create/create-coin';
+import { CreateCoinDto } from '../src/modules/coin/dto/create-coin.dto';
+import { UpdateCoinDto } from '../src/modules/coin/dto/update-coin.dto';
 import { RepositoryManager } from './utils/repository';
 import { RepositoryItem } from './utils/repository/repository-item';
 
-describe('ModuleController (e2e)', () => {
+describe('CoinController (e2e)', () => {
   let app: INestApplication;
   let getToken: TokenFactoryResponse;
 
-  const basePath = '/module';
+  const basePath = '/coin';
   const headers = {
     auth: 'authorization',
   };
 
-  let moduleController: ModuleController;
+  let coinController: CoinController;
 
   let repositoryManager: RepositoryManager;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(envConfig),
         TypeormPostgresModule,
         AuthModule,
-        UserModule,
-        UserTypeModule,
-        ModuleModule,
+        CoinModule,
       ],
     }).compile();
 
-    moduleController = moduleFixture.get<ModuleController>(ModuleController);
-    repositoryManager = new RepositoryManager(moduleFixture);
+    coinController = moduleFixture.get<CoinController>(CoinController);
 
-    repositoryManager.add([new RepositoryItem(Module)]);
+    repositoryManager = new RepositoryManager(moduleFixture);
+    repositoryManager.add([new RepositoryItem(Coin)]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
-      testName: 'module.e2e',
+      testName: 'coin.e2e',
     });
   });
 
@@ -89,22 +85,22 @@ describe('ModuleController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let createModuleResponse: CreateModuleResponse;
+        let createCoinResponseDto: CreateCoinResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          createModuleResponse = await createModule({
-            moduleController,
+          createCoinResponseDto = await createCoin({
+            coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: createModuleResponse.id,
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: createCoinResponseDto.id,
           });
         });
 
-        it('should return a list of modules', () => {
+        it('should return a list of coins', () => {
           return request(app.getHttpServer())
             .get(basePath)
             .set(headers.auth, token)
@@ -144,32 +140,34 @@ describe('ModuleController (e2e)', () => {
       describe(`CREATED - ${HttpStatus.CREATED}`, () => {
         let token: string;
 
-        const createModuleDto: CreateModuleDto = {
-          description: 'test',
+        const createCoinDto: CreateCoinDto = {
+          name: 'test',
+          acronym: 'any',
+          value: 1.0,
         };
 
-        let moduleId: number;
+        let coinId: number;
 
         beforeAll(async () => {
           token = await getToken.admin();
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: moduleId,
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: coinId,
           });
         });
 
-        it('should create a module', () => {
+        it('should create a coin', () => {
           return request(app.getHttpServer())
             .post(basePath)
             .set(headers.auth, token)
-            .send(createModuleDto)
+            .send(createCoinDto)
             .expect(HttpStatus.CREATED)
             .then((response) => {
               expect(response.body).toHaveProperty('id');
 
-              moduleId = response.body.id;
+              coinId = response.body.id;
             });
         });
       });
@@ -191,10 +189,9 @@ describe('ModuleController (e2e)', () => {
     });
   });
 
-  describe('/:moduleId', () => {
-    const path = `${basePath}/:moduleId`;
-    const pathTo = (moduleId: number) =>
-      path.replace(/:moduleId/, `${moduleId}`);
+  describe('/:coinId', () => {
+    const path = `${basePath}/:coinId`;
+    const pathTo = (coinId: number) => path.replace(/:coinId/, `${coinId}`);
 
     describe('(GET)', () => {
       describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
@@ -222,34 +219,34 @@ describe('ModuleController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let createModuleResponse: CreateModuleResponse;
+        let createCoinResponseDto: CreateCoinResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          createModuleResponse = await createModule({
-            moduleController,
+          createCoinResponseDto = await createCoin({
+            coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: createModuleResponse.id,
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: createCoinResponseDto.id,
           });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .get(pathTo(createModuleResponse.id))
+            .get(pathTo(createCoinResponseDto.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
               expect(response.body).toHaveProperty(
                 'id',
-                createModuleResponse.id,
+                createCoinResponseDto.id,
               );
               expect(response.body).toHaveProperty(
-                'description',
-                createModuleResponse.description,
+                'name',
+                createCoinResponseDto.name,
               );
               expect(response.body).toHaveProperty('createdAt');
             });
@@ -292,44 +289,42 @@ describe('ModuleController (e2e)', () => {
           return request(app.getHttpServer())
             .put(pathTo(-1))
             .set(headers.auth, token)
-            .expect(HttpStatus.BAD_REQUEST);
+            .expect(HttpStatus.BAD_REQUEST)
+            .then((response) => console.log(response.body));
         });
       });
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
 
-        const updateModuleDto: UpdateModuleDto = {
-          description: 'test',
+        const updateCoinDto: UpdateCoinDto = {
+          name: 'test',
         };
 
-        let module: CreateModuleResponse;
+        let coin: CreateCoinResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          module = await createModule({
-            moduleController,
+          coin = await createCoin({
+            coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: module.id,
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: coin.id,
           });
         });
 
-        it('should update a module', () => {
+        it('should update a coin', () => {
           return request(app.getHttpServer())
-            .put(pathTo(module.id))
+            .put(pathTo(coin.id))
             .set(headers.auth, token)
-            .send(updateModuleDto)
+            .send(updateCoinDto)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toHaveProperty('id', module.id);
-              expect(response.body).toHaveProperty(
-                'description',
-                updateModuleDto.description,
-              );
+              expect(response.body).toHaveProperty('id', coin.id);
+              expect(response.body).toHaveProperty('name', updateCoinDto.name);
               expect(response.body).toHaveProperty('createdAt');
               expect(response.body).toHaveProperty('updatedAt');
             });
@@ -363,24 +358,24 @@ describe('ModuleController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let module: CreateModuleResponse;
+        let coin: CreateCoinResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          module = await createModule({
-            moduleController,
+          coin = await createCoin({
+            coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Module.name, {
-            id: module.id,
+          await repositoryManager.removeAndCheck(Coin.name, {
+            id: coin.id,
           });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .delete(pathTo(module.id))
+            .delete(pathTo(coin.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {

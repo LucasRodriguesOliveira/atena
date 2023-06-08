@@ -1,26 +1,43 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateServicePackItemType1686058866888
-  implements MigrationInterface
-{
+export class CreateCoinTable1686058866888 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'service_pack_item_type',
+        name: 'coin',
         columns: [
           {
             name: 'id',
             type: 'int',
+            isPrimary: true,
             isGenerated: true,
             isNullable: false,
-            isPrimary: true,
             generationStrategy: 'increment',
           },
           {
-            name: 'description',
+            name: 'name',
             type: 'varchar',
-            length: '50',
             isNullable: false,
+            length: '50',
+          },
+          {
+            name: 'acronym',
+            type: 'varchar',
+            isNullable: false,
+            length: '3',
+          },
+          {
+            name: 'value',
+            type: 'decimal',
+            isNullable: false,
+            precision: 10,
+            scale: 4,
+          },
+          {
+            name: 'status',
+            type: 'boolean',
+            isNullable: false,
+            default: true,
           },
           {
             name: 'createdAt',
@@ -37,7 +54,8 @@ export class CreateServicePackItemType1686058866888
           {
             name: 'deletedAt',
             type: 'timestamp',
-            isNullable: true,
+            isNullable: false,
+            default: 'now()',
           },
         ],
       }),
@@ -45,6 +63,6 @@ export class CreateServicePackItemType1686058866888
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('service_pack_item_type');
+    await queryRunner.dropTable('coin');
   }
 }

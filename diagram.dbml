@@ -250,3 +250,4 @@ Ref "ClientBlackList_ClientBlackListReason_fk": ClientBlackList.clientBlackListR
 Ref "ClientBlackList_Client_fk": ClientBlackList.clientId < Client.id
 Ref "SupportTicket_Client_fk": SupportTicket.clientId < Client.id
 Ref "SupportTicket_User_fk": SupportTicket.userId < User.id
+Ref "ServicePack_Coin_fk": ServicePack.coinId < Coin.id

@@ -160,7 +160,6 @@ export class CompanyController {
   public async deattachUser(
     @Param('userCompanyId', ValidationPipe) userCompanyId: number,
   ): Promise<boolean> {
-    console.log('userCompanyId', userCompanyId);
     return this.userCompanyService.deattachUser(userCompanyId);
   }
 }
