@@ -10,7 +10,6 @@ import { UpdateCoinDto } from './dto/update-coin.dto';
 import { UpdateCoinResponseDto } from './dto/update-coin-response.dto';
 
 @Injectable()
-// TODO: add coin to contract table in diagram.dbml
 export class CoinService {
   constructor(
     @InjectRepository(Coin)
@@ -20,7 +19,7 @@ export class CoinService {
   public async find(coinId: number): Promise<FindCoinResponseDto | null> {
     const coin = await this.coinRepository.findOneBy({ id: coinId });
 
-    if (!Object.keys(coin).length) {
+    if (Object.keys(coin).length === 0) {
       return null;
     }
 

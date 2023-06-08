@@ -334,7 +334,6 @@ describe('ServicePackController (e2e)', () => {
             .send(updateServicePackDto)
             .expect(HttpStatus.OK)
             .then((response) => {
-              console.log(response.body);
               expect(response.body).toHaveProperty('id', servicePack.id);
               expect(response.body).toHaveProperty(
                 'description',
