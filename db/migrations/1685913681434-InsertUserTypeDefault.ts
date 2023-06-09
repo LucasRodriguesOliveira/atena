@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InsertUserTypeDefault1685927681434 implements MigrationInterface {
+export class InsertUserTypeDefault1685913681434 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.manager.insert('user_type', {
       description: 'DEFAULT',

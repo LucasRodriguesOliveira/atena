@@ -1,4 +1,4 @@
-import { ServicePack } from '../../service-pack/service-pack/entity/service-pack.entity';
+import { ServicePack } from '../../service-pack/service/entity/service-pack.entity';
 import {
   Column,
   CreateDateColumn,

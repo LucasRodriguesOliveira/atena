@@ -35,7 +35,7 @@ import { randomUUID } from 'crypto';
 import { UpdateServicePackDto } from './dto/update-service-pack.dto';
 import { UpdateServicePackResponseDto } from './dto/update-service-pack-response.dto';
 
-@Controller('service-pack')
+@Controller('service-pack/service')
 @ApiTags('service-pack')
 export class ServicePackController {
   constructor(private readonly servicePackService: ServicePackService) {}

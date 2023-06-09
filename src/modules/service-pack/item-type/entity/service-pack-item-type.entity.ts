@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ServicePackItem } from '../../item/entity/service-pack-item.entity';
 
 @Entity()
 export class ServicePackItemType {
@@ -14,6 +16,9 @@ export class ServicePackItemType {
 
   @Column({ type: 'varchar', length: 50 })
   description: string;
+
+  @OneToMany(() => ServicePackItem, (item) => item.itemType)
+  items: ServicePackItem[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

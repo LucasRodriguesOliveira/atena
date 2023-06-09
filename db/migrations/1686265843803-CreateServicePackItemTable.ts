@@ -53,11 +53,6 @@ export class CreateServicePackItemTable1686265843803
             isNullable: false,
             default: 'now()',
           },
-          {
-            name: 'updatedAt',
-            type: 'timestamp',
-            isNullable: true,
-          },
         ],
       }),
     );

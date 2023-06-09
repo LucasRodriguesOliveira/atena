@@ -1,7 +1,7 @@
 import { CoinController } from '../../../src/modules/coin/coin.controller';
-import { CreateServicePackResponseDto } from '../../../src/modules/service-pack/service-pack/dto/create-service-pack-response.dto';
-import { CreateServicePackDto } from '../../../src/modules/service-pack/service-pack/dto/create-service-pack.dto';
-import { ServicePackController } from '../../../src/modules/service-pack/service-pack/service-pack.controller';
+import { CreateServicePackResponseDto } from '../../../src/modules/service-pack/service/dto/create-service-pack-response.dto';
+import { CreateServicePackDto } from '../../../src/modules/service-pack/service/dto/create-service-pack.dto';
+import { ServicePackController } from '../../../src/modules/service-pack/service/service-pack.controller';
 import { createCoin } from './create-coin';
 
 interface CreateServicePackOptions {

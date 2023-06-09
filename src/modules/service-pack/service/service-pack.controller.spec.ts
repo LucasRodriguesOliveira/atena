@@ -77,6 +77,7 @@ describe('ServicePackController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        items: [],
       };
 
       const expected = FindServicePackResponseDto.from(servicePack);
@@ -134,6 +135,7 @@ describe('ServicePackController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      items: [],
     };
 
     const expected = ListServicePackResponseDto.from([servicePack]);
@@ -179,6 +181,7 @@ describe('ServicePackController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      items: [],
     };
 
     const createServicePackDto: CreateServicePackDto = {
@@ -232,6 +235,7 @@ describe('ServicePackController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      items: [],
     };
 
     const updateServicePackDto: UpdateServicePackDto = {

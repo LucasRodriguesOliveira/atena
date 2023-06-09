@@ -35,6 +35,10 @@ export class RepositoryManager {
     const repository = this.repositoryMap.get(name);
     const item = await repository.find(criteria, true);
 
+    if (!item) {
+      return [];
+    }
+
     return Object.keys(item)
       .filter((key) => key.match(/Id/g))
       .map((key) => {
@@ -48,34 +52,13 @@ export class RepositoryManager {
   }
 
   private async removeDependencies<Entity>(
-    name: string,
-    criteria: criteria<Entity>,
+    dependencies: RepositoryItemDependency<Entity>[],
   ): Promise<void> {
-    const dependencies = await this.findDependecies(name, criteria);
-
-    if (!dependencies.length) {
-      return;
-    }
-
     await Promise.all(
       dependencies.map(({ name: depName, criteria }) =>
         this.removeAndCheck(depName, criteria),
       ),
     );
-  }
-
-  async remove<Entity>(
-    name: string,
-    criteria: criteria<Entity>,
-    checkForDependencies = true,
-  ): Promise<boolean> {
-    const repository = this.repositoryMap.get(name);
-
-    if (checkForDependencies) {
-      await this.removeDependencies(name, criteria);
-    }
-
-    return repository.remove(criteria);
   }
 
   async removeAndCheck<Entity>(
@@ -84,12 +67,25 @@ export class RepositoryManager {
     checkForDependencies = true,
   ): Promise<void> {
     const repository = this.repositoryMap.get(name);
+    let dependencies = [];
 
     if (checkForDependencies) {
-      await this.removeDependencies(name, criteria);
+      try {
+        dependencies = await this.findDependecies(name, criteria);
+      } catch (err) {
+        throw new Error(
+          `Could not find dependencies for [${name}] with criteria ${JSON.stringify(
+            criteria,
+          )}`,
+        );
+      }
     }
 
-    return repository.removeAndCheck(criteria);
+    await repository.removeAndCheck(criteria);
+
+    if (checkForDependencies) {
+      await this.removeDependencies(dependencies);
+    }
   }
 
   async find<Entity>(

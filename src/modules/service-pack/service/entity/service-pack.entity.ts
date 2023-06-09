@@ -6,9 +6,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ServicePackItem } from '../../item/entity/service-pack-item.entity';
 
 @Entity()
 export class ServicePack {
@@ -46,6 +48,9 @@ export class ServicePack {
   })
   @ManyToOne(() => Coin, (coin) => coin.servicePacks)
   coin: Coin;
+
+  @OneToMany(() => ServicePackItem, (item) => item.servicePack)
+  items: ServicePackItem[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

@@ -51,6 +51,7 @@ describe('ServicePackItemTypeController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),
+        items: [],
       };
 
       const expected = FindServicePackItemTypeResponseDto.from(
@@ -90,6 +91,7 @@ describe('ServicePackItemTypeController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      items: [],
     };
 
     const servicePackItemTypeListExpected =
@@ -114,6 +116,7 @@ describe('ServicePackItemTypeController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      items: [],
     };
     const createServicePackItemTypeDto: CreateServicePackItemTypeDto = {
       description: 'test',
@@ -140,6 +143,7 @@ describe('ServicePackItemTypeController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      items: [],
     };
 
     const updateServicePackItemTypeDto: UpdateServicePackItemTypeDto = {
