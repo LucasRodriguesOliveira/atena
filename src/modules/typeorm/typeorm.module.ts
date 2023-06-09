@@ -11,6 +11,8 @@ import { UserCompany } from '../company/entity/user-company.entity';
 import { ServicePackItemType } from '../service-pack/item-type/entity/service-pack-item-type.entity';
 import { PaymentMethod } from '../payment-method/entity/payment-method.entity';
 import { Coin } from '../coin/entity/coin.entity';
+import { ServicePack } from '../service-pack/service/entity/service-pack.entity';
+import { ServicePackItem } from '../service-pack/item/entity/service-pack-item.entity';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { Coin } from '../coin/entity/coin.entity';
         ServicePackItemType,
         PaymentMethod,
         Coin,
+        ServicePack,
+        ServicePackItem,
       ]),
     ),
   ],

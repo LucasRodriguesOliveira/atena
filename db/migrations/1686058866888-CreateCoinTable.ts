@@ -54,8 +54,7 @@ export class CreateCoinTable1686058866888 implements MigrationInterface {
           {
             name: 'deletedAt',
             type: 'timestamp',
-            isNullable: false,
-            default: 'now()',
+            isNullable: true,
           },
         ],
       }),

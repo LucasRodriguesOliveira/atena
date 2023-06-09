@@ -1,55 +1,89 @@
-import { HttpStatus, INestApplication } from '@nestjs/common';
-import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
-import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, HttpStatus } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
 import { envConfig } from '../src/config/env/env.config';
-import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { AuthModule } from '../src/modules/auth/auth.module';
-import { CoinModule } from '../src/modules/coin/coin.module';
-import { CoinController } from '../src/modules/coin/coin.controller';
-import { Coin } from '../src/modules/coin/entity/coin.entity';
+import { UserTypeModule } from '../src/modules/user-type/user-type.module';
+import { UserModule } from '../src/modules/user/user.module';
 import * as request from 'supertest';
-import { CreateCoinResponseDto } from '../src/modules/coin/dto/create-coin-response.dto';
-import { createCoin } from './utils/create/create-coin';
-import { CreateCoinDto } from '../src/modules/coin/dto/create-coin.dto';
-import { UpdateCoinDto } from '../src/modules/coin/dto/update-coin.dto';
+import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
+import { createServicePackItemType } from './utils/create/create-service-pack-item-type';
+import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { RepositoryManager } from './utils/repository';
 import { RepositoryItem } from './utils/repository/repository-item';
+import { ServicePackItem } from '../src/modules/service-pack/item/entity/service-pack-item.entity';
+import { ServicePackItemController } from '../src/modules/service-pack/item/service-pack-item.controller';
+import { ServicePackItemTypeController } from '../src/modules/service-pack/item-type/service-pack-item-type.controller';
+import { ServicePackController } from '../src/modules/service-pack/service/service-pack.controller';
+import { CoinController } from '../src/modules/coin/coin.controller';
+import { CreateServicePackItemResponseDto } from '../src/modules/service-pack/item/dto/create-service-pack-item-response.dto';
+import { createServicePackItem } from './utils/create/create-service-pack-item';
+import { CreateServicePackItemDto } from '../src/modules/service-pack/item/dto/create-service-pack-item.dto';
+import { createServicePack } from './utils/create/create-service-pack';
+import { UpdateServicePackItemDto } from '../src/modules/service-pack/item/dto/update-service-pack-item.dto';
+import { ServicePack } from '../src/modules/service-pack/service/entity/service-pack.entity';
+import { ServicePackItemType } from '../src/modules/service-pack/item-type/entity/service-pack-item-type.entity';
+import { ServicePackModule } from '../src/modules/service-pack/service-pack.module';
+import { ServicePackItemModule } from '../src/modules/service-pack/item/service-pack-item.module';
+import { ServicePackItemTypeModule } from '../src/modules/service-pack/item-type/service-pack-item-type.module';
+import { CoinModule } from '../src/modules/coin/coin.module';
 
-describe('CoinController (e2e)', () => {
+describe('ServicePackItemController (e2e)', () => {
   let app: INestApplication;
   let getToken: TokenFactoryResponse;
 
-  const basePath = '/coin';
+  const basePath = '/service-pack/item';
   const headers = {
     auth: 'authorization',
   };
 
+  let servicePackItemController: ServicePackItemController;
+  let servicePackItemTypeController: ServicePackItemTypeController;
+  let servicePackController: ServicePackController;
   let coinController: CoinController;
 
   let repositoryManager: RepositoryManager;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(envConfig),
         TypeormPostgresModule,
         AuthModule,
+        UserModule,
         CoinModule,
+        UserTypeModule,
+        ServicePackModule,
+        ServicePackItemModule,
+        ServicePackItemTypeModule,
       ],
     }).compile();
 
+    servicePackItemController = moduleFixture.get<ServicePackItemController>(
+      ServicePackItemController,
+    );
+    servicePackItemTypeController =
+      moduleFixture.get<ServicePackItemTypeController>(
+        ServicePackItemTypeController,
+      );
+    servicePackController = moduleFixture.get<ServicePackController>(
+      ServicePackController,
+    );
     coinController = moduleFixture.get<CoinController>(CoinController);
 
     repositoryManager = new RepositoryManager(moduleFixture);
-    repositoryManager.add([new RepositoryItem(Coin)]);
+    repositoryManager.add([
+      new RepositoryItem(ServicePackItem),
+      new RepositoryItem(ServicePack),
+      new RepositoryItem(ServicePackItemType),
+    ]);
 
     app = moduleFixture.createNestApplication();
     await app.init();
 
     getToken = await getTokenFactory({
       testingModule: moduleFixture,
-      testName: 'coin.e2e',
+      testName: 'ServicePackItem.e2e',
     });
   });
 
@@ -59,60 +93,6 @@ describe('CoinController (e2e)', () => {
   });
 
   describe('/', () => {
-    describe('(GET)', () => {
-      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
-        it('should not allow access to the route without a jwt token', () => {
-          return request(app.getHttpServer())
-            .get(basePath)
-            .expect(HttpStatus.UNAUTHORIZED);
-        });
-      });
-
-      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
-        let token: string;
-
-        beforeAll(async () => {
-          token = await getToken.default();
-        });
-
-        it('should not allow access to the route due to user type is not admin', () => {
-          return request(app.getHttpServer())
-            .get(basePath)
-            .set(headers.auth, token)
-            .expect(HttpStatus.FORBIDDEN);
-        });
-      });
-
-      describe(`OK - ${HttpStatus.OK}`, () => {
-        let token: string;
-        let createCoinResponseDto: CreateCoinResponseDto;
-
-        beforeAll(async () => {
-          token = await getToken.admin();
-          createCoinResponseDto = await createCoin({
-            coinController,
-          });
-        });
-
-        afterAll(async () => {
-          await repositoryManager.removeAndCheck(Coin.name, {
-            id: createCoinResponseDto.id,
-          });
-        });
-
-        it('should return a list of coins', () => {
-          return request(app.getHttpServer())
-            .get(basePath)
-            .set(headers.auth, token)
-            .expect(HttpStatus.OK)
-            .then((response) => {
-              expect(response.body).toHaveProperty('length');
-              expect(response.body.length).toBeGreaterThanOrEqual(1);
-            });
-        });
-      });
-    });
-
     describe('(POST)', () => {
       describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
         it('should not allow access to the route without a jwt token', () => {
@@ -140,34 +120,46 @@ describe('CoinController (e2e)', () => {
       describe(`CREATED - ${HttpStatus.CREATED}`, () => {
         let token: string;
 
-        const createCoinDto: CreateCoinDto = {
-          name: 'test',
-          acronym: 'any',
-          value: 1.0,
+        const createServicePackItemDto: CreateServicePackItemDto = {
+          amount: 1,
+          itemTypeId: 0,
+          servicePackId: '',
         };
 
-        let coinId: number;
+        let servicePackItemId: number;
 
         beforeAll(async () => {
           token = await getToken.admin();
+          const [servicePack, itemType] = await Promise.all([
+            createServicePack({
+              servicePackController,
+              coinController,
+            }),
+            createServicePackItemType({
+              servicePackItemTypeController,
+            }),
+          ]);
+
+          createServicePackItemDto.itemTypeId = itemType.id;
+          createServicePackItemDto.servicePackId = servicePack.id;
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Coin.name, {
-            id: coinId,
+          await repositoryManager.removeAndCheck(ServicePackItem.name, {
+            id: servicePackItemId,
           });
         });
 
-        it('should create a coin', () => {
+        it('should create a servicePackItemType', () => {
           return request(app.getHttpServer())
             .post(basePath)
             .set(headers.auth, token)
-            .send(createCoinDto)
+            .send(createServicePackItemDto)
             .expect(HttpStatus.CREATED)
             .then((response) => {
               expect(response.body).toHaveProperty('id');
 
-              coinId = response.body.id;
+              servicePackItemId = response.body.id;
             });
         });
       });
@@ -189,9 +181,10 @@ describe('CoinController (e2e)', () => {
     });
   });
 
-  describe('/:coinId', () => {
-    const path = `${basePath}/:coinId`;
-    const pathTo = (coinId: number) => path.replace(/:coinId/, `${coinId}`);
+  describe('/:servicePackItemId', () => {
+    const path = `${basePath}/:servicePackItemId`;
+    const pathTo = (servicePackItemId: number) =>
+      path.replace(/:servicePackItemId/, `${servicePackItemId}`);
 
     describe('(GET)', () => {
       describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
@@ -219,34 +212,37 @@ describe('CoinController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let createCoinResponseDto: CreateCoinResponseDto;
+        let createServicePackItemResponse: CreateServicePackItemResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          createCoinResponseDto = await createCoin({
+          createServicePackItemResponse = await createServicePackItem({
+            servicePackItemTypeController,
+            servicePackController,
+            servicePackItemController,
             coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Coin.name, {
-            id: createCoinResponseDto.id,
+          await repositoryManager.removeAndCheck(ServicePackItem.name, {
+            id: createServicePackItemResponse.id,
           });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .get(pathTo(createCoinResponseDto.id))
+            .get(pathTo(createServicePackItemResponse.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {
               expect(response.body).toHaveProperty(
                 'id',
-                createCoinResponseDto.id,
+                createServicePackItemResponse.id,
               );
               expect(response.body).toHaveProperty(
-                'name',
-                createCoinResponseDto.name,
+                'amount',
+                createServicePackItemResponse.amount,
               );
               expect(response.body).toHaveProperty('createdAt');
             });
@@ -296,35 +292,40 @@ describe('CoinController (e2e)', () => {
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
 
-        const updateCoinDto: UpdateCoinDto = {
-          name: 'test',
+        const updateServicePackItemDto: UpdateServicePackItemDto = {
+          amount: 1,
         };
 
-        let coin: CreateCoinResponseDto;
+        let servicePackItem: CreateServicePackItemResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          coin = await createCoin({
+          servicePackItem = await createServicePackItem({
+            servicePackItemTypeController,
+            servicePackController,
+            servicePackItemController,
             coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Coin.name, {
-            id: coin.id,
+          await repositoryManager.removeAndCheck(ServicePackItem.name, {
+            id: servicePackItem.id,
           });
         });
 
-        it('should update a coin', () => {
+        it('should update a servicePackItem', () => {
           return request(app.getHttpServer())
-            .put(pathTo(coin.id))
+            .put(pathTo(servicePackItem.id))
             .set(headers.auth, token)
-            .send(updateCoinDto)
+            .send(updateServicePackItemDto)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toHaveProperty('id', coin.id);
-              expect(response.body).toHaveProperty('name', updateCoinDto.name);
-              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('id', servicePackItem.id);
+              expect(response.body).toHaveProperty(
+                'amount',
+                updateServicePackItemDto.amount,
+              );
               expect(response.body).toHaveProperty('updatedAt');
             });
         });
@@ -357,24 +358,30 @@ describe('CoinController (e2e)', () => {
 
       describe(`OK - ${HttpStatus.OK}`, () => {
         let token: string;
-        let coin: CreateCoinResponseDto;
+        let servicePackItem: CreateServicePackItemResponseDto;
 
         beforeAll(async () => {
           token = await getToken.admin();
-          coin = await createCoin({
+          servicePackItem = await createServicePackItem({
+            servicePackItemTypeController,
+            servicePackController,
+            servicePackItemController,
             coinController,
           });
         });
 
         afterAll(async () => {
-          await repositoryManager.removeAndCheck(Coin.name, {
-            id: coin.id,
+          await repositoryManager.removeAndCheck(ServicePack.name, {
+            id: servicePackItem.servicePack.id,
+          });
+          await repositoryManager.removeAndCheck(ServicePackItemType.name, {
+            id: servicePackItem.itemType.id,
           });
         });
 
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
-            .delete(pathTo(coin.id))
+            .delete(pathTo(servicePackItem.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {

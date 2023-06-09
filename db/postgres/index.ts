@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
-import { migrations } from './migrations';
+import { migrations } from '..';
 import { sep } from 'path';
 
 const result = config({

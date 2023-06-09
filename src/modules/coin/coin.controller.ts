@@ -87,7 +87,7 @@ export class CoinController {
   @UseGuards(JwtGuard, RoleGuard)
   @UserRole(UserTypeEnum.ADMIN)
   public async find(
-    @Param(':coinId', ValidationPipe) coinId: number,
+    @Param('coinId', ValidationPipe) coinId: number,
   ): Promise<FindCoinResponseDto> {
     const coin = await this.coinService.find(coinId);
 
