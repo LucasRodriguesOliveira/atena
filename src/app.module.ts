@@ -12,6 +12,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { CoinModule } from './modules/coin/coin.module';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { ServicePackModule } from './modules/service-pack/service-pack.module';
+import { ClientController } from './modules/client/client.controller';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ServicePackModule } from './modules/service-pack/service-pack.module';
     CoinModule,
     ServicePackModule,
     PaymentMethodModule,
+    ClientController,
   ],
 })
 export class AppModule {}
