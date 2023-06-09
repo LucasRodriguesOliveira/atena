@@ -24,7 +24,67 @@ export class CreateContractTable1686317324187 implements MigrationInterface {
             type: 'uuid',
             isNullable: false,
           },
-          // TODO: add all the columns remaining
+          {
+            name: 'subscriptionPrice',
+            type: 'decimal',
+            precision: 10,
+            scale: 4,
+            isNullable: false,
+          },
+          {
+            name: 'monthlyPayment',
+            type: 'decimal',
+            precision: 10,
+            scale: 4,
+            isNullable: false,
+          },
+          {
+            name: 'lateFee',
+            type: 'decimal',
+            precision: 10,
+            scale: 4,
+            isNullable: false,
+          },
+          {
+            name: 'monthlyFee',
+            type: 'decimal',
+            precision: 10,
+            scale: 5,
+            isNullable: false,
+          },
+          {
+            name: 'expiresAt',
+            type: 'date',
+            isNullable: false,
+          },
+          {
+            name: 'coinId',
+            type: 'int',
+            isNullable: false,
+          },
+          {
+            name: 'status',
+            type: 'boolean',
+            isNullable: false,
+            default: true,
+          },
+          {
+            name: 'createdAt',
+            type: 'timestamp',
+            isNullable: false,
+            default: 'now()',
+          },
+          {
+            name: 'updatedAt',
+            type: 'timestamp',
+            isNullable: false,
+            default: 'now()',
+          },
+          {
+            name: 'deletedAt',
+            type: 'timestamp',
+            isNullable: true,
+          },
         ],
       }),
     );
