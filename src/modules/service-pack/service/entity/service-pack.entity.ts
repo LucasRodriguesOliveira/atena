@@ -11,6 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ServicePackItem } from '../../item/entity/service-pack-item.entity';
+import { Contract } from '../../../contract/entity/contract.entity';
 
 @Entity()
 export class ServicePack {
@@ -51,6 +52,9 @@ export class ServicePack {
 
   @OneToMany(() => ServicePackItem, (item) => item.servicePack)
   items: ServicePackItem[];
+
+  @OneToMany(() => Contract, (contract) => contract.servicePack)
+  contracts: Contract[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

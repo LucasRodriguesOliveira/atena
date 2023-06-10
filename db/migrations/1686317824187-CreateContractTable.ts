@@ -1,4 +1,9 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
 export class CreateContractTable1686317824187 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -20,8 +25,18 @@ export class CreateContractTable1686317824187 implements MigrationInterface {
             isNullable: false,
           },
           {
+            name: 'companyId',
+            type: 'uuid',
+            isNullable: false,
+          },
+          {
             name: 'clientId',
             type: 'uuid',
+            isNullable: false,
+          },
+          {
+            name: 'coinId',
+            type: 'int',
             isNullable: false,
           },
           {
@@ -58,11 +73,6 @@ export class CreateContractTable1686317824187 implements MigrationInterface {
             isNullable: false,
           },
           {
-            name: 'coinId',
-            type: 'int',
-            isNullable: false,
-          },
-          {
             name: 'status',
             type: 'boolean',
             isNullable: false,
@@ -88,6 +98,33 @@ export class CreateContractTable1686317824187 implements MigrationInterface {
         ],
       }),
     );
+
+    await queryRunner.createForeignKeys('contract', [
+      new TableForeignKey({
+        name: 'Contract_ServicePack_fk',
+        columnNames: ['servicePackId'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'service_pack',
+      }),
+      new TableForeignKey({
+        name: 'Contract_Company_fk',
+        columnNames: ['companyId'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'company',
+      }),
+      new TableForeignKey({
+        name: 'Contract_Client_fk',
+        columnNames: ['clientId'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'client',
+      }),
+      new TableForeignKey({
+        name: 'Contract_Coin_fk',
+        columnNames: ['coinId'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'coin',
+      }),
+    ]);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
