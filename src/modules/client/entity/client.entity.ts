@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Contract } from '../../contract/entity/contract.entity';
 
 @Entity()
 export class Client {
@@ -17,6 +19,9 @@ export class Client {
 
   @Column({ type: 'varchar', length: 100 })
   email: string;
+
+  @OneToMany(() => Contract, (contract) => contract.client)
+  contracts: Contract[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

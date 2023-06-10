@@ -81,6 +81,7 @@ describe('ServicePackItemService', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       items: [],
+      contracts: [],
       coin: {
         id: 1,
         name: 'Real',
@@ -88,6 +89,7 @@ describe('ServicePackItemService', () => {
         status: true,
         value: 1,
         servicePacks: [],
+        contracts: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),

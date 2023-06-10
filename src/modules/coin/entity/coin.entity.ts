@@ -1,3 +1,4 @@
+import { Contract } from '../../contract/entity/contract.entity';
 import { ServicePack } from '../../service-pack/service/entity/service-pack.entity';
 import {
   Column,
@@ -28,6 +29,9 @@ export class Coin {
 
   @OneToMany(() => ServicePack, (servicePack) => servicePack.coin)
   servicePacks: ServicePack[];
+
+  @OneToMany(() => Contract, (contract) => contract.coin)
+  contracts: Contract[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

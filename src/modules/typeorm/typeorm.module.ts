@@ -14,6 +14,7 @@ import { Coin } from '../coin/entity/coin.entity';
 import { ServicePack } from '../service-pack/service/entity/service-pack.entity';
 import { ServicePackItem } from '../service-pack/item/entity/service-pack-item.entity';
 import { Client } from '../client/entity/client.entity';
+import { Contract } from '../contract/entity/contract.entity';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { Client } from '../client/entity/client.entity';
         ServicePack,
         ServicePackItem,
         Client,
+        Contract,
       ]),
     ),
   ],
