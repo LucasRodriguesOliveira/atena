@@ -14,6 +14,7 @@ import { CreateServicePackTable1686186968401 } from './migrations/1686186968401-
 import { CreateServicePackItemTable1686265843803 } from './migrations/1686265843803-CreateServicePackItemTable';
 import { CreateClientTable1686317728502 } from './migrations/1686317728502-CreateClientTable';
 import { CreateContractTable1686317824187 } from './migrations/1686317824187-CreateContractTable';
+import { CreateInstallmentTypeTable1686441514910 } from './migrations/1686441514910-CreateInstallmentTypeTable';
 
 export const migrations = [
   CreateUserTypeTable1685899894356,
@@ -32,4 +33,5 @@ export const migrations = [
   CreateServicePackItemTable1686265843803,
   CreateClientTable1686317728502,
   CreateContractTable1686317824187,
+  CreateInstallmentTypeTable1686441514910,
 ];
