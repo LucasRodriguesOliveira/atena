@@ -20,7 +20,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ListInstallmentTypeResponseDto } from './dto/list-installment-type-response.dto';
@@ -38,7 +37,7 @@ import { UpdateInstallmentTypeResponseDto } from './dto/update-installment-type-
 import { UpdateInstallmentTypeDto } from './dto/update-installment-type.dto';
 
 @Controller('installment/type')
-@ApiTags('installment/type')
+@ApiTags('installment')
 export class InstallmentTypeController {
   constructor(
     private readonly installmentTypeService: InstallmentTypeService,
@@ -50,9 +49,6 @@ export class InstallmentTypeController {
   @ApiOkResponse({
     type: ListInstallmentTypeResponseDto,
     isArray: true,
-  })
-  @ApiQuery({
-    type: QueryInstallmentTypeDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
   @UserRole(UserTypeEnum.ADMIN)
@@ -138,7 +134,6 @@ export class InstallmentTypeController {
     @Param('installmentTypeId', ValidationPipe) installmentTypeId: number,
     @Body(ValidationPipe) updateInstallmentTypeDto: UpdateInstallmentTypeDto,
   ): Promise<UpdateInstallmentTypeResponseDto> {
-    console.log(updateInstallmentTypeDto);
     if (Object.keys(updateInstallmentTypeDto).length === 0) {
       throw new HttpException(
         'inform description or status to update the installment type',

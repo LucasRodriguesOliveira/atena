@@ -25,11 +25,11 @@ export class ListClientResponseDto {
 
   static from(
     clients: Client[],
-    count: number,
+    total: number,
   ): PaginatedResult<ListClientResponseDto> {
     return {
       data: clients.map(ListClientResponseDto.map),
-      count,
+      total,
     };
   }
 }

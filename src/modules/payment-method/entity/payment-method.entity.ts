@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Installment } from '../../installment/item/entity/installment.entity';
 
 @Entity()
 export class PaymentMethod {
@@ -17,6 +19,9 @@ export class PaymentMethod {
 
   @Column({ type: 'boolean', default: true })
   status: boolean;
+
+  @OneToMany(() => Installment, (installment) => installment.paymentMethod)
+  installments: Installment[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

@@ -65,7 +65,7 @@ export class ContractService {
         break;
     }
 
-    const [contracts, count] = await this.contractRepository.findAndCount({
+    const [contracts, total] = await this.contractRepository.findAndCount({
       select: ['id', 'servicePack', 'company'],
       relations: {
         servicePack: true,
@@ -78,7 +78,7 @@ export class ContractService {
       take: items,
     });
 
-    return ListContractResponseDto.from(contracts, count);
+    return ListContractResponseDto.from(contracts, total);
   }
 
   public async create(

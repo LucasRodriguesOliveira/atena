@@ -14,6 +14,7 @@ import { PaymentMethodModule } from './modules/payment-method/payment-method.mod
 import { ServicePackModule } from './modules/service-pack/service-pack.module';
 import { ContractModule } from './modules/contract/contract.module';
 import { ClientModule } from './modules/client/client.module';
+import { InstallMentModule } from './modules/installment/item/installment.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ClientModule } from './modules/client/client.module';
     PaymentMethodModule,
     ClientModule,
     ContractModule,
+    InstallMentModule,
   ],
 })
 export class AppModule {}

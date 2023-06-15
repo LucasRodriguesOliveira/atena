@@ -36,14 +36,14 @@ export class ListCompanyResponseDto {
 
   static from({
     companies,
-    count,
+    total,
   }: {
     companies: Company[];
-    count: number;
+    total: number;
   }): PaginatedResult<ListCompanyResponseDto> {
     return {
       data: companies.map(ListCompanyResponseDto.map),
-      count,
+      total,
     };
   }
 }

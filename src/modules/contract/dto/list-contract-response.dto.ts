@@ -3,7 +3,7 @@ import { PaginatedResult } from '../../../shared/paginated-result.interface';
 import { Contract } from '../entity/contract.entity';
 import { FindCompanyResponseDto } from './find-company-response.dto';
 import { FindServicePackResponseDto } from './find-service-pack-response.dto';
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 
 class ListItemContractResponseDto {
   @ApiProperty({
@@ -50,14 +50,14 @@ export class ListContractResponseDto
 
   @ApiProperty({
     type: Number,
-    example: 10,
+    example: randomInt(1, 100),
   })
-  count: number;
+  total: number;
 
-  static from(data: Contract[], count: number): ListContractResponseDto {
+  static from(data: Contract[], total: number): ListContractResponseDto {
     return {
       data: ListItemContractResponseDto.from(data),
-      count,
+      total,
     };
   }
 }

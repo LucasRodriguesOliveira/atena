@@ -16,8 +16,8 @@ export async function createServicePack({
   const { id: coinId } = await createCoin({ coinController });
 
   const createServicePackDto: CreateServicePackDto = {
-    name: 'TEST_COIN',
-    description: 'TEST_COIN',
+    name: 'TEST_SERVICE_PACK',
+    description: 'TEST_SERVICE_PACK',
     duration: 1,
     lateFee: 1,
     monthlyFee: 1,

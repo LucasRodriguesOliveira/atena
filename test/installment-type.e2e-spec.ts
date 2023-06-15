@@ -3,21 +3,21 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { envConfig } from '../src/config/env/env.config';
 import { AuthModule } from '../src/modules/auth/auth.module';
-import { InstallmentType } from '../src/modules/installment/installment-type/entity/installment-type.entity';
-import { InstallmentTypeModule } from '../src/modules/installment/installment-type/installment-type.module';
+import { InstallmentType } from '../src/modules/installment/type/entity/installment-type.entity';
+import { InstallmentTypeModule } from '../src/modules/installment/type/installment-type.module';
 import { UserTypeModule } from '../src/modules/user-type/user-type.module';
 import { UserModule } from '../src/modules/user/user.module';
 import * as request from 'supertest';
 import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
-import { CreateInstallmentTypeDto } from '../src/modules/installment/installment-type/dto/create-installment-type.dto';
-import { CreateInstallmentTypeResponseDto } from '../src/modules/installment/installment-type/dto/create-installment-type-response.dto';
-import { UpdateInstallmentTypeDto } from '../src/modules/installment/installment-type/dto/update-installment-type.dto';
-import { InstallmentTypeController } from '../src/modules/installment/installment-type/installment-type.controller';
+import { CreateInstallmentTypeDto } from '../src/modules/installment/type/dto/create-installment-type.dto';
+import { CreateInstallmentTypeResponseDto } from '../src/modules/installment/type/dto/create-installment-type-response.dto';
+import { UpdateInstallmentTypeDto } from '../src/modules/installment/type/dto/update-installment-type.dto';
+import { InstallmentTypeController } from '../src/modules/installment/type/installment-type.controller';
 import { createInstallmentType } from './utils/create/create-installment-type';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
 import { RepositoryManager } from './utils/repository';
 import { RepositoryItem } from './utils/repository/repository-item';
-import { QueryInstallmentTypeDto } from '../src/modules/installment/installment-type/dto/query-installment-type.dto';
+import { QueryInstallmentTypeDto } from '../src/modules/installment/type/dto/query-installment-type.dto';
 
 describe('InstallmentTypeController (e2e)', () => {
   let app: INestApplication;

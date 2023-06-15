@@ -8,10 +8,9 @@ import { CreateInstallmentTypeDto } from './dto/create-installment-type.dto';
 import { CreateInstallmentTypeResponseDto } from './dto/create-installment-type-response.dto';
 import { UpdateInstallmentTypeDto } from './dto/update-installment-type.dto';
 import { UpdateInstallmentTypeResponseDto } from './dto/update-installment-type-response.dto';
-import { InstallmentTypeController } from './installment-type.controller';
 
-describe('InstallmentTypeController', () => {
-  let controller: InstallmentTypeController;
+describe('InstallmentTypeService', () => {
+  let service: InstallmentTypeService;
   const repository = {
     findOneBy: jest.fn(),
     findOneByOrFail: jest.fn(),
@@ -23,20 +22,17 @@ describe('InstallmentTypeController', () => {
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [InstallmentTypeController],
       providers: [
         InstallmentTypeService,
         { provide: getRepositoryToken(InstallmentType), useValue: repository },
       ],
     }).compile();
 
-    controller = moduleRef.get<InstallmentTypeController>(
-      InstallmentTypeController,
-    );
+    service = moduleRef.get<InstallmentTypeService>(InstallmentTypeService);
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(service).toBeDefined();
   });
 
   describe('Find', () => {
@@ -44,6 +40,7 @@ describe('InstallmentTypeController', () => {
       id: 1,
       description: 'test',
       status: true,
+      installments: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -57,7 +54,7 @@ describe('InstallmentTypeController', () => {
     });
 
     it('should find a installment-type by id', async () => {
-      const result = await controller.find(installmentType.id);
+      const result = await service.find(installmentType.id);
 
       expect(repository.findOneByOrFail).toHaveBeenCalled();
       expect(result).toEqual(installmentTypeExpected);
@@ -69,6 +66,7 @@ describe('InstallmentTypeController', () => {
       id: 1,
       description: 'test',
       status: true,
+      installments: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -83,7 +81,7 @@ describe('InstallmentTypeController', () => {
     });
 
     it('should return a list of installment-types', async () => {
-      const result = await controller.list({ description: 'test' });
+      const result = await service.list({ description: 'test' });
 
       expect(repository.find).toHaveBeenCalled();
       expect(result).toStrictEqual(installmentTypeExpected);
@@ -95,6 +93,7 @@ describe('InstallmentTypeController', () => {
       id: 1,
       description: 'test',
       status: true,
+      installments: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -111,7 +110,7 @@ describe('InstallmentTypeController', () => {
     });
 
     it('should create a installment-type', async () => {
-      const result = await controller.create(createInstallmentTypeDto);
+      const result = await service.create(createInstallmentTypeDto);
 
       expect(repository.save).toHaveBeenCalled();
       expect(result).toStrictEqual(expected);
@@ -123,6 +122,7 @@ describe('InstallmentTypeController', () => {
       id: 1,
       description: 'test',
       status: true,
+      installments: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -140,7 +140,7 @@ describe('InstallmentTypeController', () => {
     });
 
     it('should update a installment-type', async () => {
-      const result = await controller.update(
+      const result = await service.update(
         installmentType.id,
         updateInstallmentTypeDto,
       );
@@ -162,7 +162,7 @@ describe('InstallmentTypeController', () => {
     });
 
     it('should soft delete a installment-type', async () => {
-      const result = await controller.delete(installmentTypeId);
+      const result = await service.delete(installmentTypeId);
 
       expect(repository.softDelete).toHaveBeenCalled();
       expect(result).toBe(true);
