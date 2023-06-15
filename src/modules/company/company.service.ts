@@ -66,7 +66,7 @@ export class CompanyService {
       }
     }
 
-    const [companies, count] = await this.companyRepository.findAndCount({
+    const [companies, total] = await this.companyRepository.findAndCount({
       where: query,
       skip: page,
       take: maxResults,
@@ -74,7 +74,7 @@ export class CompanyService {
 
     return ListCompanyResponseDto.from({
       companies,
-      count,
+      total,
     });
   }
 

@@ -32,14 +32,14 @@ export class ClientService {
   public async list({
     name,
   }: QueryClientDto): Promise<PaginatedResult<ListClientResponseDto>> {
-    const [clients, count] = await this.clientRepository.findAndCount({
+    const [clients, total] = await this.clientRepository.findAndCount({
       select: ['id', 'name'],
       where: {
         ...(name ? { name: Like(name) } : {}),
       },
     });
 
-    return ListClientResponseDto.from(clients, count);
+    return ListClientResponseDto.from(clients, total);
   }
 
   public async create(

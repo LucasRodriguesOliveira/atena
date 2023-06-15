@@ -174,9 +174,9 @@ describe('ContractControlle (e2e)', () => {
             .query(queryContractDto)
             .expect(HttpStatus.OK)
             .then((response) => {
-              expect(response.body).toHaveProperty('count');
+              expect(response.body).toHaveProperty('total');
               expect(response.body).toHaveProperty('data');
-              expect(response.body.count).toBeGreaterThanOrEqual(1);
+              expect(response.body.total).toBeGreaterThanOrEqual(1);
               expect(response.body.data.length).toBeGreaterThanOrEqual(1);
             });
         });

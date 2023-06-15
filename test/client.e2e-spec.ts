@@ -108,7 +108,7 @@ describe('ClientController (e2e)', () => {
             .expect(HttpStatus.OK)
             .then((response) => {
               expect(response.body).toHaveProperty('data.length');
-              expect(response.body.count).toBeGreaterThanOrEqual(1);
+              expect(response.body.total).toBeGreaterThanOrEqual(1);
             });
         });
       });

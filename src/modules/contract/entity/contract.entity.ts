@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -12,6 +13,7 @@ import { ServicePack } from '../../service-pack/service/entity/service-pack.enti
 import { Client } from '../../client/entity/client.entity';
 import { Company } from '../../company/entity/company.entity';
 import { Coin } from '../../coin/entity/coin.entity';
+import { Installment } from '../../installment/item/entity/installment.entity';
 
 @Entity()
 export class Contract {
@@ -49,6 +51,9 @@ export class Contract {
   })
   @ManyToOne(() => Coin, (coin) => coin.contracts)
   coin: Coin;
+
+  @OneToMany(() => Installment, (installment) => installment.contract)
+  installments: Installment[];
 
   @Column({ type: 'decimal', precision: 10, scale: 4 })
   subscriptionPrice: number;

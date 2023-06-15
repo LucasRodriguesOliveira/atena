@@ -90,6 +90,7 @@ describe('ServicePackItemService', () => {
         value: 1,
         servicePacks: [],
         contracts: [],
+        installments: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),

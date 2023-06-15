@@ -100,7 +100,7 @@ describe('CompanyService', () => {
 
     const queryBuilderResult = {
       companies: [company],
-      count: 1,
+      total: 1,
     };
 
     const expected: PaginatedResult<ListCompanyResponseDto> =
@@ -116,7 +116,7 @@ describe('CompanyService', () => {
       beforeEach(() => {
         repository.findAndCount.mockResolvedValueOnce([
           queryBuilderResult.companies,
-          queryBuilderResult.count,
+          queryBuilderResult.total,
         ]);
       });
 
@@ -138,7 +138,7 @@ describe('CompanyService', () => {
       beforeEach(() => {
         repository.findAndCount.mockResolvedValueOnce([
           queryBuilderResult.companies,
-          queryBuilderResult.count,
+          queryBuilderResult.total,
         ]);
       });
 
@@ -160,7 +160,7 @@ describe('CompanyService', () => {
       beforeEach(() => {
         repository.findAndCount.mockResolvedValueOnce([
           queryBuilderResult.companies,
-          queryBuilderResult.count,
+          queryBuilderResult.total,
         ]);
       });
 
