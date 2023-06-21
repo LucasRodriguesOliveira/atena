@@ -444,8 +444,8 @@ describe('InstallmentController (e2e)', () => {
             .put(pathTo(installment.installment.id))
             .set(headers.auth, token)
             .send(updateInstallmentDto)
+            .expect(HttpStatus.OK)
             .then((response) => {
-              console.log(response.body);
               expect(response.body).toHaveProperty(
                 'id',
                 installment.installment.id,
