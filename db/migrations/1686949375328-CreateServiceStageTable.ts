@@ -47,7 +47,7 @@ export class CreateServiceStageTable1686949375328
   });
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable(this.serviceStage);
+    await queryRunner.createTable(this.serviceStage);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
