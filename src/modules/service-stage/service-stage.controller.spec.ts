@@ -46,6 +46,7 @@ describe('ServiceStageController', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
+      costumerServices: [],
     };
 
     const expected = FindServiceStageResponseDto.from(serviceStage);
@@ -70,6 +71,7 @@ describe('ServiceStageController', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       status: true,
+      costumerServices: [],
     };
 
     const expected = ListServiceStageResponseDto.from([serviceStage]);
@@ -96,6 +98,7 @@ describe('ServiceStageController', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       status: true,
+      costumerServices: [],
     };
     const createServiceStageDto: CreateServiceStageDto = {
       description: randomBytes(10).toString('hex'),
@@ -123,6 +126,7 @@ describe('ServiceStageController', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       status: true,
+      costumerServices: [],
     };
 
     const updateServiceStageDto: UpdateServiceStageDto = {

@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Contract } from '../../contract/entity/contract.entity';
+import { CostumerService } from '../../costumer-service/entity/costumer-service.entity';
 
 @Entity()
 export class Client {
@@ -22,6 +23,9 @@ export class Client {
 
   @OneToMany(() => Contract, (contract) => contract.client)
   contracts: Contract[];
+
+  @OneToMany(() => CostumerService, (costumerService) => costumerService.client)
+  costumerServices: CostumerService[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

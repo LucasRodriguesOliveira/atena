@@ -122,6 +122,7 @@ describe('ContractService', () => {
     name: randomBytes(10).toString('hex'),
     email: randomBytes(20).toString('hex'),
     contracts: [],
+    costumerServices: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: new Date(),

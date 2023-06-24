@@ -1,4 +1,5 @@
 import { UserCompany } from '../../company/entity/user-company.entity';
+import { CostumerService } from '../../costumer-service/entity/costumer-service.entity';
 import { UserType } from '../../user-type/entity/user-type.entity';
 import {
   Column,
@@ -39,6 +40,9 @@ export class User {
 
   @OneToMany(() => UserCompany, (userCompany) => userCompany.user)
   userCompanies: UserCompany[];
+
+  @OneToMany(() => CostumerService, (costumerService) => costumerService.user)
+  costumerServices: CostumerService[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

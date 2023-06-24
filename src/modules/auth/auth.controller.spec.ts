@@ -84,6 +84,7 @@ describe('AuthController', () => {
       deletedAt: new Date(),
       token: '',
       userCompanies: [],
+      costumerServices: [],
       type: {
         id: 0,
         description: 'test type',
@@ -118,6 +119,7 @@ describe('AuthController', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       userCompanies: [],
+      costumerServices: [],
       token: '',
       type: {
         id: 0,

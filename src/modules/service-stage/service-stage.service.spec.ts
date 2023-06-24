@@ -41,6 +41,7 @@ describe('ServiceStageService', () => {
       id: randomInt(10, 100),
       description: randomBytes(10).toString('hex'),
       status: true,
+      costumerServices: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),
@@ -68,6 +69,7 @@ describe('ServiceStageService', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       status: true,
+      costumerServices: [],
     };
 
     const expected = ListServiceStageResponseDto.from([serviceStage]);
@@ -94,6 +96,7 @@ describe('ServiceStageService', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       status: true,
+      costumerServices: [],
     };
     const createServiceStageDto: CreateServiceStageDto = {
       description: randomBytes(10).toString('hex'),
@@ -121,6 +124,7 @@ describe('ServiceStageService', () => {
       updatedAt: new Date(),
       deletedAt: new Date(),
       status: true,
+      costumerServices: [],
     };
 
     const updateServiceStageDto: UpdateServiceStageDto = {

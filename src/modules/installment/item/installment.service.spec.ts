@@ -94,6 +94,7 @@ describe('InstallmentService', () => {
     name: 'test',
     email: 'test',
     contracts: [],
+    costumerServices: [],
     createdAt,
     updatedAt,
     deletedAt,
