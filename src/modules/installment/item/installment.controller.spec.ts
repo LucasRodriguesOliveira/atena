@@ -100,6 +100,7 @@ describe('InstallmentController', () => {
     email: 'test',
     contracts: [],
     costumerServices: [],
+    tickets: [],
     createdAt,
     updatedAt,
     deletedAt,

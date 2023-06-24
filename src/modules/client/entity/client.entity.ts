@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Contract } from '../../contract/entity/contract.entity';
 import { CostumerService } from '../../costumer-service/entity/costumer-service.entity';
+import { SupportTicket } from '../../support-ticket/entity/support-ticket.entity';
 
 @Entity()
 export class Client {
@@ -26,6 +27,9 @@ export class Client {
 
   @OneToMany(() => CostumerService, (costumerService) => costumerService.client)
   costumerServices: CostumerService[];
+
+  @OneToMany(() => SupportTicket, (ticket) => ticket.client)
+  tickets: SupportTicket[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

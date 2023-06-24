@@ -21,6 +21,7 @@ import { ServiceStage } from '../service-stage/entity/service-stage.entity';
 import { CostumerService } from '../costumer-service/entity/costumer-service.entity';
 import { Reason as ClientBlackListReason } from '../black-list/reason/entity/reason.entity';
 import { BlackList as ClientBlackList } from '../black-list/item/entity/black-list.entity';
+import { SupportTicket } from '../support-ticket/entity/support-ticket.entity';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { BlackList as ClientBlackList } from '../black-list/item/entity/black-li
         CostumerService,
         ClientBlackListReason,
         ClientBlackList,
+        SupportTicket,
       ]),
     ),
   ],

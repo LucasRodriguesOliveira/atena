@@ -305,6 +305,7 @@ describe('CompanyController', () => {
         token: null,
         userCompanies: [],
         costumerServices: [],
+        tickets: [],
         type: {
           id: 1,
           description: 'test',
@@ -367,6 +368,7 @@ describe('CompanyController', () => {
         },
         userCompanies: [],
         costumerServices: [],
+        tickets: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: new Date(),

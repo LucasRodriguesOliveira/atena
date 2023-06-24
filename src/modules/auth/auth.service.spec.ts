@@ -72,6 +72,7 @@ describe('AuthService', () => {
       deletedAt: new Date(),
       userCompanies: [],
       costumerServices: [],
+      tickets: [],
       token: '',
       type: {
         id: 0,
@@ -108,6 +109,7 @@ describe('AuthService', () => {
       deletedAt: new Date(),
       userCompanies: [],
       costumerServices: [],
+      tickets: [],
       token: '',
       type: {
         id: 0,
