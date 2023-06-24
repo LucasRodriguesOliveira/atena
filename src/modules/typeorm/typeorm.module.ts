@@ -20,6 +20,7 @@ import { Installment } from '../installment/item/entity/installment.entity';
 import { ServiceStage } from '../service-stage/entity/service-stage.entity';
 import { CostumerService } from '../costumer-service/entity/costumer-service.entity';
 import { Reason as ClientBlackListReason } from '../black-list/reason/entity/reason.entity';
+import { BlackList as ClientBlackList } from '../black-list/item/entity/black-list.entity';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { Reason as ClientBlackListReason } from '../black-list/reason/entity/rea
         ServiceStage,
         CostumerService,
         ClientBlackListReason,
+        ClientBlackList,
       ]),
     ),
   ],

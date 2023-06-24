@@ -17,6 +17,7 @@ import { ClientModule } from './modules/client/client.module';
 import { InstallmentModule } from './modules/installment/item/installment.module';
 import { ServiceStageModule } from './modules/service-stage/service-stage.module';
 import { CostumerServiceModule } from './modules/costumer-service/costumer-service.module';
+import { BlackListModule } from './modules/black-list/black-list.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CostumerServiceModule } from './modules/costumer-service/costumer-servi
     InstallmentModule,
     ServiceStageModule,
     CostumerServiceModule,
+    BlackListModule,
   ],
 })
 export class AppModule {}

@@ -42,6 +42,7 @@ describe('ReasonController', () => {
     id: 1,
     title: 'test',
     details: '',
+    items: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: new Date(),
