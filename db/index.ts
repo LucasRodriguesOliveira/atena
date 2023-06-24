@@ -18,6 +18,7 @@ import { CreateInstallmentTypeTable1686441514910 } from './migrations/1686441514
 import { CreateInstallmentTable1686447882372 } from './migrations/1686447882372-CreateInstallmentTable';
 import { CreateServiceStageTable1686949375328 } from './migrations/1686949375328-CreateServiceStageTable';
 import { CreateCostumerServiceTable1687382298320 } from './migrations/1687382298320-CreateCostumerServiceTable';
+import { CreateClientBlackListReasonTable1687568092067 } from './migrations/1687568092067-CreateClientBlackListReasonTable';
 
 export const migrations = [
   CreateUserTypeTable1685899894356,
@@ -40,4 +41,5 @@ export const migrations = [
   CreateInstallmentTable1686447882372,
   CreateServiceStageTable1686949375328,
   CreateCostumerServiceTable1687382298320,
+  CreateClientBlackListReasonTable1687568092067,
 ];
