@@ -71,6 +71,7 @@ describe('UserController', () => {
         },
         userCompanies: [],
         costumerServices: [],
+        tickets: [],
         username: 'test.test',
         password: '123',
         token: null,
@@ -107,6 +108,7 @@ describe('UserController', () => {
           name: 'test',
           userCompanies: [],
           costumerServices: [],
+          tickets: [],
           type: {
             id: 0,
             description: 'test type',
@@ -161,6 +163,7 @@ describe('UserController', () => {
       token: null,
       userCompanies: [],
       costumerServices: [],
+      tickets: [],
       type: {
         id: 0,
         description: 'test',

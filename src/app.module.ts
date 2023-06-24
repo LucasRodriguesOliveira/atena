@@ -18,6 +18,7 @@ import { InstallmentModule } from './modules/installment/item/installment.module
 import { ServiceStageModule } from './modules/service-stage/service-stage.module';
 import { CostumerServiceModule } from './modules/costumer-service/costumer-service.module';
 import { BlackListModule } from './modules/black-list/black-list.module';
+import { SupportTicketModule } from './modules/support-ticket/support-ticket.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { BlackListModule } from './modules/black-list/black-list.module';
     ServiceStageModule,
     CostumerServiceModule,
     BlackListModule,
+    SupportTicketModule,
   ],
 })
 export class AppModule {}

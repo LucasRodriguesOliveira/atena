@@ -93,6 +93,7 @@ describe('CostumerServiceService', () => {
       deletedAt: new Date(),
       contracts: [],
       costumerServices: [],
+      tickets: [],
     },
     user: {
       id: randomUUID(),
@@ -111,6 +112,7 @@ describe('CostumerServiceService', () => {
       },
       costumerServices: [],
       userCompanies: [],
+      tickets: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: new Date(),

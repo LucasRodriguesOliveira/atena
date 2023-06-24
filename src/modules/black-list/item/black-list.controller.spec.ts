@@ -84,6 +84,7 @@ describe('BlackListController', () => {
     email: 'test',
     contracts: [],
     costumerServices: [],
+    tickets: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: new Date(),

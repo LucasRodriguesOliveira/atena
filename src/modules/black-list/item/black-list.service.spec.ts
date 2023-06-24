@@ -81,6 +81,7 @@ describe('BlackListService', () => {
     name: 'test',
     email: 'test',
     contracts: [],
+    tickets: [],
     costumerServices: [],
     createdAt: new Date(),
     updatedAt: new Date(),

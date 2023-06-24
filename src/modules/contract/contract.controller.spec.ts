@@ -125,6 +125,7 @@ describe('ContractController', () => {
     email: randomBytes(20).toString('hex'),
     contracts: [],
     costumerServices: [],
+    tickets: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: new Date(),
