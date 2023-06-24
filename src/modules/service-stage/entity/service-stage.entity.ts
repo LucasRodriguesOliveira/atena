@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CostumerService } from '../../costumer-service/entity/costumer-service.entity';
 
 @Entity()
 export class ServiceStage {
@@ -17,6 +19,12 @@ export class ServiceStage {
 
   @Column({ type: 'boolean', default: true })
   status: boolean;
+
+  @OneToMany(
+    () => CostumerService,
+    (costumerService) => costumerService.serviceStage,
+  )
+  costumerServices: CostumerService[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

@@ -70,6 +70,7 @@ describe('UserController', () => {
           permissionGroups: [],
         },
         userCompanies: [],
+        costumerServices: [],
         username: 'test.test',
         password: '123',
         token: null,
@@ -105,6 +106,7 @@ describe('UserController', () => {
           id: '0',
           name: 'test',
           userCompanies: [],
+          costumerServices: [],
           type: {
             id: 0,
             description: 'test type',
@@ -158,6 +160,7 @@ describe('UserController', () => {
       password: 'test',
       token: null,
       userCompanies: [],
+      costumerServices: [],
       type: {
         id: 0,
         description: 'test',

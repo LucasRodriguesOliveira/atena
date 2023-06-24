@@ -18,6 +18,7 @@ import { Contract } from '../contract/entity/contract.entity';
 import { InstallmentType } from '../installment/type/entity/installment-type.entity';
 import { Installment } from '../installment/item/entity/installment.entity';
 import { ServiceStage } from '../service-stage/entity/service-stage.entity';
+import { CostumerService } from '../costumer-service/entity/costumer-service.entity';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ServiceStage } from '../service-stage/entity/service-stage.entity';
         InstallmentType,
         Installment,
         ServiceStage,
+        CostumerService,
       ]),
     ),
   ],

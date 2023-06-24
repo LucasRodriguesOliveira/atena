@@ -189,7 +189,7 @@ Table ServiceStage {
   note: 'Waiting for service, in attendance, refused services, accepted services, ...'
 }
 
-Table ClientService {
+Table CostumerService {
   id             int       [pk, increment, not null]
   clientId       varchar   [not null]
   userId         varchar   [not null]
@@ -243,9 +243,9 @@ Ref "Installment_PaymentMethod_fk": Installment.paymentMethodId < PaymentMethod.
 Ref "Installment_InstallmentType_fk": Installment.installmentTypeId < InstallmentType.id
 Ref "Installment_Coin_fk": Installment.coinId < Coin.id
 Ref "Installment_Contract_fk": Installment.contractId < Contract.id
-Ref "ClientService_Client_fk": ClientService.clientId < Client.id
-Ref "ClientService_ServiceStage_fk": ClientService.serviceStageId < ServiceStage.id
-Ref "ClientService_User_fk": ClientService.userId < User.id
+Ref "CostumerService_Client_fk": CostumerService.clientId < Client.id
+Ref "CostumerService_ServiceStage_fk": CostumerService.serviceStageId < ServiceStage.id
+Ref "CostumerService_User_fk": CostumerService.userId < User.id
 Ref "ClientBlackList_ClientBlackListReason_fk": ClientBlackList.clientBlackListReasonId < ClientBlackListReason.id
 Ref "ClientBlackList_Client_fk": ClientBlackList.clientId < Client.id
 Ref "SupportTicket_Client_fk": SupportTicket.clientId < Client.id
