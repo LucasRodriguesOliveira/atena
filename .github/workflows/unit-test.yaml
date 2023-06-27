@@ -28,5 +28,6 @@ jobs:
         run: yarn --frozen-lockfile
       - run: yarn build
   run:
-    - name: Run Unit tests
-      run: yarn test
+    steps:
+      - name: Run Unit tests
+        run: yarn test
