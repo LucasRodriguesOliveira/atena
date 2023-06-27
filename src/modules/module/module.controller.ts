@@ -10,7 +10,8 @@ import {
   HttpStatus,
   UseGuards,
   ValidationPipe,
-  HttpException,
+  NotFoundException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -28,11 +29,12 @@ import { FindModuleDto } from './dto/find-module.dto';
 import { ListModuleDto } from './dto/list-module.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('module')
 @ApiTags('module')
+@AppModule('MODULE')
 export class ModuleController {
   constructor(private readonly moduleService: ModuleService) {}
 
@@ -41,23 +43,19 @@ export class ModuleController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: FindModuleDto,
-    description: 'Module received',
   })
-  @ApiNotFoundResponse({
-    description: 'Module could not be found',
-  })
+  @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
-    @Param('id', ValidationPipe) id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<FindModuleDto> {
-    const module = await this.moduleService.find(id);
+    let module: FindModuleDto;
 
-    if (!module) {
-      throw new HttpException(
-        'Module could not be found',
-        HttpStatus.NOT_FOUND,
-      );
+    try {
+      module = await this.moduleService.find(id);
+    } catch (err) {
+      throw new NotFoundException('Module could not be found');
     }
 
     return module;
@@ -67,11 +65,11 @@ export class ModuleController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: [ListModuleDto],
-    description: 'A list of all modules',
+    type: ListModuleDto,
+    isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(): Promise<ListModuleDto[]> {
     return this.moduleService.list();
   }
@@ -81,10 +79,9 @@ export class ModuleController {
   @ApiBearerAuth()
   @ApiCreatedResponse({
     type: CreateModuleResponse,
-    description: 'Module created',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createModuleDto: CreateModuleDto,
   ): Promise<CreateModuleResponse> {
@@ -96,12 +93,11 @@ export class ModuleController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: UpdateModuleResponse,
-    description: 'Module updated',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
-    @Param('id', ValidationPipe) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) updateModuleDto: UpdateModuleDto,
   ): Promise<UpdateModuleResponse> {
     return this.moduleService.update(id, updateModuleDto);
@@ -112,13 +108,10 @@ export class ModuleController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: Boolean,
-    description: 'Confirmation that the module has been removed',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
-  public async delete(
-    @Param('id', ValidationPipe) id: number,
-  ): Promise<boolean> {
+  @AccessPermission('DELETE')
+  public async delete(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
     return this.moduleService.delete(id);
   }
 }

@@ -16,6 +16,7 @@ describe('ServicePackItemService', () => {
 
   const servicePackItemRepository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -104,27 +105,14 @@ describe('ServicePackItemService', () => {
       const expected = FindServicePackItemResponseDto.from(item);
 
       beforeEach(() => {
-        servicePackItemRepository.findOne.mockResolvedValueOnce(item);
+        servicePackItemRepository.findOneOrFail.mockResolvedValueOnce(item);
       });
 
       it('should find a service pack item by id', async () => {
         const result = await service.find(item.id);
 
         expect(result).toStrictEqual(expected);
-        expect(servicePackItemRepository.findOne).toHaveBeenCalled();
-      });
-    });
-
-    describe('Fail', () => {
-      beforeEach(() => {
-        servicePackItemRepository.findOne.mockResolvedValueOnce({});
-      });
-
-      it('should return null for not findind the item', async () => {
-        const result = await service.find(servicePackItem.id);
-
-        expect(result).toBeNull();
-        expect(servicePackItemRepository.findOne).toHaveBeenCalled();
+        expect(servicePackItemRepository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });

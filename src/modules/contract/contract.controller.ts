@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -20,7 +20,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ContractService } from './contract.service';
@@ -36,9 +35,12 @@ import { FindContractResponseDto } from './dto/find-contract-response.dto';
 import { randomUUID } from 'crypto';
 import { UpdateContractResponseDto } from './dto/update-contract-response.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('contract')
 @ApiTags('contract')
+@AppModule('CONTRACT')
 export class ContractController {
   constructor(private readonly contractService: ContractService) {}
 
@@ -48,12 +50,8 @@ export class ContractController {
   @ApiOkResponse({
     type: ListContractResponseDto,
   })
-  @ApiQuery({
-    type: QueryContractDto,
-    required: true,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryContractDto: QueryContractDto,
   ): Promise<ListContractResponseDto> {
@@ -71,7 +69,7 @@ export class ContractController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createContractDto: CreateContractDto,
   ): Promise<CreateContractResponseDto> {
@@ -84,9 +82,7 @@ export class ContractController {
   @ApiOkResponse({
     type: FindContractResponseDto,
   })
-  @ApiNotFoundResponse({
-    description: 'Could not find the contract <contractId>',
-  })
+  @ApiNotFoundResponse()
   @ApiParam({
     type: String,
     name: 'contractId',
@@ -103,9 +99,8 @@ export class ContractController {
     try {
       contract = await this.contractService.find(contractId);
     } catch (err) {
-      throw new HttpException(
+      throw new NotFoundException(
         `Could not find the Contract [${contractId}]`,
-        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -118,18 +113,12 @@ export class ContractController {
   @ApiOkResponse({
     type: UpdateContractResponseDto,
   })
-  @ApiParam({
-    type: String,
-    name: 'contractId',
-    example: randomUUID(),
-    required: true,
-  })
   @ApiBody({
     type: UpdateContractDto,
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('contractId', ValidationPipe) contractId: string,
     @Body(ValidationPipe) updateContractDto: UpdateContractDto,
@@ -143,14 +132,8 @@ export class ContractController {
   @ApiOkResponse({
     type: Boolean,
   })
-  @ApiParam({
-    type: String,
-    name: 'contractId',
-    example: randomUUID(),
-    required: true,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('contractId', ValidationPipe) contractId: string,
   ): Promise<boolean> {

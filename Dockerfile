@@ -6,8 +6,11 @@ COPY yarn.lock ./
 
 RUN yarn
 RUN yarn add bcrypt
+RUN yarn global add typeorm
 
 COPY . .
+
+RUN yarn typeorm migration:run -d ./db/postgres
 
 EXPOSE 3000
 

@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
+  NotFoundException,
   HttpStatus,
   Param,
   Post,
@@ -19,25 +19,24 @@ import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { InstallmentService } from './installment.service';
-import { randomUUID } from 'crypto';
 import { FindInstallmentResponseDto } from './dto/find-installment-respose.dto';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { RoleGuard } from '../../auth/guard/role.guard';
-import { UserRole } from '../../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../../user-type/type/user-type.enum';
 import { QueryInstallmentDto } from './dto/query-installment.dto';
 import { ListInstallmentResponseDto } from './dto/list-installment-response.dto';
 import { CreateInstallmentResponseDto } from './dto/create-installment-response.dto';
 import { CreateInstallmentDto } from './dto/create-installment.dto';
 import { UpdateInstallmentResponseDto } from './dto/update-installment.response.dto';
 import { UpdateInstallmentDto } from './dto/update-installment.dto';
+import { AppModule } from '../../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../../auth/decorator/access-permission.decorator';
 
 @Controller('installment/item')
 @ApiTags('installment')
+@AppModule('INSTALLMENT_ITEM')
 export class InstallmentController {
   constructor(private readonly installmentService: InstallmentService) {}
 
@@ -48,7 +47,7 @@ export class InstallmentController {
     type: ListInstallmentResponseDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryInstallmentDto: QueryInstallmentDto,
   ): Promise<any> {
@@ -66,7 +65,7 @@ export class InstallmentController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createInstallmentDto: CreateInstallmentDto,
   ): Promise<CreateInstallmentResponseDto> {
@@ -79,17 +78,9 @@ export class InstallmentController {
   @ApiOkResponse({
     type: FindInstallmentResponseDto,
   })
-  @ApiNotFoundResponse({
-    description: 'Could not find the installment <installmentId>',
-  })
-  @ApiParam({
-    type: String,
-    required: true,
-    name: 'installmentId',
-    example: randomUUID(),
-  })
+  @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('installmentId', ValidationPipe) installmentId: string,
   ): Promise<FindInstallmentResponseDto> {
@@ -98,9 +89,8 @@ export class InstallmentController {
     try {
       installment = await this.installmentService.find(installmentId);
     } catch (err) {
-      throw new HttpException(
+      throw new NotFoundException(
         `Cound not find the installment [${installmentId}]`,
-        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -118,7 +108,7 @@ export class InstallmentController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async pay(
     @Param('installmentId', ValidationPipe) installmentId: string,
     @Body(ValidationPipe) updateInstallmentDto: UpdateInstallmentDto,
@@ -136,7 +126,7 @@ export class InstallmentController {
     type: Boolean,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('installmentId', ValidationPipe) installmentId: string,
   ): Promise<boolean> {

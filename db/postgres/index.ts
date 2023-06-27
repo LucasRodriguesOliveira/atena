@@ -4,7 +4,7 @@ import { migrations } from '..';
 import { sep } from 'path';
 
 const result = config({
-  path: `${process.cwd()}${sep}.env.test`,
+  path: `${process.cwd()}${sep}.env`,
 });
 
 console.log(result);

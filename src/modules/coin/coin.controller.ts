@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
+  NotFoundException,
   HttpStatus,
   Param,
   Post,
@@ -19,23 +19,23 @@ import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { CoinService } from './coin.service';
 import { ListCoinResponseDto } from './dto/list-coin-response.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { CreateCoinResponseDto } from './dto/create-coin-response.dto';
 import { CreateCoinDto } from './dto/create-coin.dto';
 import { FindCoinResponseDto } from './dto/find-coin-response.dto';
 import { UpdateCoinResponseDto } from './dto/update-coin-response.dto';
 import { UpdateCoinDto } from './dto/update-coin.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('coin')
 @ApiTags('coin')
+@AppModule('COIN')
 export class CoinController {
   constructor(private readonly coinService: CoinService) {}
 
@@ -47,7 +47,7 @@ export class CoinController {
     isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(): Promise<ListCoinResponseDto[]> {
     return this.coinService.list();
   }
@@ -60,7 +60,7 @@ export class CoinController {
   })
   @ApiBody({ type: CreateCoinDto })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createCoinDto: CreateCoinDto,
   ): Promise<CreateCoinResponseDto> {
@@ -73,26 +73,18 @@ export class CoinController {
   @ApiOkResponse({
     type: FindCoinResponseDto,
   })
-  @ApiParam({
-    type: Number,
-    allowEmptyValue: false,
-    example: 1,
-    name: 'coinId',
-    description: 'coin entity identification',
-    required: true,
-  })
   @ApiNotFoundResponse({
     description: 'could not find the coin',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('coinId', ValidationPipe) coinId: number,
   ): Promise<FindCoinResponseDto> {
     const coin = await this.coinService.find(coinId);
 
     if (!coin) {
-      throw new HttpException('could not find the coin', HttpStatus.NOT_FOUND);
+      throw new NotFoundException('could not find the coin');
     }
 
     return coin;
@@ -104,37 +96,18 @@ export class CoinController {
   @ApiOkResponse({
     type: UpdateCoinResponseDto,
   })
-  @ApiBadRequestResponse({
-    description:
-      'Even though all the properties in body are optional, at least one property is required',
-  })
-  @ApiParam({
-    type: Number,
-    allowEmptyValue: false,
-    example: 1,
-    name: 'coinId',
-    description: 'coin entity identification',
-    required: true,
-  })
+  @ApiBadRequestResponse()
   @ApiBody({
     type: UpdateCoinDto,
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('coinId', ValidationPipe) coinId: number,
     @Body(ValidationPipe) updateCoinDto: UpdateCoinDto,
   ): Promise<UpdateCoinResponseDto> {
-    let coin: UpdateCoinResponseDto;
-
-    try {
-      coin = await this.coinService.update(coinId, updateCoinDto);
-    } catch (err) {
-      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
-    }
-
-    return coin;
+    return this.coinService.update(coinId, updateCoinDto);
   }
 
   @Delete(':coinId')
@@ -143,16 +116,8 @@ export class CoinController {
   @ApiOkResponse({
     type: Boolean,
   })
-  @ApiParam({
-    type: Number,
-    allowEmptyValue: false,
-    example: 1,
-    name: 'coinId',
-    description: 'coin entity identification',
-    required: true,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('coinId', ValidationPipe) coinId: number,
   ): Promise<boolean> {

@@ -9,13 +9,13 @@ import { CreateModuleDto } from './dto/create-module.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
 import { UpdateModuleResponse } from './dto/update-module-response.dto';
 import { ModuleController } from './module.controller';
-import { HttpException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ModuleController', () => {
   let controller: ModuleController;
-  let service: ModuleService;
   const repository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -31,12 +31,10 @@ describe('ModuleController', () => {
       ],
     }).compile();
 
-    service = moduleRef.get<ModuleService>(ModuleService);
     controller = moduleRef.get<ModuleController>(ModuleController);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
     expect(controller).toBeDefined();
   });
 
@@ -54,14 +52,14 @@ describe('ModuleController', () => {
       const expectedModule = FindModuleDto.from(moduleItem);
 
       beforeEach(() => {
-        repository.findOne.mockResolvedValueOnce(moduleItem);
+        repository.findOneOrFail.mockResolvedValueOnce(moduleItem);
       });
 
       it('should find a module', async () => {
         const result = await controller.find(moduleItem.id);
 
         expect(result).toStrictEqual(expectedModule);
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
       });
     });
 
@@ -69,15 +67,15 @@ describe('ModuleController', () => {
       const moduleId = 1;
 
       beforeEach(() => {
-        repository.findOne.mockResolvedValueOnce({});
+        repository.findOneOrFail.mockRejectedValueOnce({});
       });
 
       it('should throw an error', async () => {
         await expect(() => controller.find(moduleId)).rejects.toThrow(
-          HttpException,
+          NotFoundException,
         );
 
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });

@@ -1,7 +1,7 @@
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
-import { FindOptionsWhere, ObjectID, Repository } from 'typeorm';
+import { FindOptionsWhere, ObjectId, Repository } from 'typeorm';
 
 type criteria<Entity> =
   | string
@@ -10,8 +10,8 @@ type criteria<Entity> =
   | number[]
   | Date
   | Date[]
-  | ObjectID
-  | ObjectID[]
+  | ObjectId
+  | ObjectId[]
   | FindOptionsWhere<Entity>;
 
 export class RepositoryItem<Entity extends EntityClassOrSchema> {

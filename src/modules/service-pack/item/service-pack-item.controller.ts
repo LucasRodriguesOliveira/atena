@@ -5,12 +5,13 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  HttpException,
   Param,
   Post,
   Put,
   UseGuards,
   ValidationPipe,
+  NotFoundException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -19,22 +20,22 @@ import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { ServicePackItemService } from './service-pack-item.service';
 import { CreateServicePackItemResponseDto } from './dto/create-service-pack-item-response.dto';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { RoleGuard } from '../../auth/guard/role.guard';
-import { UserRole } from '../../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../../user-type/type/user-type.enum';
 import { CreateServicePackItemDto } from './dto/create-service-pack-item.dto';
 import { FindServicePackItemResponseDto } from './dto/find-service-pack-item-response.dto';
 import { UpdateServicePackItemResponseDto } from './dto/update-service-pack-item-response.dto';
 import { UpdateServicePackItemDto } from './dto/update-service-pack-item.dto';
+import { AppModule } from '../../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../../auth/decorator/access-permission.decorator';
 
 @Controller('service-pack/item')
 @ApiTags('service-pack')
+@AppModule('SERVICE_PACK_ITEM')
 export class ServicePackItemController {
   constructor(
     private readonly servicePackItemService: ServicePackItemService,
@@ -49,10 +50,9 @@ export class ServicePackItemController {
   @ApiBadRequestResponse()
   @ApiBody({
     type: CreateServicePackItemDto,
-    required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createServicePackItemDto: CreateServicePackItemDto,
   ): Promise<CreateServicePackItemResponseDto> {
@@ -65,29 +65,20 @@ export class ServicePackItemController {
   @ApiOkResponse({
     type: FindServicePackItemResponseDto,
   })
-  @ApiNotFoundResponse({
-    description: 'could not find the Service Pack Item',
-  })
-  @ApiParam({
-    type: Number,
-    name: 'servicePackItemId',
-    example: 1,
-    required: true,
-  })
+  @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
-    @Param('servicePackItemId', ValidationPipe) servicePackItemId: number,
+    @Param('servicePackItemId', ParseIntPipe) servicePackItemId: number,
   ): Promise<FindServicePackItemResponseDto> {
-    const servicePackItem = await this.servicePackItemService.find(
-      servicePackItemId,
-    );
+    let servicePackItem: FindServicePackItemResponseDto;
 
-    if (!servicePackItem) {
-      throw new HttpException(
-        'could not find the Service Pack Item',
-        HttpStatus.NOT_FOUND,
+    try {
+      servicePackItem = await this.servicePackItemService.find(
+        servicePackItemId,
       );
+    } catch (err) {
+      throw new NotFoundException('could not find the Service Pack Item');
     }
 
     return servicePackItem;
@@ -99,20 +90,14 @@ export class ServicePackItemController {
   @ApiOkResponse({
     type: UpdateServicePackItemResponseDto,
   })
-  @ApiParam({
-    type: Number,
-    name: 'servicePackItemId',
-    example: 1,
-    required: true,
-  })
   @ApiBody({
     type: UpdateServicePackItemDto,
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
-    @Param('servicePackItemId', ValidationPipe) servicePackItemId: number,
+    @Param('servicePackItemId', ParseIntPipe) servicePackItemId: number,
     @Body(ValidationPipe) updateServicePackItemDto: UpdateServicePackItemDto,
   ): Promise<UpdateServicePackItemResponseDto> {
     return this.servicePackItemService.update(
@@ -127,16 +112,10 @@ export class ServicePackItemController {
   @ApiOkResponse({
     type: Boolean,
   })
-  @ApiParam({
-    type: Number,
-    name: 'servicePackItemId',
-    example: 1,
-    required: true,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
-    @Param('servicePackItemId', ValidationPipe) servicePackItemId: number,
+    @Param('servicePackItemId', ParseIntPipe) servicePackItemId: number,
   ): Promise<boolean> {
     return this.servicePackItemService.delete(servicePackItemId);
   }

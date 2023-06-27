@@ -13,6 +13,7 @@ describe('PermissionService', () => {
   let service: PermissionService;
   const repository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -48,27 +49,14 @@ describe('PermissionService', () => {
       };
 
       beforeAll(() => {
-        repository.findOne.mockResolvedValueOnce(permissionExpected);
+        repository.findOneOrFail.mockResolvedValueOnce(permissionExpected);
       });
 
       it('should find a permission by id', async () => {
         const result = await service.find(permissionId);
 
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
         expect(result).toEqual(FindPermissionDto.from(permissionExpected));
-      });
-    });
-
-    describe('fail', () => {
-      beforeAll(() => {
-        repository.findOne.mockResolvedValueOnce({});
-      });
-
-      it('should return null when not finding a permission', async () => {
-        const result = await service.find(permissionId);
-
-        expect(repository.findOne).toHaveBeenCalled();
-        expect(result).toBeNull();
       });
     });
   });

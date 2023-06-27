@@ -7,6 +7,7 @@ import { UserType } from '../user-type/entity/user-type.entity';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 import { ListUserResponseDto } from './dto/list-user-response.dto';
+import { FindUserWithPermissions } from './dto/find-user-with-permissions';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -15,6 +16,7 @@ describe('UserService', () => {
   const userRepository = {
     find: jest.fn(),
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     findOneBy: jest.fn(),
@@ -117,7 +119,8 @@ describe('UserService', () => {
           deletedAt: new Date(),
         };
 
-        beforeEach(() => {
+        beforeAll(() => {
+          userRepository.findOneOrFail.mockResolvedValue(user);
           userRepository.findOne.mockResolvedValueOnce(user);
         });
 
@@ -125,26 +128,20 @@ describe('UserService', () => {
           const result = await userService.find('0');
 
           expect(result).toStrictEqual(FindUserDto.from(user));
-          expect(userRepository.findOne).toHaveBeenCalled();
+          expect(userRepository.findOneOrFail).toHaveBeenCalled();
+        });
+
+        it('should return a user with permission groups', async () => {
+          const result = await userService.findWithPermissions('0');
+
+          expect(result).toStrictEqual(FindUserWithPermissions.from(user));
+          expect(userRepository.findOneOrFail).toHaveBeenCalled();
         });
 
         it('should return a user by username', async () => {
           const result = await userService.findByUsername('test');
 
           expect(result).toBe(user);
-          expect(userRepository.findOne).toHaveBeenCalled();
-        });
-      });
-
-      describe('Fail', () => {
-        beforeEach(() => {
-          userRepository.findOne.mockResolvedValueOnce({});
-        });
-
-        it('should return null', async () => {
-          const result = await userService.find('0');
-
-          expect(result).toBeNull();
           expect(userRepository.findOne).toHaveBeenCalled();
         });
       });

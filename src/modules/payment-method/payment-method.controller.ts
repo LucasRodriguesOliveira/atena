@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
   Query,
   Param,
@@ -12,6 +11,8 @@ import {
   Put,
   UseGuards,
   ValidationPipe,
+  NotFoundException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -19,8 +20,6 @@ import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
-  ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { PaymentMethodService } from './payment-method.service';
@@ -30,14 +29,15 @@ import { CreatePaymentMethodResponseDto } from './dto/create-payment-method-resp
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { FindPaymentMethodResponseDto } from './dto/find-payment-method-response.dto';
 import { UpdatePaymentMethodResponseDto } from './dto/update-payment-method-response.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('payment-method')
 @ApiTags('payment-method')
+@AppModule('PAYMENT_METHOD')
 export class PaymentMethodController {
   constructor(private readonly paymentMethodService: PaymentMethodService) {}
 
@@ -48,12 +48,8 @@ export class PaymentMethodController {
     type: ListPaymentMethodResponseDto,
     isArray: true,
   })
-  @ApiQuery({
-    type: QueryPaymentMethodDto,
-    required: false,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryPaymentMethodDto?: QueryPaymentMethodDto,
   ): Promise<ListPaymentMethodResponseDto[]> {
@@ -66,12 +62,8 @@ export class PaymentMethodController {
   @ApiCreatedResponse({
     type: CreatePaymentMethodResponseDto,
   })
-  @ApiBody({
-    type: CreatePaymentMethodDto,
-    required: true,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createPaymentMethodDto: CreatePaymentMethodDto,
   ): Promise<CreatePaymentMethodResponseDto> {
@@ -84,27 +76,18 @@ export class PaymentMethodController {
   @ApiOkResponse({
     type: FindPaymentMethodResponseDto,
   })
-  @ApiNotFoundResponse({
-    description: 'could not find the Payment Method',
-  })
-  @ApiParam({
-    type: Number,
-    required: true,
-    name: 'paymentMethodId',
-    example: 1,
-  })
+  @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
-    @Param('paymentMethodId', ValidationPipe) paymentMethodId: number,
+    @Param('paymentMethodId', ParseIntPipe) paymentMethodId: number,
   ): Promise<FindPaymentMethodResponseDto> {
-    const paymentMethod = await this.paymentMethodService.find(paymentMethodId);
+    let paymentMethod: FindPaymentMethodResponseDto;
 
-    if (!paymentMethod) {
-      throw new HttpException(
-        'could not find Payment Method',
-        HttpStatus.NOT_FOUND,
-      );
+    try {
+      paymentMethod = await this.paymentMethodService.find(paymentMethodId);
+    } catch (err) {
+      throw new NotFoundException('could not find Payment Method');
     }
 
     return paymentMethod;
@@ -116,18 +99,13 @@ export class PaymentMethodController {
   @ApiOkResponse({
     type: UpdatePaymentMethodResponseDto,
   })
-  @ApiParam({
-    type: Number,
-    name: 'paymentMethodId',
-    example: 1,
-  })
   @ApiBody({
     type: UpdatePaymentMethodDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
-    @Param('paymentMethodId', ValidationPipe) paymentMethodId: number,
+    @Param('paymentMethodId', ParseIntPipe) paymentMethodId: number,
     @Body(ValidationPipe) updatePaymentMethodDto: UpdatePaymentMethodDto,
   ): Promise<UpdatePaymentMethodResponseDto> {
     return this.paymentMethodService.update(
@@ -142,13 +120,8 @@ export class PaymentMethodController {
   @ApiOkResponse({
     type: Boolean,
   })
-  @ApiParam({
-    type: Number,
-    name: 'paymentMethodId',
-    example: 1,
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('paymentMethodId', ValidationPipe) paymentMethodId: number,
   ): Promise<boolean> {

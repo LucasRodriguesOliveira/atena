@@ -10,13 +10,12 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { UserRole } from '../auth/decorator/user-type.decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
 import { CreateUserTypeDto } from './dto/create-user-type.dto';
 import { UpdateUserTypeDto } from './dto/update-user-type.dto';
-import { UserTypeEnum } from './type/user-type.enum';
 import { UserTypeService } from './user-type.service';
 import { CreateUserTypeResponse } from './dto/create-user-type-response.dto';
 import { ListUserTypeResponse } from './dto/list-user-type-response.dto';
@@ -27,33 +26,36 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('user-type')
 @ApiTags('user-type')
+@AppModule('USER_TYPE')
 export class UserTypeController {
   constructor(private readonly userTypeService: UserTypeService) {}
 
   @Get()
-  @UserRole(UserTypeEnum.ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: [ListUserTypeResponse],
-    description: 'list of user types',
+    type: ListUserTypeResponse,
+    isArray: true,
   })
+  @AccessPermission('LIST')
   public async list(): Promise<ListUserTypeResponse[]> {
     return this.userTypeService.list();
   }
 
   @Post()
-  @UserRole(UserTypeEnum.ADMIN)
-  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiCreatedResponse({
     type: CreateUserTypeResponse,
   })
-  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createUserTypeDto: CreateUserTypeDto,
   ): Promise<CreateUserTypeResponse> {
@@ -61,31 +63,30 @@ export class UserTypeController {
   }
 
   @Put(':userTypeId')
-  @UserRole(UserTypeEnum.ADMIN)
-  @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
     type: UpdateUserTypeResponse,
   })
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('UPDATE')
   public async update(
-    @Param('userTypeId', ValidationPipe) userTypeId: number,
+    @Param('userTypeId', ParseIntPipe) userTypeId: number,
     @Body(ValidationPipe) updateUserTypeDto: UpdateUserTypeDto,
   ): Promise<UpdateUserTypeResponse> {
     return this.userTypeService.update(userTypeId, updateUserTypeDto);
   }
 
   @Delete(':userTypeId')
-  @UserRole(UserTypeEnum.ADMIN)
-  @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
     type: Boolean,
-    description: 'confirmation of the exclusion of the user type',
   })
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('DELETE')
   public async delete(
-    @Param('userTypeId', ValidationPipe) userTypeId: number,
+    @Param('userTypeId', ParseIntPipe) userTypeId: number,
   ): Promise<boolean> {
     return this.userTypeService.delete(userTypeId);
   }

@@ -25,17 +25,18 @@ import { ReasonService } from './reason.service';
 import { ListReasonResponseDto } from './dto/list-reason-response.dto';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { RoleGuard } from '../../auth/guard/role.guard';
-import { UserRole } from '../../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../../user-type/type/user-type.enum';
 import { QueryReasonDto } from './dto/query-reason.dto';
 import { CreateReasonResponseDto } from './dto/create-reason-response.dto';
 import { CreateReasonDto } from './dto/create-reason.dto';
 import { FindReasonResponseDto } from './dto/find-reason-response.dto';
 import { UpdateReasonResponseDto } from './dto/update-reason-response.dto';
 import { UpdateReasonDto } from './dto/update-reason.dto';
+import { AppModule } from '../../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../../auth/decorator/access-permission.decorator';
 
 @Controller('black-list/reason')
 @ApiTags('black-list')
+@AppModule('BLACK_LIST_REASON')
 export class ReasonController {
   constructor(private readonly reasonService: ReasonService) {}
 
@@ -47,7 +48,7 @@ export class ReasonController {
     isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryReasonDto: QueryReasonDto,
   ): Promise<ListReasonResponseDto[]> {
@@ -64,7 +65,7 @@ export class ReasonController {
     type: CreateReasonDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createReasonDto: CreateReasonDto,
   ): Promise<CreateReasonResponseDto> {
@@ -79,7 +80,7 @@ export class ReasonController {
   })
   @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('reasonId', ValidationPipe) reasonId: number,
   ): Promise<FindReasonResponseDto> {
@@ -107,7 +108,7 @@ export class ReasonController {
     type: UpdateReasonDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('reasonId', ValidationPipe) reasonId: number,
     @Body(ValidationPipe) updateReasonDto: UpdateReasonDto,
@@ -122,7 +123,7 @@ export class ReasonController {
     type: Boolean,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('reasonId', ValidationPipe) reasonId: number,
   ): Promise<boolean> {

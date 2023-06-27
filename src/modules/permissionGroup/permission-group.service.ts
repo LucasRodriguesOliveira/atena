@@ -7,7 +7,6 @@ import { UserType } from '../user-type/entity/user-type.entity';
 import { ListUserTypeDto } from './dto/list-user-type.dto';
 import { ListModuleDto } from './dto/list-module.dto';
 import { Module } from '../module/entity/module.entity';
-import { QueryPermissionsDto } from './dto/query-permissions.dto';
 import { ListPermissionsDto } from './dto/list-permissions.dto';
 import { CreatePermissionGroupDto } from './dto/create-permission-group.dto';
 
@@ -85,10 +84,10 @@ export class PermissionGroupService {
     return result.map((module) => ListModuleDto.from(module));
   }
 
-  async listPermissions({
-    moduleId,
-    userTypeId,
-  }: QueryPermissionsDto): Promise<ListPermissionsDto[]> {
+  async listPermissions(
+    moduleId: number,
+    userTypeId: number,
+  ): Promise<ListPermissionsDto[]> {
     const result = await this.permissionGroupRepository.find({
       select: {
         id: true,

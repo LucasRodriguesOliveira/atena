@@ -132,10 +132,10 @@ describe('PermissionGroupService', () => {
     });
 
     it('should return a list of permissions for a module and user type in permission group table ', async () => {
-      const result = await service.listPermissions({
-        userTypeId: permissionGroup.userType.id,
-        moduleId: permissionGroup.module.id,
-      });
+      const result = await service.listPermissions(
+        permissionGroup.userType.id,
+        permissionGroup.module.id,
+      );
 
       expect(result).toStrictEqual([permissionExpected]);
       expect(repository.find).toHaveBeenCalled();

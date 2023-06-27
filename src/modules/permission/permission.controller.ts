@@ -9,10 +9,17 @@ import {
   Post,
   Put,
   UseGuards,
-  HttpException,
   ValidationPipe,
+  ParseIntPipe,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreatePermissionResponse } from './dto/create-permission-response.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionResponse } from './dto/update-permission-response.dto';
@@ -20,38 +27,35 @@ import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { PermissionService } from './permission.service';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { ListPermissionDto } from './dto/list-permission.dto';
 import { FindPermissionDto } from './dto/find-permission.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('permission')
 @ApiTags('permission')
+@AppModule('PERMISSION')
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
   @ApiBearerAuth()
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Permission',
+  @ApiOkResponse({
     type: FindPermissionDto,
   })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Permission could not be found',
-  })
-  public async find(@Param('id') id: number): Promise<FindPermissionDto> {
-    const permission = await this.permissionService.find(id);
+  @ApiNotFoundResponse()
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('FIND')
+  public async find(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<FindPermissionDto> {
+    let permission: FindPermissionDto;
 
-    if (!permission?.id) {
-      throw new HttpException(
-        'Permission could not be found',
-        HttpStatus.NOT_FOUND,
-      );
+    try {
+      permission = await this.permissionService.find(id);
+    } catch (err) {
+      throw new NotFoundException('Permission could not be found');
     }
 
     return permission;
@@ -59,28 +63,25 @@ export class PermissionController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
   @ApiBearerAuth()
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: [ListPermissionDto],
-    description: 'A list of all the permissions',
+  @ApiOkResponse({
+    type: ListPermissionDto,
+    isArray: true,
   })
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('LIST')
   public async list(): Promise<ListPermissionDto[]> {
     return this.permissionService.list();
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
   @ApiBearerAuth()
-  @ApiResponse({
-    status: HttpStatus.CREATED,
+  @ApiCreatedResponse({
     type: CreatePermissionResponse,
-    description: 'Permission created',
   })
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createPermissionDto: CreatePermissionDto,
   ): Promise<CreatePermissionResponse> {
@@ -89,14 +90,14 @@ export class PermissionController {
 
   @Put(':id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
   @ApiBearerAuth()
-  @ApiResponse({
-    status: HttpStatus.OK,
+  @ApiOkResponse({
+    type: UpdatePermissionResponse,
   })
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('UPDATE')
   public async update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body(ValidationPipe) updatePermissionDto: UpdatePermissionDto,
   ): Promise<UpdatePermissionResponse> {
     return this.permissionService.update(id, updatePermissionDto);
@@ -104,13 +105,13 @@ export class PermissionController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
   @ApiBearerAuth()
-  @ApiResponse({
-    status: HttpStatus.OK,
+  @ApiOkResponse({
+    type: Boolean,
   })
-  public async delete(@Param('id') id: number): Promise<boolean> {
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('DELETE')
+  public async delete(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
     return this.permissionService.delete(id);
   }
 }

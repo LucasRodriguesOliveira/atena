@@ -26,7 +26,7 @@ export class ServicePackItemService {
   public async find(
     servicePackItemId: number,
   ): Promise<FindServicePackItemResponseDto | null> {
-    const servicePackItem = await this.servicePackItemRepository.findOne({
+    const servicePackItem = await this.servicePackItemRepository.findOneOrFail({
       select: [
         'id',
         'servicePack',
@@ -41,10 +41,6 @@ export class ServicePackItemService {
         itemType: true,
       },
     });
-
-    if (Object.keys(servicePackItem).length === 0) {
-      return null;
-    }
 
     return FindServicePackItemResponseDto.from(servicePackItem);
   }

@@ -10,6 +10,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
 import { ListUserResponseDto } from './dto/list-user-response.dto';
+import { FindUserWithPermissions } from './dto/find-user-with-permissions';
 
 @Injectable()
 export class UserService {
@@ -57,7 +58,7 @@ export class UserService {
   }
 
   public async find(userId: string): Promise<FindUserDto | null> {
-    const user = await this.userRepository.findOne({
+    const user = await this.userRepository.findOneOrFail({
       select: {
         id: true,
         name: true,
@@ -79,6 +80,43 @@ export class UserService {
     }
 
     return FindUserDto.from(user);
+  }
+
+  public async findWithPermissions(
+    userId: string,
+  ): Promise<FindUserWithPermissions> {
+    const user = await this.userRepository.findOneOrFail({
+      select: {
+        id: true,
+        name: true,
+        type: {
+          id: true,
+          description: true,
+          permissionGroups: {
+            id: true,
+            permission: {
+              id: true,
+              description: true,
+            },
+            module: {
+              id: true,
+              description: true,
+            },
+          },
+        },
+      },
+      where: { id: userId },
+      relations: {
+        type: {
+          permissionGroups: {
+            permission: true,
+            module: true,
+          },
+        },
+      },
+    });
+
+    return FindUserWithPermissions.from(user);
   }
 
   public async findByUsername(username: string): Promise<User> {

@@ -12,11 +12,13 @@ import { UpdateServicePackDto } from './dto/update-service-pack.dto';
 import { UpdateServicePackResponseDto } from './dto/update-service-pack-response.dto';
 import { Coin } from '../../coin/entity/coin.entity';
 import { ServicePackController } from './service-pack.controller';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ServicePackController', () => {
   let controller: ServicePackController;
   const servicePackRepository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -86,14 +88,14 @@ describe('ServicePackController', () => {
       const expected = FindServicePackResponseDto.from(servicePack);
 
       beforeEach(() => {
-        servicePackRepository.findOne.mockResolvedValueOnce(servicePack);
+        servicePackRepository.findOneOrFail.mockResolvedValueOnce(servicePack);
       });
 
       it('should find a service pack by id', async () => {
         const result = await controller.find(servicePack.id);
 
         expect(result).toStrictEqual(expected);
-        expect(servicePackRepository.findOne).toHaveBeenCalled();
+        expect(servicePackRepository.findOneOrFail).toHaveBeenCalled();
       });
     });
 
@@ -101,14 +103,15 @@ describe('ServicePackController', () => {
       const servicePackId = randomUUID();
 
       beforeEach(() => {
-        servicePackRepository.findOne.mockResolvedValueOnce({});
+        servicePackRepository.findOneOrFail.mockRejectedValueOnce({});
       });
 
       it('should return null for not finding the service pack', async () => {
-        const result = await controller.find(servicePackId);
+        await expect(() => controller.find(servicePackId)).rejects.toThrow(
+          NotFoundException,
+        );
 
-        expect(result).toBeNull();
-        expect(servicePackRepository.findOne).toHaveBeenCalled();
+        expect(servicePackRepository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });

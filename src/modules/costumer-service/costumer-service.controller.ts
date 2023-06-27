@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
+  NotFoundException,
   HttpStatus,
   Param,
   Post,
@@ -25,15 +25,16 @@ import { CostumerServiceService } from './costumer-service.service';
 import { ListCostumerServiceResponseDto } from './dto/list-costumer-service-response.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { QueryCostumerServiceDto } from './dto/query-costumer-service.dto';
 import { FindCostumerServiceResponseDto } from './dto/find-costumer-service-response.dto';
 import { CreateCostumerServiceDto } from './dto/create-costumer-service.dto';
 import { UpdateCostumerServiceDto } from './dto/update-costumer-service.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('costumer-service')
 @ApiTags('costumer-service')
+@AppModule('COSTUMER_SERVICE')
 export class CostumerServiceController {
   constructor(
     private readonly costumerServiceService: CostumerServiceService,
@@ -46,7 +47,7 @@ export class CostumerServiceController {
     type: ListCostumerServiceResponseDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryCostumerServiceDto: QueryCostumerServiceDto,
   ): Promise<ListCostumerServiceResponseDto> {
@@ -63,7 +64,7 @@ export class CostumerServiceController {
     type: CreateCostumerServiceDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createCostumerServiceDto: CreateCostumerServiceDto,
   ): Promise<FindCostumerServiceResponseDto> {
@@ -78,7 +79,7 @@ export class CostumerServiceController {
   })
   @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('costumerServiceId', ValidationPipe) costumerServiceId: number,
   ): Promise<FindCostumerServiceResponseDto> {
@@ -89,10 +90,7 @@ export class CostumerServiceController {
         costumerServiceId,
       );
     } catch (err) {
-      throw new HttpException(
-        'could not find the costumer service',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('could not find the costumer service');
     }
 
     return costumerService;
@@ -108,7 +106,7 @@ export class CostumerServiceController {
     type: UpdateCostumerServiceDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('costumerServiceId', ValidationPipe) costumerServiceId: number,
     @Body(ValidationPipe) updateCostumerServiceDto: UpdateCostumerServiceDto,
@@ -126,7 +124,7 @@ export class CostumerServiceController {
     type: Boolean,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('costumerServiceId', ValidationPipe) costumerServiceId: number,
   ): Promise<boolean> {

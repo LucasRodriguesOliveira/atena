@@ -9,11 +9,13 @@ import { CreateServicePackItemTypeResponseDto } from './dto/create-service-pack-
 import { UpdateServicePackItemTypeDto } from './dto/update-service-pack-item-type.dto';
 import { UpdateServicePackItemTypeResponseDto } from './dto/update-service-pack-item-type-response.dto';
 import { ServicePackItemTypeService } from './service-pack-item-type.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ServicePackItemTypeController', () => {
   let controller: ServicePackItemTypeController;
   const repository = {
     findOneBy: jest.fn(),
+    findOneByOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -59,27 +61,30 @@ describe('ServicePackItemTypeController', () => {
       );
 
       beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce(servicePackItemTypeExpected);
+        repository.findOneByOrFail.mockResolvedValueOnce(
+          servicePackItemTypeExpected,
+        );
       });
 
       it('should find a servicePackItemType by id', async () => {
         const result = await controller.find(servicePackItemTypeId);
 
-        expect(repository.findOneBy).toHaveBeenCalled();
+        expect(repository.findOneByOrFail).toHaveBeenCalled();
         expect(result).toStrictEqual(expected);
       });
     });
 
     describe('fail', () => {
       beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce({});
+        repository.findOneByOrFail.mockRejectedValueOnce({});
       });
 
       it('should return null when not finding a servicePackItemType', async () => {
-        const result = await controller.find(servicePackItemTypeId);
+        await expect(() =>
+          controller.find(servicePackItemTypeId),
+        ).rejects.toThrow(NotFoundException);
 
-        expect(repository.findOneBy).toHaveBeenCalled();
-        expect(result).toBeNull();
+        expect(repository.findOneByOrFail).toHaveBeenCalled();
       });
     });
   });
