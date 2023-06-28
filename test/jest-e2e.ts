@@ -6,8 +6,4 @@ export default {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
-  fakeTimers: {
-    enableGlobally: true,
-    legacyFakeTimers: true,
-  },
 };
