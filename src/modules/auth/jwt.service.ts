@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
@@ -6,7 +6,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JWTConfig } from '../../config/env/jwt.config';
 import { User } from '../user/entity/user.entity';
 import { UserService } from '../user/user.service';
-import { FindUserDto } from '../user/dto/find-user.dto';
+import { FindUserWithPermissions } from '../user/dto/find-user-with-permissions';
 
 @Injectable()
 export class JWTService extends PassportStrategy(Strategy) {
@@ -21,12 +21,14 @@ export class JWTService extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { id: string }): Promise<FindUserDto> {
+  async validate(payload: { id: string }): Promise<FindUserWithPermissions> {
     const { id } = payload;
-    const user = await this.userService.find(id);
+    let user: FindUserWithPermissions;
 
-    if (!user?.id) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    try {
+      user = await this.userService.findWithPermissions(id);
+    } catch (err) {
+      throw new NotFoundException('User not found');
     }
 
     return user;

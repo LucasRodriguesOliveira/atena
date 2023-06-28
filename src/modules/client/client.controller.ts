@@ -26,8 +26,6 @@ import { ClientService } from './client.service';
 import { ListClientResponseDto } from './dto/list-client-response.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { QueryClientDto } from './dto/query-client.dto';
 import { PaginatedResult } from '../../shared/paginated-result.interface';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -36,9 +34,12 @@ import { FindClientResponseDto } from './dto/find-client-response.dto';
 import { randomUUID } from 'crypto';
 import { UpdateClientResponseDto } from './dto/update-client-response.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('client')
 @ApiTags('client')
+@AppModule('CLIENT')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
@@ -54,7 +55,7 @@ export class ClientController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryClientDto: QueryClientDto,
   ): Promise<PaginatedResult<ListClientResponseDto>> {
@@ -72,7 +73,7 @@ export class ClientController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createClientDto: CreateClientDto,
   ): Promise<CreateClientResponseDto> {
@@ -92,7 +93,7 @@ export class ClientController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('clientId', ValidationPipe) clientId: string,
   ): Promise<FindClientResponseDto> {
@@ -127,7 +128,7 @@ export class ClientController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('clientId', ValidationPipe) clientId: string,
     @Body(ValidationPipe) updateClientDto: UpdateClientDto,
@@ -148,7 +149,7 @@ export class ClientController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('clientId', ValidationPipe) clientId: string,
   ): Promise<boolean> {

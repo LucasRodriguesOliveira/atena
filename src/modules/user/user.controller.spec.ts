@@ -7,7 +7,7 @@ import { UserType } from '../user-type/entity/user-type.entity';
 import { UserController } from './user.controller';
 import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserResponseDto } from './dto/update-user-response.dto';
-import { HttpException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { ListUserResponseDto } from './dto/list-user-response.dto';
 
 describe('UserController', () => {
@@ -17,6 +17,7 @@ describe('UserController', () => {
 
   const userRepository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     findOneBy: jest.fn(),
     find: jest.fn(),
     update: jest.fn(),
@@ -127,28 +128,28 @@ describe('UserController', () => {
         };
 
         beforeEach(() => {
-          userRepository.findOne.mockResolvedValueOnce(user);
+          userRepository.findOneOrFail.mockResolvedValueOnce(user);
         });
 
         it('should return a user', async () => {
           const result = await userController.find('0');
 
           expect(result).toStrictEqual(FindUserDto.from(user));
-          expect(userRepository.findOne).toHaveBeenCalled();
+          expect(userRepository.findOneOrFail).toHaveBeenCalled();
         });
       });
 
       describe('Fail', () => {
         beforeEach(() => {
-          userRepository.findOne.mockResolvedValueOnce({});
+          userRepository.findOneOrFail.mockRejectedValueOnce({});
         });
 
         it('should throw an error', async () => {
           await expect(() => userController.find('0')).rejects.toThrow(
-            HttpException,
+            NotFoundException,
           );
 
-          expect(userRepository.findOne).toHaveBeenCalled();
+          expect(userRepository.findOneOrFail).toHaveBeenCalled();
         });
       });
     });

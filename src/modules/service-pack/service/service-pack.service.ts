@@ -23,8 +23,8 @@ export class ServicePackService {
 
   public async find(
     servicePackId: string,
-  ): Promise<FindServicePackResponseDto | null> {
-    const servicePack = await this.servicePackRepository.findOne({
+  ): Promise<FindServicePackResponseDto> {
+    const servicePack = await this.servicePackRepository.findOneOrFail({
       select: {
         id: true,
         name: true,
@@ -46,10 +46,6 @@ export class ServicePackService {
         coin: true,
       },
     });
-
-    if (Object.keys(servicePack).length === 0) {
-      return null;
-    }
 
     return FindServicePackResponseDto.from(servicePack);
   }

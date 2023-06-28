@@ -17,8 +17,9 @@ describe('CompanyService', () => {
   let service: CompanyService;
 
   const repository = {
-    findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     findAndCount: jest.fn(),
+    findOne: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     softDelete: jest.fn(),
@@ -57,29 +58,14 @@ describe('CompanyService', () => {
       const expected = FindCompanyResponseDto.from(company);
 
       beforeEach(() => {
-        repository.findOne.mockResolvedValueOnce(company);
+        repository.findOneOrFail.mockResolvedValueOnce(company);
       });
 
       it('should find a company by id', async () => {
         const result = await service.find(company.id);
 
         expect(result).toStrictEqual(expected);
-        expect(repository.findOne).toHaveBeenCalled();
-      });
-    });
-
-    describe('Fail', () => {
-      const companyId = randomUUID();
-
-      beforeEach(() => {
-        repository.findOne.mockResolvedValueOnce({});
-      });
-
-      it('should not find a company by id', async () => {
-        const result = await service.find(companyId);
-
-        expect(result).toBeNull();
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });

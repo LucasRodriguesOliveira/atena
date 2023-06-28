@@ -4,9 +4,10 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -25,17 +26,18 @@ import { ServiceStageService } from './service-stage.service';
 import { ListServiceStageResponseDto } from './dto/list-service-stage-response.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { QueryServiceStageDto } from './dto/query-service-stage.dto';
 import { CreateServiceStageResponseDto } from './dto/create-service-stage-response.dto';
 import { CreateServiceStageDto } from './dto/create-service-stage.dto';
 import { FindServiceStageResponseDto } from './dto/find-service-stage-response.dto';
 import { UpdateServiceStageResponseDto } from './dto/update-service-stage-response.dto';
 import { UpdateServiceStageDto } from './dto/update-service-stage.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('service-stage')
 @ApiTags('service-stage')
+@AppModule('SERVICE_STAGE')
 export class ServiceStageController {
   constructor(private readonly serviceStageService: ServiceStageService) {}
 
@@ -47,7 +49,7 @@ export class ServiceStageController {
     isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryServiceStageDto: QueryServiceStageDto,
   ): Promise<ListServiceStageResponseDto[]> {
@@ -65,7 +67,7 @@ export class ServiceStageController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createServiceStageDto: CreateServiceStageDto,
   ): Promise<CreateServiceStageResponseDto> {
@@ -80,19 +82,16 @@ export class ServiceStageController {
   })
   @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
-    @Param('serviceStageId', ValidationPipe) serviceStageId: number,
+    @Param('serviceStageId', ParseIntPipe) serviceStageId: number,
   ): Promise<FindServiceStageResponseDto> {
     let serviceStage: FindServiceStageResponseDto;
 
     try {
       serviceStage = await this.serviceStageService.find(serviceStageId);
     } catch (err) {
-      throw new HttpException(
-        'could not find the service stage',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('could not find the service stage');
     }
 
     return serviceStage;
@@ -108,7 +107,7 @@ export class ServiceStageController {
     type: UpdateServiceStageDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('serviceStageId', ValidationPipe) serviceStageId: number,
     @Body(ValidationPipe) updateServiceStageDto: UpdateServiceStageDto,
@@ -126,7 +125,7 @@ export class ServiceStageController {
     type: Boolean,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('serviceStageId', ValidationPipe) serviceStageId: number,
   ): Promise<boolean> {

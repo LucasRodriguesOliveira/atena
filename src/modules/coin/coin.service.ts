@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Coin } from './entity/coin.entity';
 import { Repository } from 'typeorm';
@@ -47,7 +47,7 @@ export class CoinService {
     updateCoinDto: UpdateCoinDto,
   ): Promise<UpdateCoinResponseDto> {
     if (Object.keys(updateCoinDto).length === 0) {
-      throw new Error('No data sent to update Coin');
+      throw new BadRequestException('No data sent to update Coin');
     }
 
     await this.coinRepository.update({ id: coinId }, { ...updateCoinDto });

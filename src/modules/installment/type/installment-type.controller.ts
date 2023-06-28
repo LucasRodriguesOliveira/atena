@@ -6,7 +6,9 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -19,7 +21,6 @@ import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { ListInstallmentTypeResponseDto } from './dto/list-installment-type-response.dto';
@@ -32,12 +33,14 @@ import { InstallmentTypeService } from './installment-type.service';
 import { CreateInstallmentTypeResponseDto } from './dto/create-installment-type-response.dto';
 import { CreateInstallmentTypeDto } from './dto/create-installment-type.dto';
 import { FindInstallmentTypeResponseDto } from './dto/find-installment-type-response.dto';
-import { randomInt } from 'crypto';
 import { UpdateInstallmentTypeResponseDto } from './dto/update-installment-type-response.dto';
 import { UpdateInstallmentTypeDto } from './dto/update-installment-type.dto';
+import { AppModule } from '../../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../../auth/decorator/access-permission.decorator';
 
 @Controller('installment/type')
 @ApiTags('installment')
+@AppModule('INSTALLMENT_TYPE')
 export class InstallmentTypeController {
   constructor(
     private readonly installmentTypeService: InstallmentTypeService,
@@ -52,6 +55,7 @@ export class InstallmentTypeController {
   })
   @UseGuards(JwtGuard, RoleGuard)
   @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryInstallmentTypeDto: QueryInstallmentTypeDto,
   ): Promise<ListInstallmentTypeResponseDto[]> {
@@ -69,7 +73,7 @@ export class InstallmentTypeController {
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createInstallmentTypeDto: CreateInstallmentTypeDto,
   ): Promise<CreateInstallmentTypeResponseDto> {
@@ -82,19 +86,11 @@ export class InstallmentTypeController {
   @ApiOkResponse({
     type: FindInstallmentTypeResponseDto,
   })
-  @ApiNotFoundResponse({
-    description: 'Could not find the Installment Type <installmentTypeId>',
-  })
-  @ApiParam({
-    type: Number,
-    required: true,
-    example: randomInt(1, 100),
-    name: 'installmentTypeId',
-  })
+  @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
-    @Param('installmentTypeId') installmentTypeId: number,
+    @Param('installmentTypeId', ParseIntPipe) installmentTypeId: number,
   ): Promise<FindInstallmentTypeResponseDto> {
     let installmentType: FindInstallmentTypeResponseDto;
 
@@ -103,9 +99,8 @@ export class InstallmentTypeController {
         installmentTypeId,
       );
     } catch (err) {
-      throw new HttpException(
+      throw new NotFoundException(
         `Could not find the Installment Type [${installmentTypeId}]`,
-        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -118,20 +113,14 @@ export class InstallmentTypeController {
   @ApiOkResponse({
     type: UpdateInstallmentTypeResponseDto,
   })
-  @ApiParam({
-    type: Number,
-    required: true,
-    example: randomInt(1, 100),
-    name: 'installmentTypeId',
-  })
   @ApiBody({
     type: UpdateInstallmentTypeDto,
     required: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
-    @Param('installmentTypeId', ValidationPipe) installmentTypeId: number,
+    @Param('installmentTypeId', ParseIntPipe) installmentTypeId: number,
     @Body(ValidationPipe) updateInstallmentTypeDto: UpdateInstallmentTypeDto,
   ): Promise<UpdateInstallmentTypeResponseDto> {
     if (Object.keys(updateInstallmentTypeDto).length === 0) {
@@ -153,16 +142,10 @@ export class InstallmentTypeController {
   @ApiOkResponse({
     type: Boolean,
   })
-  @ApiParam({
-    type: Number,
-    required: true,
-    example: randomInt(1, 100),
-    name: 'installmentTypeId',
-  })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
-    @Param('installmentTypeId', ValidationPipe) installmentTypeId: number,
+    @Param('installmentTypeId', ParseIntPipe) installmentTypeId: number,
   ): Promise<boolean> {
     return this.installmentTypeService.delete(installmentTypeId);
   }

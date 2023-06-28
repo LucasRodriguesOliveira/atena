@@ -13,6 +13,7 @@ describe('PaymentMethodService', () => {
   let service: PaymentMethodService;
   const repository = {
     findOneBy: jest.fn(),
+    findOneByOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -51,27 +52,14 @@ describe('PaymentMethodService', () => {
       const expected = FindPaymentMethodResponseDto.from(paymentMethod);
 
       beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce(paymentMethod);
+        repository.findOneByOrFail.mockResolvedValueOnce(paymentMethod);
       });
 
       it('should find a paymentMethod by id', async () => {
         const result = await service.find(paymentMethodId);
 
         expect(result).toStrictEqual(expected);
-        expect(repository.findOneBy).toHaveBeenCalled();
-      });
-    });
-
-    describe('fail', () => {
-      beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce({});
-      });
-
-      it('should return null when not finding a paymentMethod', async () => {
-        const result = await service.find(paymentMethodId);
-
-        expect(result).toBeNull();
-        expect(repository.findOneBy).toHaveBeenCalled();
+        expect(repository.findOneByOrFail).toHaveBeenCalled();
       });
     });
   });

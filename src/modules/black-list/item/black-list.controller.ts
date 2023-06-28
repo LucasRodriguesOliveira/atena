@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -26,17 +26,18 @@ import { BlackListService } from './black-list.service';
 import { ListBlackListResponseDto } from './dto/list-black-list-response.dto';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { RoleGuard } from '../../auth/guard/role.guard';
-import { UserRole } from '../../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../../user-type/type/user-type.enum';
 import { QueryBlackListDto } from './dto/query-black-list.dto';
 import { CreateBlackListResponseDto } from './dto/create-black-list-response.dto';
 import { CreateBlackListDto } from './dto/create-black-list.dto';
 import { FindBlackListResponseDto } from './dto/find-black-list-response.dto';
 import { UpdateBlackListResponseDto } from './dto/update-black-list-response.dto';
 import { UpdateBlackListDto } from './dto/update-black-list.dto';
+import { AppModule } from '../../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../../auth/decorator/access-permission.decorator';
 
 @Controller('black-list/item')
 @ApiTags('black-list')
+@AppModule('BLACK_LIST_ITEM')
 export class BlackListController {
   constructor(private readonly blackListService: BlackListService) {}
 
@@ -47,7 +48,7 @@ export class BlackListController {
     type: ListBlackListResponseDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryBlackListDto: QueryBlackListDto,
   ): Promise<ListBlackListResponseDto> {
@@ -64,7 +65,7 @@ export class BlackListController {
     type: CreateBlackListDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createBlackListDto: CreateBlackListDto,
   ): Promise<CreateBlackListResponseDto> {
@@ -79,7 +80,7 @@ export class BlackListController {
   })
   @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('blackListItemId', ParseIntPipe) blackListItemId: number,
   ): Promise<FindBlackListResponseDto> {
@@ -88,10 +89,7 @@ export class BlackListController {
     try {
       blackListItem = await this.blackListService.find(blackListItemId);
     } catch (err) {
-      throw new HttpException(
-        'could not find the black list item',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('could not find the black list item');
     }
 
     return blackListItem;
@@ -107,7 +105,7 @@ export class BlackListController {
     type: UpdateBlackListDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('blackListItemId', ParseIntPipe) blackListItemId: number,
     @Body(ValidationPipe) updateBlackListDto: UpdateBlackListDto,
@@ -122,7 +120,7 @@ export class BlackListController {
     type: Boolean,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('blackListItemId', ParseIntPipe) blackListItemId: number,
   ): Promise<boolean> {

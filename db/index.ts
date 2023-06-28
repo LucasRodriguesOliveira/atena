@@ -21,6 +21,9 @@ import { CreateCostumerServiceTable1687382298320 } from './migrations/1687382298
 import { CreateClientBlackListReasonTable1687568092067 } from './migrations/1687568092067-CreateClientBlackListReasonTable';
 import { CreateClientBlackListTable1687574010200 } from './migrations/1687574010200-CreateClientBlackListTable';
 import { CreateSupportTicketTable1687586772597 } from './migrations/1687586772597-CreateSupportTicketTable';
+import { CreatePermissionsSeed1687739458331 } from './migrations/1687739458331-CreatePermissionsSeed';
+import { CreateModuleSeed1687739712850 } from './migrations/1687739712850-CreateModuleSeed';
+import { CreatePermissionGroupSeed1687740106609 } from './migrations/1687740106609-CreatePermissionGroupSeed';
 
 export const migrations = [
   CreateUserTypeTable1685899894356,
@@ -46,4 +49,7 @@ export const migrations = [
   CreateClientBlackListReasonTable1687568092067,
   CreateClientBlackListTable1687574010200,
   CreateSupportTicketTable1687586772597,
+  CreatePermissionsSeed1687739458331,
+  CreateModuleSeed1687739712850,
+  CreatePermissionGroupSeed1687740106609,
 ];

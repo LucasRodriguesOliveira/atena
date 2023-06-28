@@ -11,24 +11,16 @@ import * as request from 'supertest';
 import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
 import { CreateCompanyDto } from '../src/modules/company/dto/create-company.dto';
 import { CreateCompanyResponseDto } from '../src/modules/company/dto/create-company-response.dto';
-import { UpdateCompanyDto } from '../src/modules/company/dto/update-company.dto';
 import { CompanyController } from '../src/modules/company/company.controller';
 import { createCompany } from './utils/create/create-company';
 import { TypeormPostgresModule } from '../src/modules/typeorm/typeorm.module';
-import { randomUUID } from 'crypto';
 import { QueryListCompanyDto } from '../src/modules/company/dto/query-list-company.dto';
-import {
-  CreateUserCompanyMockResponse,
-  createUserCompany,
-} from './utils/create/create-user-company';
-import { AuthController } from '../src/modules/auth/auth.controller';
 import { User } from '../src/modules/user/entity/user.entity';
 import { UserCompany } from '../src/modules/company/entity/user-company.entity';
-import { CreateUserCompanyDto } from '../src/modules/company/dto/create-user-company.dto';
-import { createUser } from './utils/create/create-user';
-import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
 import { RepositoryManager } from './utils/repository';
 import { RepositoryItem } from './utils/repository/repository-item';
+import { randomUUID } from 'crypto';
+import { UpdateCompanyDto } from '../src/modules/company/dto/update-company.dto';
 
 describe('CompanyController (e2e)', () => {
   let app: INestApplication;
@@ -40,7 +32,6 @@ describe('CompanyController (e2e)', () => {
   };
 
   let companyController: CompanyController;
-  let authController: AuthController;
 
   let repositoryManager: RepositoryManager;
 
@@ -57,7 +48,6 @@ describe('CompanyController (e2e)', () => {
     }).compile();
 
     companyController = moduleFixture.get<CompanyController>(CompanyController);
-    authController = moduleFixture.get<AuthController>(AuthController);
 
     repositoryManager = new RepositoryManager(moduleFixture);
     repositoryManager.add([
@@ -371,230 +361,6 @@ describe('CompanyController (e2e)', () => {
         it(`${HttpStatus.OK}`, () => {
           return request(app.getHttpServer())
             .delete(pathTo(company.id))
-            .set(headers.auth, token)
-            .expect(HttpStatus.OK)
-            .then((response) => {
-              expect(JSON.parse(response.text)).toBe(true);
-            });
-        });
-      });
-    });
-  });
-
-  describe('/:companyId/user', () => {
-    const path = `${basePath}/:companyId/user`;
-    const pathTo = (companyId: string | number) =>
-      path.replace(/:companyId/, `${companyId}`);
-
-    describe('(GET)', () => {
-      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
-        it('should not allow access to the route without a jwt token', () => {
-          return request(app.getHttpServer())
-            .get(pathTo(randomUUID()))
-            .expect(HttpStatus.UNAUTHORIZED);
-        });
-      });
-
-      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
-        let token: string;
-
-        beforeAll(async () => {
-          token = await getToken.default();
-        });
-
-        it('should not allow access to the route due to user type is not admin', () => {
-          return request(app.getHttpServer())
-            .get(pathTo(randomUUID()))
-            .set(headers.auth, token)
-            .expect(HttpStatus.FORBIDDEN);
-        });
-      });
-
-      describe(`OK - ${HttpStatus.OK}`, () => {
-        let token: string;
-        let userCompany: CreateUserCompanyMockResponse;
-
-        beforeAll(async () => {
-          token = await getToken.admin();
-          userCompany = await createUserCompany({
-            authController,
-            companyController,
-            repositoryManager,
-            testName: 'company.e2e',
-          });
-        });
-
-        afterAll(async () => {
-          await repositoryManager.removeAndCheck(UserCompany.name, {
-            id: userCompany.id,
-          });
-        });
-
-        it('should return a list of users attached to a company', () => {
-          return request(app.getHttpServer())
-            .get(pathTo(userCompany.companyId))
-            .set(headers.auth, token)
-            .expect(HttpStatus.OK)
-            .then((response) => {
-              expect(response.body).toHaveProperty('length');
-              expect(response.body.length).toBeGreaterThanOrEqual(1);
-            });
-        });
-      });
-    });
-
-    describe('(POST)', () => {
-      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
-        it('should not allow access to the route without a jwt token', () => {
-          return request(app.getHttpServer())
-            .post(pathTo(randomUUID()))
-            .expect(HttpStatus.UNAUTHORIZED);
-        });
-      });
-
-      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
-        let token: string;
-
-        beforeAll(async () => {
-          token = await getToken.default();
-        });
-
-        it('should not allow access to the route due to user type is not admin', () => {
-          return request(app.getHttpServer())
-            .post(pathTo(randomUUID()))
-            .set(headers.auth, token)
-            .expect(HttpStatus.FORBIDDEN);
-        });
-      });
-
-      describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
-        let token: string;
-
-        beforeAll(async () => {
-          token = await getToken.admin();
-        });
-
-        it('should throw an error due to the lack of data sent', () => {
-          return request(app.getHttpServer())
-            .post(pathTo(randomUUID()))
-            .set(headers.auth, token)
-            .expect(HttpStatus.BAD_REQUEST);
-        });
-      });
-
-      describe(`CREATED - ${HttpStatus.CREATED}`, () => {
-        let token: string;
-        const createUserCompanyDto: CreateUserCompanyDto = {
-          userId: '',
-        };
-        const createUserCompanyMockResponse: CreateUserCompanyMockResponse = {
-          companyId: '',
-          username: '',
-          id: -1,
-        };
-
-        beforeAll(async () => {
-          token = await getToken.admin();
-          const username = await createUser({
-            authController,
-            userType: UserTypeEnum.DEFAULT,
-            override: true,
-            testName: 'UserCompany',
-          });
-
-          const { id: userId } = await repositoryManager.find<User>(User.name, {
-            username,
-          });
-          const company = await createCompany({
-            companyController,
-          });
-
-          createUserCompanyDto.userId = userId;
-          createUserCompanyMockResponse.companyId = company.id;
-          createUserCompanyMockResponse.username = username;
-        });
-
-        afterAll(async () => {
-          await repositoryManager.removeAndCheck(UserCompany.name, {
-            id: createUserCompanyMockResponse.id,
-          });
-        });
-
-        it('should create a UserCompany', () => {
-          return request(app.getHttpServer())
-            .post(pathTo(createUserCompanyMockResponse.companyId))
-            .set(headers.auth, token)
-            .send(createUserCompanyDto)
-            .expect(HttpStatus.CREATED)
-            .then((response) => {
-              expect(response.body).toHaveProperty('id');
-              expect(response.body).toHaveProperty(
-                'companyId',
-                createUserCompanyMockResponse.companyId,
-              );
-              expect(response.body).toHaveProperty(
-                'userId',
-                createUserCompanyDto.userId,
-              );
-
-              createUserCompanyMockResponse.id = response.body.id;
-            });
-        });
-      });
-    });
-
-    describe('(DELETE)', () => {
-      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
-        it('should not allow access to the route without a jwt token', () => {
-          return request(app.getHttpServer())
-            .delete(pathTo(randomUUID()))
-            .expect(HttpStatus.UNAUTHORIZED);
-        });
-      });
-
-      describe(`FORBIDDEN - ${HttpStatus.FORBIDDEN}`, () => {
-        let token: string;
-
-        beforeAll(async () => {
-          token = await getToken.default();
-        });
-
-        it('should not allow access to the route due to user type is not admin', () => {
-          return request(app.getHttpServer())
-            .delete(pathTo(randomUUID()))
-            .set(headers.auth, token)
-            .expect(HttpStatus.FORBIDDEN);
-        });
-      });
-
-      describe(`OK - ${HttpStatus.OK}`, () => {
-        let token: string;
-        let createUserCompanyMockResponse: CreateUserCompanyMockResponse;
-
-        beforeAll(async () => {
-          token = await getToken.admin();
-          createUserCompanyMockResponse = await createUserCompany({
-            authController,
-            companyController,
-            repositoryManager,
-            testName: 'company.e2e',
-          });
-        });
-
-        afterAll(async () => {
-          await Promise.all([
-            repositoryManager.removeAndCheck(Company.name, {
-              id: createUserCompanyMockResponse.companyId,
-            }),
-            repositoryManager.removeAndCheck(User.name, {
-              username: createUserCompanyMockResponse.username,
-            }),
-          ]);
-        });
-
-        it('should delete a UserCompany', () => {
-          return request(app.getHttpServer())
-            .delete(pathTo(createUserCompanyMockResponse.id))
             .set(headers.auth, token)
             .expect(HttpStatus.OK)
             .then((response) => {

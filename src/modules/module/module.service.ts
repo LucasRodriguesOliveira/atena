@@ -17,14 +17,10 @@ export class ModuleService {
   ) {}
 
   public async find(id: number): Promise<FindModuleDto | null> {
-    const module = await this.moduleRepository.findOne({
+    const module = await this.moduleRepository.findOneOrFail({
       where: { id },
       select: ['id', 'description', 'createdAt'],
     });
-
-    if (!module?.id) {
-      return null;
-    }
 
     return FindModuleDto.from(module);
   }

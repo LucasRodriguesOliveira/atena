@@ -19,17 +19,13 @@ export class CompanyService {
     private readonly companyRepository: Repository<Company>,
   ) {}
 
-  public async find(companyId: string): Promise<FindCompanyResponseDto | null> {
-    const company = await this.companyRepository.findOne({
+  public async find(companyId: string): Promise<FindCompanyResponseDto> {
+    const company = await this.companyRepository.findOneOrFail({
       select: ['id', 'name', 'displayName', 'email'],
       where: {
         id: companyId,
       },
     });
-
-    if (!Object.keys(company).length) {
-      return null;
-    }
 
     return FindCompanyResponseDto.from(company);
   }

@@ -11,14 +11,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # container: node:10.18-jessie
     services:
       postgres:
         image: postgres
         env:
           POSTGRES_PASSWORD: admin
           POSTGRES_USER: postgres
-          POSTGRES_DB: test
+          POSTGRES_DB: postgres
         ports:
           - 5432:5432
         options: >-
@@ -40,11 +39,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install bcrypt
         run: yarn add bcrypt
+      - name: Install Typeorm
+        run: yarn global add typeorm
       - name: Install dependencies
         run: yarn --frozen-lockfile
       - run: yarn build
-      - run: yarn typeorm migration:run -- -d ./db/postgres
-      - run: yarn test:e2e
+      - name: Run migrations in postgres db
+        run: yarn typeorm migration:run -- -d ./db/postgres
+      - name: Run e2e tests
+        run: yarn test:e2e
         env:
           NODE_ENV: test
           PORT: 3000
@@ -52,8 +55,8 @@ jobs:
           DATABASE_USER: postgres
           DATABASE_PASSWORD: admin
           DATABASE_PORT: 5432
-          DATABASE_NAME: test
+          DATABASE_NAME: postgres
           POSTGRES_PASSWORD: admin
           POSTGRES_USER: postgres
-          POSTGRES_DB: test
+          POSTGRES_DB: postgres
           JWT_SECRET: secret_test

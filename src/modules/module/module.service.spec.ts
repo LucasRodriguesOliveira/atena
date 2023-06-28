@@ -13,6 +13,7 @@ describe('ModuleService', () => {
   let service: ModuleService;
   const repository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -48,29 +49,14 @@ describe('ModuleService', () => {
       const expectedModule = FindModuleDto.from(moduleItem);
 
       beforeEach(() => {
-        repository.findOne.mockResolvedValueOnce(moduleItem);
+        repository.findOneOrFail.mockResolvedValueOnce(moduleItem);
       });
 
       it('should find a module', async () => {
         const result = await service.find(moduleItem.id);
 
         expect(result).toStrictEqual(expectedModule);
-        expect(repository.findOne).toHaveBeenCalled();
-      });
-    });
-
-    describe('fail', () => {
-      const moduleId = 1;
-
-      beforeEach(() => {
-        repository.findOne.mockResolvedValueOnce({});
-      });
-
-      it('should receive a null value', async () => {
-        const result = await service.find(moduleId);
-
-        expect(result).toBeNull();
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });

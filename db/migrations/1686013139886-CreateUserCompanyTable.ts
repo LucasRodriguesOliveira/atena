@@ -29,6 +29,12 @@ export class CreateUserCompanyTable1686013139886 implements MigrationInterface {
             type: 'uuid',
             isNullable: false,
           },
+          {
+            name: 'createdAt',
+            type: 'timestamp',
+            isNullable: false,
+            default: 'now()',
+          },
         ],
       }),
     );

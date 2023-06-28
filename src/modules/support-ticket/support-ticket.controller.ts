@@ -8,10 +8,10 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  HttpException,
   UseGuards,
   ValidationPipe,
   ParseUUIDPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -25,15 +25,16 @@ import { SupportTicketService } from './support-ticket.service';
 import { ListSupportTicketResponseDto } from './dto/list-support-ticket-response.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { QuerySupportTicketDto } from './dto/query-support-ticket.dto';
 import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
 import { CreateSupportTicketResponseDto } from './dto/create-support-ticket-response.dto';
 import { FindSupportTicketResponseDto } from './dto/find-support-ticket-response.dto';
+import { AppModule } from '../auth/decorator/app-module.decorator';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
 
 @Controller('support-ticket')
 @ApiTags('support-ticket')
+@AppModule('SUPPORT_TICKET')
 export class SupportTicketController {
   constructor(private readonly supportTicketService: SupportTicketService) {}
 
@@ -44,7 +45,7 @@ export class SupportTicketController {
     type: ListSupportTicketResponseDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) querySupportTicketDto: QuerySupportTicketDto,
   ): Promise<ListSupportTicketResponseDto> {
@@ -61,7 +62,7 @@ export class SupportTicketController {
     type: CreateSupportTicketDto,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createSupportTicketDto: CreateSupportTicketDto,
   ): Promise<CreateSupportTicketResponseDto> {
@@ -76,7 +77,7 @@ export class SupportTicketController {
   })
   @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('supportTicketId', ParseUUIDPipe) supportTicketId: string,
   ): Promise<FindSupportTicketResponseDto> {
@@ -85,10 +86,7 @@ export class SupportTicketController {
     try {
       supportTicket = await this.supportTicketService.find(supportTicketId);
     } catch (err) {
-      throw new HttpException(
-        'could not find the support ticket',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('could not find the support ticket');
     }
 
     return supportTicket;
@@ -101,7 +99,7 @@ export class SupportTicketController {
     type: Boolean,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('supportTicketId', ParseUUIDPipe) supportTicketId: string,
   ): Promise<boolean> {

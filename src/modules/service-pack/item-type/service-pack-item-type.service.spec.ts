@@ -13,6 +13,7 @@ describe('ServicePackItemTypeService', () => {
   let service: ServicePackItemTypeService;
   const repository = {
     findOneBy: jest.fn(),
+    findOneByOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -57,27 +58,16 @@ describe('ServicePackItemTypeService', () => {
       );
 
       beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce(servicePackItemTypeExpected);
+        repository.findOneByOrFail.mockResolvedValueOnce(
+          servicePackItemTypeExpected,
+        );
       });
 
       it('should find a servicePackItemType by id', async () => {
         const result = await service.find(servicePackItemTypeId);
 
-        expect(repository.findOneBy).toHaveBeenCalled();
+        expect(repository.findOneByOrFail).toHaveBeenCalled();
         expect(result).toStrictEqual(expected);
-      });
-    });
-
-    describe('fail', () => {
-      beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce({});
-      });
-
-      it('should return null when not finding a servicePackItemType', async () => {
-        const result = await service.find(servicePackItemTypeId);
-
-        expect(repository.findOneBy).toHaveBeenCalled();
-        expect(result).toBeNull();
       });
     });
   });

@@ -7,8 +7,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserType } from '../user-type/entity/user-type.entity';
 import { UserTypeService } from '../user-type/user-type.service';
-import { HttpException } from '@nestjs/common';
-import { FindUserDto } from '../user/dto/find-user.dto';
+import { NotFoundException } from '@nestjs/common';
+import { FindUserWithPermissions } from '../user/dto/find-user-with-permissions';
 
 describe.only('JwtService', () => {
   let jwtService: JWTService;
@@ -16,7 +16,7 @@ describe.only('JwtService', () => {
   let userTypeService: UserTypeService;
 
   const userRepository = {
-    findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
   };
   const userTypeRepository = {};
 
@@ -70,18 +70,44 @@ describe.only('JwtService', () => {
 
   describe('validate', () => {
     describe('successfully validates', () => {
+      const userType: UserType = {
+        id: 0,
+        description: 'test',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: new Date(),
+        users: [],
+        permissionGroups: [],
+      };
       const user: User = {
         id: '0',
         name: 'test',
         username: 'test.test',
         type: {
-          id: 0,
-          description: 'test',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: new Date(),
-          users: [],
-          permissionGroups: [],
+          ...userType,
+          permissionGroups: [
+            {
+              id: 0,
+              createdAt: new Date(),
+              module: {
+                id: 0,
+                description: 'test',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                deletedAt: new Date(),
+                permissionGroups: [],
+              },
+              permission: {
+                id: 0,
+                description: 'test',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                deletedAt: new Date(),
+                permissionGroups: [],
+              },
+              userType,
+            },
+          ],
         },
         password: 'test',
         token: null,
@@ -94,7 +120,7 @@ describe.only('JwtService', () => {
       };
 
       beforeEach(() => {
-        userRepository.findOne.mockResolvedValueOnce(user);
+        userRepository.findOneOrFail.mockResolvedValueOnce(user);
       });
 
       it('should validate a jwt token returning a user', async () => {
@@ -102,18 +128,18 @@ describe.only('JwtService', () => {
           id: '0',
         });
 
-        expect(result).toStrictEqual(FindUserDto.from(user));
+        expect(result).toStrictEqual(FindUserWithPermissions.from(user));
       });
     });
 
     describe('throws an error', () => {
       beforeEach(() => {
-        userRepository.findOne.mockResolvedValueOnce({});
+        userRepository.findOneOrFail.mockRejectedValueOnce({});
       });
 
       it('should thrown an error for not finding a user', async () => {
         await expect(() => jwtService.validate({ id: '0' })).rejects.toThrow(
-          HttpException,
+          NotFoundException,
         );
       });
     });

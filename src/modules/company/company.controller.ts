@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  NotFoundException,
   Query,
   Body,
   Param,
@@ -23,36 +24,30 @@ import { FindCompanyResponseDto } from './dto/find-company-response.dto';
 import { ListCompanyResponseDto } from './dto/list-company-response.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { QueryListCompanyDto } from './dto/query-list-company.dto';
 import { PaginatedResult } from '../../shared/paginated-result.interface';
 import { CreateCompanyResponseDto } from './dto/create-company-response.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyResponseDto } from './dto/update-company-response.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { UserCompanyService } from './user-company.service';
-import { FindUsersDto } from './dto/find-users.dto';
-import { CreateUserCompanyResponseDto } from './dto/create-user-company-response.dto';
-import { CreateUserCompanyDto } from './dto/create-user-company.dto';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
+import { AppModule } from '../auth/decorator/app-module.decorator';
 
 @Controller('company')
 @ApiTags('company')
+@AppModule('COMPANY')
 export class CompanyController {
-  constructor(
-    private readonly companyService: CompanyService,
-    private readonly userCompanyService: UserCompanyService,
-  ) {}
+  constructor(private readonly companyService: CompanyService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: [ListCompanyResponseDto],
-    description: 'List of companies',
+    type: ListCompanyResponseDto,
+    isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async list(
     @Query(ValidationPipe) queryListCompanyDto?: QueryListCompanyDto,
   ): Promise<PaginatedResult<ListCompanyResponseDto>> {
@@ -63,9 +58,10 @@ export class CompanyController {
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({
     type: CreateCompanyResponseDto,
-    description: 'Company created',
   })
   @ApiBearerAuth()
+  @UseGuards(JwtGuard, RoleGuard)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createCompanyDto: CreateCompanyDto,
   ): Promise<CreateCompanyResponseDto> {
@@ -77,14 +73,21 @@ export class CompanyController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: FindCompanyResponseDto,
-    description: 'Company found by id',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
     @Param('companyId', ValidationPipe) companyId: string,
   ): Promise<FindCompanyResponseDto> {
-    return this.companyService.find(companyId);
+    let company: FindCompanyResponseDto;
+
+    try {
+      company = await this.companyService.find(companyId);
+    } catch (err) {
+      throw new NotFoundException('could not find the company');
+    }
+
+    return company;
   }
 
   @Put(':companyId')
@@ -92,10 +95,9 @@ export class CompanyController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: UpdateCompanyResponseDto,
-    description: 'Company updated',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('UPDATE')
   public async update(
     @Param('companyId', ValidationPipe) companyId: string,
     @Body(ValidationPipe) updateCompanyDto: UpdateCompanyDto,
@@ -108,58 +110,12 @@ export class CompanyController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: Boolean,
-    description: 'Confirmation of exclusion of company',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
     @Param('companyId', ValidationPipe) companyId: string,
   ): Promise<boolean> {
     return this.companyService.delete(companyId);
-  }
-
-  @Get(':companyId/user')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @ApiOkResponse({
-    type: [FindUsersDto],
-  })
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
-  public async findUsers(
-    @Param('companyId') companyId: string,
-  ): Promise<FindUsersDto[]> {
-    return this.userCompanyService.findUsers(companyId);
-  }
-
-  @Post(':companyId/user')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiBearerAuth()
-  @ApiCreatedResponse({
-    type: CreateUserCompanyResponseDto,
-  })
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
-  public async attachUser(
-    @Param('companyId', ValidationPipe) companyId: string,
-    @Body(ValidationPipe) createUserCompanyDto: CreateUserCompanyDto,
-  ): Promise<CreateUserCompanyResponseDto> {
-    return this.userCompanyService.attachUser(companyId, createUserCompanyDto);
-  }
-
-  @Delete(':userCompanyId/user')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @ApiOkResponse({
-    type: Boolean,
-    description:
-      'Confirmation of the exclusion of the connection between company and user',
-  })
-  @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
-  public async deattachUser(
-    @Param('userCompanyId', ValidationPipe) userCompanyId: number,
-  ): Promise<boolean> {
-    return this.userCompanyService.deattachUser(userCompanyId);
   }
 }

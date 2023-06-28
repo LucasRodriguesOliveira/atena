@@ -4,9 +4,10 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
+  NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   UseGuards,
   ValidationPipe,
@@ -22,16 +23,16 @@ import { PermissionGroupService } from './permission-group.service';
 import { ListUserTypeDto } from './dto/list-user-type.dto';
 import { ListModuleDto } from './dto/list-module.dto';
 import { ListPermissionsDto } from './dto/list-permissions.dto';
-import { QueryPermissionsDto } from './dto/query-permissions.dto';
 import { FindPermissionGroupDto } from './dto/find-permission-group.dto';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
-import { UserRole } from '../auth/decorator/user-type.decorator';
-import { UserTypeEnum } from '../user-type/type/user-type.enum';
 import { CreatePermissionGroupDto } from './dto/create-permission-group.dto';
+import { AccessPermission } from '../auth/decorator/access-permission.decorator';
+import { AppModule } from '../auth/decorator/app-module.decorator';
 
 @Controller('permission-group')
 @ApiTags('permission-group')
+@AppModule('PERMISSION_GROUP')
 export class PermissionGroupController {
   constructor(
     private readonly permissionGroupService: PermissionGroupService,
@@ -41,11 +42,11 @@ export class PermissionGroupController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: [ListUserTypeDto],
-    description: 'List of all User Types registered in Permission Group',
+    type: ListUserTypeDto,
+    isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async listUserTypes(): Promise<ListUserTypeDto[]> {
     return this.permissionGroupService.listUserTypes();
   }
@@ -54,12 +55,11 @@ export class PermissionGroupController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: [ListModuleDto],
-    description:
-      'List of all modules registered in Permission Group by a User Type',
+    type: ListModuleDto,
+    isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async listModules(
     @Param('userTypeId', ValidationPipe) userTypeId: number,
   ): Promise<ListModuleDto[]> {
@@ -70,16 +70,16 @@ export class PermissionGroupController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    type: [ListPermissionsDto],
-    description:
-      'List of all permissions registered in Permission Group by User Type and Module',
+    type: ListPermissionsDto,
+    isArray: true,
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('LIST')
   public async listPermissions(
-    @Param(ValidationPipe) queryPermissionsDto: QueryPermissionsDto,
+    @Param('userTypeId', ParseIntPipe) userTypeId: number,
+    @Param('moduleId', ParseIntPipe) moduleId: number,
   ): Promise<ListPermissionsDto[]> {
-    return this.permissionGroupService.listPermissions(queryPermissionsDto);
+    return this.permissionGroupService.listPermissions(moduleId, userTypeId);
   }
 
   @Get(':permissionGroupId')
@@ -87,25 +87,21 @@ export class PermissionGroupController {
   @ApiBearerAuth()
   @ApiOkResponse({
     type: FindPermissionGroupDto,
-    description: 'Permission Group',
   })
-  @ApiNotFoundResponse({
-    description: 'Permission Group could not be found',
-  })
+  @ApiNotFoundResponse()
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('FIND')
   public async find(
-    @Param('permissionGroupId', ValidationPipe) permissionGroupId: number,
+    @Param('permissionGroupId', ParseIntPipe) permissionGroupId: number,
   ): Promise<FindPermissionGroupDto> {
-    const permissionGroup = await this.permissionGroupService.find(
-      permissionGroupId,
-    );
+    let permissionGroup: FindPermissionGroupDto;
 
-    if (!permissionGroup) {
-      throw new HttpException(
-        'Permission Group could not be found',
-        HttpStatus.NOT_FOUND,
+    try {
+      permissionGroup = await this.permissionGroupService.find(
+        permissionGroupId,
       );
+    } catch (err) {
+      throw new NotFoundException('Permission Group could not be found');
     }
 
     return permissionGroup;
@@ -116,10 +112,9 @@ export class PermissionGroupController {
   @ApiBearerAuth()
   @ApiCreatedResponse({
     type: FindPermissionGroupDto,
-    description: 'Permission Group created',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('CREATE')
   public async create(
     @Body(ValidationPipe) createPermissionGroupDto: CreatePermissionGroupDto,
   ): Promise<FindPermissionGroupDto> {
@@ -129,14 +124,13 @@ export class PermissionGroupController {
   @Delete(':permissionGroupId')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     type: Boolean,
-    description: 'Confirmation if the Permission Group was excluded',
   })
   @UseGuards(JwtGuard, RoleGuard)
-  @UserRole(UserTypeEnum.ADMIN)
+  @AccessPermission('DELETE')
   public async delete(
-    @Param('permissionGroupId', ValidationPipe) permissionGroupId: number,
+    @Param('permissionGroupId', ParseIntPipe) permissionGroupId: number,
   ): Promise<boolean> {
     return this.permissionGroupService.delete(permissionGroupId);
   }

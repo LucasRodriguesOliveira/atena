@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { ServicePackItem } from './entity/service-pack-item.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ServicePackItemService } from './service-pack-item.service';
@@ -18,6 +18,7 @@ describe('ServicePackItemController', () => {
 
   const servicePackItemRepository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -109,28 +110,28 @@ describe('ServicePackItemController', () => {
       const expected = FindServicePackItemResponseDto.from(item);
 
       beforeEach(() => {
-        servicePackItemRepository.findOne.mockResolvedValueOnce(item);
+        servicePackItemRepository.findOneOrFail.mockResolvedValueOnce(item);
       });
 
       it('should find a service pack item by id', async () => {
         const result = await controller.find(item.id);
 
         expect(result).toStrictEqual(expected);
-        expect(servicePackItemRepository.findOne).toHaveBeenCalled();
+        expect(servicePackItemRepository.findOneOrFail).toHaveBeenCalled();
       });
     });
 
     describe('Fail', () => {
       beforeEach(() => {
-        servicePackItemRepository.findOne.mockResolvedValueOnce({});
+        servicePackItemRepository.findOneOrFail.mockRejectedValueOnce({});
       });
 
       it('should throw an error for not findind the item', async () => {
         await expect(() => controller.find(servicePackItem.id)).rejects.toThrow(
-          HttpException,
+          NotFoundException,
         );
 
-        expect(servicePackItemRepository.findOne).toHaveBeenCalled();
+        expect(servicePackItemRepository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });

@@ -17,14 +17,10 @@ export class PermissionService {
   ) {}
 
   public async find(id: number): Promise<FindPermissionDto | null> {
-    const permission = await this.permissionRepository.findOne({
+    const permission = await this.permissionRepository.findOneOrFail({
       where: { id },
       select: ['id', 'description', 'createdAt'],
     });
-
-    if (!permission?.id) {
-      return null;
-    }
 
     return FindPermissionDto.from(permission);
   }

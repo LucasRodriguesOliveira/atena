@@ -17,7 +17,7 @@ export const typeOrmModuleConfig = (entities): TypeOrmModuleAsyncOptions => ({
       password,
       username,
       database,
-      synchronize: true,
+      synchronize: false,
       entities,
       logging: ['develop', 'dev', 'development'].includes(env),
     };

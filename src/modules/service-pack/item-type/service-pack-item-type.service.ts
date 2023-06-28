@@ -21,13 +21,9 @@ export class ServicePackItemTypeService {
     servicePackItemTypeId: number,
   ): Promise<FindServicePackItemTypeResponseDto> {
     const servicePackItemType =
-      await this.servicePackItemTypeRepository.findOneBy({
+      await this.servicePackItemTypeRepository.findOneByOrFail({
         id: servicePackItemTypeId,
       });
-
-    if (Object.keys(servicePackItemType).length === 0) {
-      return null;
-    }
 
     return FindServicePackItemTypeResponseDto.from(servicePackItemType);
   }

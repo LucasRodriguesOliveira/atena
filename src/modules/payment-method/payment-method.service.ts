@@ -19,14 +19,10 @@ export class PaymentMethodService {
 
   public async find(
     paymentMethodId: number,
-  ): Promise<FindPaymentMethodResponseDto | null> {
-    const paymentMethod = await this.paymentMethodRepository.findOneBy({
+  ): Promise<FindPaymentMethodResponseDto> {
+    const paymentMethod = await this.paymentMethodRepository.findOneByOrFail({
       id: paymentMethodId,
     });
-
-    if (Object.keys(paymentMethod).length === 0) {
-      return null;
-    }
 
     return FindPaymentMethodResponseDto.from(paymentMethod);
   }

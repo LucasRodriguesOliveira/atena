@@ -8,13 +8,14 @@ import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { CreatePaymentMethodResponseDto } from './dto/create-payment-method-response.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 import { UpdatePaymentMethodResponseDto } from './dto/update-payment-method-response.dto';
-import { HttpException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { PaymentMethodService } from './payment-method.service';
 
 describe('PaymentMethodController', () => {
   let controller: PaymentMethodController;
   const repository = {
     findOneBy: jest.fn(),
+    findOneByOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -56,28 +57,28 @@ describe('PaymentMethodController', () => {
       const expected = FindPaymentMethodResponseDto.from(paymentMethod);
 
       beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce(paymentMethod);
+        repository.findOneByOrFail.mockResolvedValueOnce(paymentMethod);
       });
 
       it('should find a paymentMethod by id', async () => {
         const result = await controller.find(paymentMethodId);
 
         expect(result).toStrictEqual(expected);
-        expect(repository.findOneBy).toHaveBeenCalled();
+        expect(repository.findOneByOrFail).toHaveBeenCalled();
       });
     });
 
     describe('fail', () => {
       beforeAll(() => {
-        repository.findOneBy.mockResolvedValueOnce({});
+        repository.findOneByOrFail.mockRejectedValueOnce({});
       });
 
       it('should return null when not finding a paymentMethod', async () => {
         await expect(() => controller.find(paymentMethodId)).rejects.toThrow(
-          HttpException,
+          NotFoundException,
         );
 
-        expect(repository.findOneBy).toHaveBeenCalled();
+        expect(repository.findOneByOrFail).toHaveBeenCalled();
       });
     });
   });

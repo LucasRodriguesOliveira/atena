@@ -14,6 +14,7 @@ describe('PermissionGroupService', () => {
   const getRawMany = jest.fn();
   const repository = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     delete: jest.fn(),
@@ -81,14 +82,14 @@ describe('PermissionGroupService', () => {
       FindPermissionGroupDto.from(permissionGroup);
 
     beforeEach(() => {
-      repository.findOne.mockResolvedValueOnce(permissionGroup);
+      repository.findOneOrFail.mockResolvedValueOnce(permissionGroup);
     });
 
     it('should find a permission group by id', async () => {
       const result = await service.find(permissionGroup.id);
 
       expect(result).toStrictEqual(permissionGroupExpected);
-      expect(repository.findOne).toHaveBeenCalled();
+      expect(repository.findOneOrFail).toHaveBeenCalled();
     });
   });
 
@@ -132,10 +133,10 @@ describe('PermissionGroupService', () => {
     });
 
     it('should return a list of permissions for a module and user type in permission group table ', async () => {
-      const result = await service.listPermissions({
-        userTypeId: permissionGroup.userType.id,
-        moduleId: permissionGroup.module.id,
-      });
+      const result = await service.listPermissions(
+        permissionGroup.userType.id,
+        permissionGroup.module.id,
+      );
 
       expect(result).toStrictEqual([permissionExpected]);
       expect(repository.find).toHaveBeenCalled();

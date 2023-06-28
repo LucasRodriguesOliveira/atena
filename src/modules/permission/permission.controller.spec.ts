@@ -11,13 +11,14 @@ import { CreatePermissionDto } from './dto/create-permission.dto';
 import { CreatePermissionResponse } from './dto/create-permission-response.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { UpdatePermissionResponse } from './dto/update-permission-response.dto';
-import { HttpException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 describe('PermissionController', () => {
   let controller: PermissionController;
   let service: PermissionService;
   const repository: MockType<Repository<Permission>> = {
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
     find: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -56,28 +57,28 @@ describe('PermissionController', () => {
       };
 
       beforeAll(() => {
-        repository.findOne.mockResolvedValueOnce(permissionExpected);
+        repository.findOneOrFail.mockResolvedValueOnce(permissionExpected);
       });
 
       it('should find a permission by id', async () => {
         const result = await controller.find(permissionId);
 
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
         expect(result).toEqual(FindPermissionDto.from(permissionExpected));
       });
     });
 
     describe('fail', () => {
       beforeAll(() => {
-        repository.findOne.mockResolvedValueOnce({});
+        repository.findOneOrFail.mockRejectedValueOnce({});
       });
 
       it('should throw an error when not finding a permission', async () => {
         await expect(() => controller.find(permissionId)).rejects.toThrow(
-          HttpException,
+          NotFoundException,
         );
 
-        expect(repository.findOne).toHaveBeenCalled();
+        expect(repository.findOneOrFail).toHaveBeenCalled();
       });
     });
   });
