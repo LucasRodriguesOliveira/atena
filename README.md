@@ -1,5 +1,8 @@
 # Atena
 
+[![e2e-test](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/e2e-test.yaml/badge.svg)](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/e2e-test.yaml)
+[![unit-test](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/unit-test.yaml/badge.svg)](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/unit-test.yaml)
+
 ## Description
 Api com objetivo de fornecer conteúdo administrativo para gerenciar 
 dados de contrato do site Zeus (Hermes/Hercules/Hera)
