@@ -17,7 +17,7 @@ export class RoleGuard implements CanActivate {
       context.getHandler(),
     );
 
-    if (requiredType.length) {
+    if (requiredType?.length) {
       return requiredType.includes(user.type.description);
     }
 
@@ -35,21 +35,24 @@ export class RoleGuard implements CanActivate {
       return false;
     }
 
-    const permissionGroup = permissionGroups.find((permissionGroup) => {
-      return permissionGroup.module.description === module;
-    });
+    const permissionsByModule = permissionGroups
+      .filter(
+        (permissionGroup) => permissionGroup.module.description === module,
+      )
+      .map(({ permission }) => permission.description);
 
-    if (!permissionGroup) {
+    if (!permissionsByModule.length) {
       return false;
     }
 
     if (
-      permissionGroup.module.description !== module ||
-      !permissions.includes(permissionGroup.permission.description)
+      permissions.every((accessPermission) =>
+        permissionsByModule.includes(accessPermission),
+      )
     ) {
-      return false;
+      return true;
     }
 
-    return true;
+    return false;
   }
 }

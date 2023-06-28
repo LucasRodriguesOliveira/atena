@@ -28,9 +28,11 @@ import { JwtGuard } from '../auth/guard/jwt.guard';
 import { RoleGuard } from '../auth/guard/role.guard';
 import { CreatePermissionGroupDto } from './dto/create-permission-group.dto';
 import { AccessPermission } from '../auth/decorator/access-permission.decorator';
+import { AppModule } from '../auth/decorator/app-module.decorator';
 
 @Controller('permission-group')
 @ApiTags('permission-group')
+@AppModule('PERMISSION_GROUP')
 export class PermissionGroupController {
   constructor(
     private readonly permissionGroupService: PermissionGroupService,

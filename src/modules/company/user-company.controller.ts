@@ -6,6 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   UseGuards,
   ValidationPipe,
@@ -41,7 +43,7 @@ export class UserCompanyController {
   @UseGuards(JwtGuard, RoleGuard)
   @AccessPermission('FIND')
   public async findUsers(
-    @Param('companyId') companyId: string,
+    @Param('companyId', ParseUUIDPipe) companyId: string,
   ): Promise<FindUsersDto[]> {
     return this.userCompanyService.findUsers(companyId);
   }
@@ -55,7 +57,7 @@ export class UserCompanyController {
   @UseGuards(JwtGuard, RoleGuard)
   @AccessPermission('CREATE')
   public async attachUser(
-    @Param('companyId', ValidationPipe) companyId: string,
+    @Param('companyId', ParseUUIDPipe) companyId: string,
     @Body(ValidationPipe) createUserCompanyDto: CreateUserCompanyDto,
   ): Promise<CreateUserCompanyResponseDto> {
     return this.userCompanyService.attachUser(companyId, createUserCompanyDto);
@@ -70,7 +72,7 @@ export class UserCompanyController {
   @UseGuards(JwtGuard, RoleGuard)
   @AccessPermission('DELETE')
   public async deattachUser(
-    @Param('userCompanyId', ValidationPipe) userCompanyId: number,
+    @Param('companyId', ParseIntPipe) userCompanyId: number,
   ): Promise<boolean> {
     return this.userCompanyService.deattachUser(userCompanyId);
   }

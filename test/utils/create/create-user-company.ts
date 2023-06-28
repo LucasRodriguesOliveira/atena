@@ -6,8 +6,10 @@ import { User } from '../../../src/modules/user/entity/user.entity';
 import { createCompany } from './create-company';
 import { CreateUserCompanyDto } from '../../../src/modules/company/dto/create-user-company.dto';
 import { RepositoryManager } from '../repository';
+import { UserCompanyController } from '../../../src/modules/company/user-company.controller';
 
 interface CreateUserCompanyOptions {
+  userCompanyController: UserCompanyController;
   companyController: CompanyController;
   authController: AuthController;
   repositoryManager: RepositoryManager;
@@ -21,6 +23,7 @@ export class CreateUserCompanyMockResponse {
 }
 
 export async function createUserCompany({
+  userCompanyController,
   companyController,
   authController,
   repositoryManager,
@@ -44,7 +47,7 @@ export async function createUserCompany({
     userId,
   };
 
-  const result = await companyController.attachUser(
+  const result = await userCompanyController.attachUser(
     company.id,
     createUserCompanyDto,
   );

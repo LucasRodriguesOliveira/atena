@@ -31,9 +31,11 @@ import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyResponseDto } from './dto/update-company-response.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { AccessPermission } from '../auth/decorator/access-permission.decorator';
+import { AppModule } from '../auth/decorator/app-module.decorator';
 
 @Controller('company')
 @ApiTags('company')
+@AppModule('COMPANY')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 

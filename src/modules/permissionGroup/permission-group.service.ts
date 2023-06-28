@@ -20,7 +20,7 @@ export class PermissionGroupService {
   async find(
     permissionGroupId: number,
   ): Promise<FindPermissionGroupDto | null> {
-    const permissionGroup = await this.permissionGroupRepository.findOne({
+    const permissionGroup = await this.permissionGroupRepository.findOneOrFail({
       where: {
         id: permissionGroupId,
       },

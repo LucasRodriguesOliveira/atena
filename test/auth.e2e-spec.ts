@@ -13,6 +13,7 @@ import { UserTypeEnum } from '../src/modules/user-type/type/user-type.enum';
 import { User } from '../src/modules/user/entity/user.entity';
 import { RepositoryManager } from './utils/repository';
 import { RepositoryItem } from './utils/repository/repository-item';
+import { TokenFactoryResponse, getTokenFactory } from './utils/get-token';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -21,6 +22,8 @@ describe('AuthController (e2e)', () => {
 
   let authController: AuthController;
   let repositoryManager: RepositoryManager;
+
+  let getToken: TokenFactoryResponse;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -38,9 +41,15 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    getToken = await getTokenFactory({
+      testingModule: moduleFixture,
+      testName: 'auth.e2e',
+    });
   });
 
   afterAll(async () => {
+    await getToken.clear();
     await app.close();
   });
 
@@ -48,19 +57,36 @@ describe('AuthController (e2e)', () => {
     const path = `${basePath}/register`;
 
     describe('(POST)', () => {
+      describe(`UNAUTHORIZED - ${HttpStatus.UNAUTHORIZED}`, () => {
+        it('should not allow access to the route without a token', () => {
+          return request(app.getHttpServer())
+            .post(path)
+            .expect(HttpStatus.UNAUTHORIZED);
+        });
+      });
+
       describe(`BAD_REQUEST - ${HttpStatus.BAD_REQUEST}`, () => {
+        let token: string;
+
+        beforeEach(async () => {
+          token = await getToken.admin();
+        });
+
         it('should throw an error due to the lack of data sent', () => {
           return request(app.getHttpServer())
             .post(path)
+            .set('authorization', token)
             .expect(HttpStatus.BAD_REQUEST);
         });
       });
 
       describe(`OK - ${HttpStatus.OK}`, () => {
+        let token: string;
         const registerDto: RegisterDto = register.default;
 
-        beforeAll(() => {
+        beforeAll(async () => {
           registerDto.username = `${registerDto.username}/${Date.now()}`;
+          token = await getToken.admin();
         });
 
         afterAll(async () => {
@@ -74,6 +100,7 @@ describe('AuthController (e2e)', () => {
         it('should register a user and return true', () => {
           return request(app.getHttpServer())
             .post(path)
+            .set('authorization', token)
             .send(registerDto)
             .expect(HttpStatus.OK)
             .then((response) => {
