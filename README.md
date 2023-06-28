@@ -2,6 +2,7 @@
 
 [![e2e-test](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/e2e-test.yaml/badge.svg)](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/e2e-test.yaml)
 [![unit-test](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/unit-test.yaml/badge.svg)](https://github.com/LucasRodriguesOliveira/atena/actions/workflows/unit-test.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/LucasRodriguesOliveira/atena/badge.svg)](https://coveralls.io/github/LucasRodriguesOliveira/atena)
 
 ## Description
 Api com objetivo de fornecer conteúdo administrativo para gerenciar 
